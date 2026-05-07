@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "schoenflies"
+version = "0.1.0"
+description = "Automatic Schoenflies point group determination from molecular coordinates"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+vis = ["matplotlib"]
+
+[project.scripts]
+schoenflies = "schoenflies.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
