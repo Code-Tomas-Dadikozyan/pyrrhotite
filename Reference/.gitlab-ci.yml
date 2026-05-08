@@ -1,0 +1,143 @@
+image: debian:latest
+
+stages:
+  - build
+  - test
+  - package
+  - release
+
+variables:
+  WINEPATH: "Z:/usr/lib/gcc/x86_64-w64-mingw32/10-posix;Z:/usr/x86_64-w64-mingw32/lib;Z:${CI_PROJECT_DIR}/lib/qtbase-mingw-w64-x86-64-posix/bin;Z:${CI_PROJECT_DIR}/lib/qtbase-mingw-w64-x86-64-posix/plugins;Z:${CI_PROJECT_DIR}/lib/freetype-mingw-w64-x86-64-posix/bin"
+
+default:
+  before_script:
+    - echo -e "\e[0Ksection_start:`date +%s`:apt[collapsed=true]\r\e[0KInstalling packages"
+    - apt update
+    - apt install -y $APT_PACKAGES --no-install-recommends
+    - echo -e "\e[0Ksection_end:`date +%s`:apt\r\e[0K"
+
+# Debian
+build-debian:
+  stage: build
+  variables:
+    APT_PACKAGES: "build-essential cmake qtbase5-dev qtbase5-dev-tools libboost-all-dev libeigen3-dev libfreetype-dev libglm-dev nlohmann-json3-dev"
+  script:
+    - cd build
+    - cmake ..
+    - make
+  artifacts:
+    paths:
+      - build/**
+    expire_in: 1 day
+
+test-debian:
+  stage: test
+  needs:
+    - build-debian
+  variables:
+    APT_PACKAGES: "libqt5widgets5"
+  script:
+    - cd build/test
+    - ./schoenflies_test
+
+package-debian:
+  rules:
+    - if: $CI_COMMIT_TAG
+  stage: package
+  needs:
+    - build-debian
+    - test-debian
+  variables:
+    APT_PACKAGES: "inkscape"
+  script:
+    - mkdir -p dist/deb
+    - cd dist/deb
+    - ../package_debian.sh
+  artifacts:
+    paths:
+      - dist/deb/schoenflies_*.deb
+    expire_in: 1 day
+
+# Windows
+build-windows:
+  stage: build
+  variables:
+    APT_PACKAGES: "bzip2 ca-certificates cmake curl g++ g++-mingw-w64-x86-64-posix git libeigen3-dev libglm-dev make tar zstd"
+  script:
+    - ln -s /usr/include/eigen3 /usr/x86_64-w64-mingw32/include/eigen3
+    - ln -s /usr/include/glm /usr/x86_64-w64-mingw32/include/glm
+    - cd lib
+    - ./download_boost_mingw.sh
+    - ./download_freetype_mingw.sh
+    - ./download_json_mingw.sh
+    - ./download_qtbase_mingw.sh
+    - cd ../build
+    - cmake -DCMAKE_TOOLCHAIN_FILE=../windows-toolchain.cmake ..
+    - make
+  artifacts:
+    paths:
+      - build/**
+    expire_in: 1 day
+
+test-windows:
+  stage: test
+  needs:
+    - build-windows
+  variables:
+    APT_PACKAGES: "bzip2 ca-certificates curl gcc-mingw-w64-x86-64-posix-runtime mingw-w64-x86-64-dev tar wine"
+  script:
+    - cd lib
+    - ./download_freetype_mingw.sh
+    - ./download_qtbase_mingw.sh
+    - cd ../build/test
+    - wine schoenflies_test.exe
+
+package-windows:
+  image: debian:testing  # NSIS >= 3.08 required
+  rules:
+    - if: $CI_COMMIT_TAG
+  stage: package
+  needs:
+    - build-windows
+    - test-windows
+  variables:
+    APT_PACKAGES: "bzip2 build-essential ca-certificates curl gcc-mingw-w64-x86-64-posix-runtime libcurl4-openssl-dev libssl-dev mingw-w64-x86-64-dev nsis pkg-config python3 tar wine zip"
+    WINEDEBUG: "+loaddll"
+  script:
+    - base64 -d ${CERT_BASE64} > cert.p12
+    # osslsigncode is currently unavailable in debian:testing
+    - curl -OL https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode-2.2.0.tar.gz
+    - tar xf osslsigncode-2.2.0.tar.gz
+    - cd osslsigncode-2.2.0
+    - ./configure
+    - make
+    - make install
+    - cd ../lib
+    - ./download_freetype_mingw.sh
+    - ./download_qtbase_mingw.sh
+    - cd ../dist
+    - mkdir win
+    - cd win
+    - ../package_windows.sh
+  artifacts:
+    paths:
+      - dist/win/schoenflies-windows-*.zip
+      - dist/win/schoenflies-windows-installer-*.exe
+    expire_in: 1 day
+
+# release
+release:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+  stage: release
+  needs:
+    - package-debian
+    - package-windows
+  variables:
+    APT_PACKAGES: "ca-certificates curl python3"
+  script:
+    # note: the %2F here is important, I'm not sure why
+    - curl -o release-cli -L https://gitlab.com/api/v4/projects/gitlab-org%2Frelease-cli/packages/generic/release-cli/latest/release-cli-linux-amd64
+    - chmod +x release-cli
+    - ./dist/create_release.sh

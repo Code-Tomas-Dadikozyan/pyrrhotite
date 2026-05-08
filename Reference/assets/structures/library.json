@@ -1,0 +1,780 @@
+[
+    {
+        "path": "1,2-difluorocubane.xyz",
+        "name": "1,2-Difluorocubane",
+        "chemical_formula": "C<sub>8</sub>H<sub>6</sub>F<sub>2</sub>",
+        "point_group": ["Cv", 2],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "F",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "1,4-difluorocubane.xyz",
+        "name": "1,4-Difluorocubane",
+        "chemical_formula": "C<sub>8</sub>H<sub>6</sub>F<sub>2</sub>",
+        "point_group": ["Dd", 3],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "F",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "18-annulene.xyz",
+        "name": "[18]Annulene",
+        "chemical_formula": "C<sub>18</sub>H<sub>18</sub>",
+        "point_group": ["Dh", 6],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "18-crown-6.xyz",
+        "name": "18-Crown-6",
+        "chemical_formula": "C<sub>12</sub>H<sub>24</sub>O<sub>6</sub>",
+        "point_group": ["Dh", 6],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                },
+                {
+                    "element": "O",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "O",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "adamantane.xyz",
+        "name": "Adamantane",
+        "chemical_formula": "C<sub>10</sub>H<sub>16</sub>",
+        "point_group": ["Td"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "ammonia.xyz",
+        "name": "Ammonia",
+        "chemical_formula": "NH<sub>3</sub>",
+        "point_group": ["Cv", 3],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "H",
+                    "orbital": "1s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "benzene.xyz",
+        "name": "Benzene",
+        "chemical_formula": "C<sub>6</sub>H<sub>6</sub>",
+        "point_group": ["Dh", 6],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "borane.xyz",
+        "name": "Borane",
+        "chemical_formula": "BH<sub>3</sub>",
+        "point_group": ["Dh", 3],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "H",
+                    "orbital": "1s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "buckminsterfullerene.xyz",
+        "name": "Buckminsterfullerene",
+        "chemical_formula": "C<sub>60</sub>",
+        "point_group": ["Ih"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "coronene.xyz",
+        "name": "Coronene",
+        "chemical_formula": "C<sub>24</sub>H<sub>12</sub>",
+        "point_group": ["Dh", 6],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "cubane.xyz",
+        "name": "Cubane",
+        "chemical_formula": "C<sub>8</sub>H<sub>8</sub>",
+        "point_group": ["Oh"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "cubylcubane.xyz",
+        "name": "Cubylcubane",
+        "chemical_formula": "C<sub>16</sub>H<sub>14</sub>",
+        "point_group": ["Dd", 3],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "cyclohexane-boat.xyz",
+        "name": "Cyclohexane (boat)",
+        "chemical_formula": "C<sub>6</sub>H<sub>12</sub>",
+        "point_group": ["Cv", 2],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "cyclohexane-chair.xyz",
+        "name": "Cyclohexane (chair)",
+        "chemical_formula": "C<sub>6</sub>H<sub>12</sub>",
+        "point_group": ["Dd", 3],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "cyclopentadienyl.xyz",
+        "name": "Cyclopentadienyl",
+        "chemical_formula": "[C<sub>5</sub>H<sub>5</sub>]<sup>−</sup>",
+        "point_group": ["Dh", 5],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "dodecaborate.xyz",
+        "name": "Dodecaborate",
+        "chemical_formula": "[B<sub>12</sub>H<sub>12</sub>]<sup>2−</sup>",
+        "point_group": ["Ih"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "B",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "dodecaethyleneoctamine.xyz",
+        "name": "Dodecaethyleneoctamine",
+        "chemical_formula": "C<sub>24</sub>H<sub>48</sub>N<sub>8</sub>",
+        "point_group": ["O"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": false
+            }
+        }
+    },
+    {
+        "path": "dodecahedrane.xyz",
+        "name": "Dodecahedrane",
+        "chemical_formula": "C<sub>20</sub>H<sub>20</sub>",
+        "point_group": ["Ih"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "ethylene.xyz",
+        "name": "Ethylene",
+        "chemical_formula": "C<sub>2</sub>H<sub>4</sub>",
+        "point_group": ["Dh", 2],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "ferrocene-eclipsed.xyz",
+        "name": "Ferrocene (eclipsed)",
+        "chemical_formula": "Fe(C<sub>5</sub>H<sub>5</sub>)<sub>2</sub>",
+        "point_group": ["Dh", 5],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "ferrocene-staggered.xyz",
+        "name": "Ferrocene (staggered)",
+        "chemical_formula": "Fe(C<sub>5</sub>H<sub>5</sub>)<sub>2</sub>",
+        "point_group": ["Dd", 5],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "iodine-heptafluoride.xyz",
+        "name": "Iodine heptafluoride",
+        "chemical_formula": "IF<sub>7</sub>",
+        "point_group": ["Dh", 5],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "F",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "iron-phthalocyanine.xyz",
+        "name": "Iron phthalocyanine",
+        "chemical_formula": "Fe(C<sub>8</sub>H<sub>4</sub>N<sub>2</sub>)<sub>4</sub>",
+        "point_group": ["Dh", 4],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "iron-porphyrin.xyz",
+        "name": "Iron porphyrin",
+        "chemical_formula": "C<sub>20</sub>H<sub>14</sub>FeN<sub>4</sub>",
+        "point_group": ["Dh", 4],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "methane.xyz",
+        "name": "Methane",
+        "chemical_formula": "CH<sub>4</sub>",
+        "point_group": ["Td"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "H",
+                    "orbital": "1s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "neopentane.xyz",
+        "name": "Neopentane",
+        "chemical_formula": "C<sub>5</sub>H<sub>12</sub>",
+        "point_group": ["Td"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "octamethylsilsesquioxane.xyz",
+        "name": "Octamethylsilsesquioxane",
+        "chemical_formula": "C<sub>8</sub>H<sub>24</sub>O<sub>12</sub>Si<sub>8</sub>",
+        "point_group": ["Oh"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "O",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "Si",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "oxalic-acid.xyz",
+        "name": "Oxalic acid",
+        "chemical_formula": "C<sub>2</sub>H<sub>2</sub>O<sub>4</sub>",
+        "point_group": ["Ch", 2],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                },
+                {
+                    "element": "O",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "O",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "pentaprismane.xyz",
+        "name": "Pentaprismane",
+        "chemical_formula": "C<sub>10</sub>H<sub>10</sub>",
+        "point_group": ["Dh", 5],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "sulfur-hexafluoride.xyz",
+        "name": "Sulfur hexafluoride",
+        "chemical_formula": "SF<sub>6</sub>",
+        "point_group": ["Oh"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "F",
+                    "orbital": "2s"
+                }
+            ]
+        }
+    },
+    {
+        "path": "tetrairidium-dodecacarbonyl.xyz",
+        "name": "Tetrairidium dodecacarbonyl",
+        "chemical_formula": "Ir<sub>4</sub>(CO)<sub>12</sub>",
+        "point_group": ["Td"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "tetraphenylmethane.xyz",
+        "name": "Tetraphenylmethane",
+        "chemical_formula": "C<sub>25</sub>H<sub>20</sub>",
+        "point_group": ["S", 4],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "triphenylene.xyz",
+        "name": "Triphenylene",
+        "chemical_formula": "C<sub>18</sub>H<sub>12</sub>",
+        "point_group": ["Dh", 3],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "uranocene.xyz",
+        "name": "Uranocene",
+        "chemical_formula": "U(C<sub>8</sub>H<sub>8</sub>)<sub>2</sub>",
+        "point_group": ["Dh", 8],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    },
+    {
+        "path": "water.xyz",
+        "name": "Water",
+        "chemical_formula": "H<sub>2</sub>O",
+        "point_group": ["Cv", 2],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "xenon-tetrafluoride.xyz",
+        "name": "Xenon tetrafluoride",
+        "chemical_formula": "XeF<sub>4</sub>",
+        "point_group": ["Dh", 4],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "F",
+                    "orbital": "2s"
+                },
+                {
+                    "element": "F",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    }
+]

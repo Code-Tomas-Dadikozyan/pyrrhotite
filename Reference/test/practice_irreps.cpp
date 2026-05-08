@@ -1,0 +1,64 @@
+/**
+ * Schoenflies
+ * Copyright (c) 2022 Luuk Kempen
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include <memory>
+#include <string>
+#include <vector>
+#include <boost/test/unit_test.hpp>
+#include "../src/library/library.h"
+#include "../src/library/library_item.h"
+#include "../src/practice/practice_irreps.h"
+#include "../src/practice/practice_structure.h"
+#include "../src/symmetry/symmetry.h"
+#include "../src/basis_set.h"
+#include "../src/structure.h"
+#include "utils.h"
+
+BOOST_AUTO_TEST_SUITE(practice_irreps);
+
+BOOST_AUTO_TEST_CASE(benzene) {
+    std::string file = resolve_path("test/files/test_library_practice.json");
+    Library library(false);
+    library.add_items_from_package(file);
+    LibraryItem item = library.get_items()[0];
+
+    auto struc = std::make_shared<Structure>(item.get_path());
+    struc->set_library_item(std::make_shared<LibraryItem>(item));
+    auto symmetry = std::make_shared<Symmetry>(struc);
+    auto practice_structure = std::make_shared<PracticeStructure>(symmetry, false);
+    PracticeIrreps irreps(practice_structure);
+
+    BOOST_TEST(practice_structure->get_basis_set()->get_element().symbol == "C");
+    BOOST_TEST(practice_structure->get_basis_set()->get_orbital_label().get_principal() == 2);
+    BOOST_TEST(practice_structure->get_basis_set()->get_orbital_label().get_azimuthal() == 1);
+    BOOST_TEST(practice_structure->get_basis_set()->get_orbital_label().get_magnetic() == 0);
+
+    auto calculated_characters = irreps.get_correct_characters();
+    std::vector<double> correct_characters = {0, 0, 0, -6, 0, 0, 0, 0, -6, 6, 0};
+    for (unsigned int i = 0; i < correct_characters.size(); ++i) {
+        BOOST_TEST(calculated_characters[i].second == correct_characters[i], boost::test_tools::tolerance(1e-8));
+    }
+
+    auto calculated_irreps = irreps.get_correct_irreps();
+    std::vector<double> correct_irreps = {0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1};
+    for (unsigned int i = 0; i < correct_irreps.size(); ++i) {
+        BOOST_TEST(calculated_irreps[i].second == correct_irreps[i], boost::test_tools::tolerance(1e-8));
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END();

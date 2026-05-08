@@ -1,0 +1,25 @@
+[
+    {
+        "path": "benzene.xyz",
+        "name": "Benzene",
+        "chemical_formula": "C<sub>6</sub>H<sub>6</sub>",
+        "point_group": ["Dh", 6],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            },
+            "irreps": {
+                "enabled": true
+            },
+            "projection": {
+                "enabled": true
+            },
+            "basis_sets": [
+                {
+                    "element": "C",
+                    "orbital": "2pz"
+                }
+            ]
+        }
+    }
+]

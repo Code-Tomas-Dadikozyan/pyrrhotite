@@ -1,0 +1,46 @@
+[
+    {
+        "path": "benzene.xyz",
+        "name": "Benzene",
+        "chemical_formula": "C<sub>6</sub>H<sub>6</sub>",
+        "point_group": ["Dh", 6],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "cubane.xyz",
+        "name": "Cubane",
+        "chemical_formula": "C<sub>8</sub>H<sub>8</sub>",
+        "point_group": ["Oh"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "methane.xyz",
+        "name": "Methane",
+        "chemical_formula": "CH<sub>4</sub>",
+        "point_group": ["Td"],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    },
+    {
+        "path": "water.xyz",
+        "name": "Water",
+        "chemical_formula": "H<sub>2</sub>O",
+        "point_group": ["Cv", 2],
+        "practice_config": {
+            "flowchart": {
+                "enabled": true
+            }
+        }
+    }
+]
