@@ -9,14 +9,22 @@ as closely as possible.
 ## Repository Structure
 ```
 schoenflies_python/
-├── reference/        ← READ ONLY. Original C++ source. Never modify.
-├── version1/         ← READ ONLY. Archived earlier attempt. Never modify.
+│
+├── .claude/
+│   ├── .claudeignore       ← Claude config. Do not modify.
+│   └── CLAUDE.md           ← This file.
+│
+├── .vscode/                ← Editor settings. Ignore.
+├── reference/              ← READ ONLY. Original C++ source. Never modify.
 ├── schoenflies/      ← Primary working directory. All new code goes here.
 ├── tests/            ← Test files. You may create and run these.
-├── CLAUDE.md         ← This file.
-├── CHANGELOG.md      ← Update when meaningful changes are made.
-├── pyproject.toml    ← Do not modify unless explicitly instructed.
-└── .gitignore        ← Do not modify.
+├── version1/               ← READ ONLY. Archived earlier attempt. Never modify.
+│
+├── .gitignore              ← Do not modify.
+├── CHANGELOG.md            ← Update when meaningful changes are made.
+├── LICENSE                 ← Do not modify.
+├── pyproject.toml          ← Do not modify unless explicitly instructed.
+└── README.md               ← Do not modify unless explicitly instructed.
 ```
 
 ## Permissions
