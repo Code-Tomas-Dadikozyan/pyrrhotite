@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(if \\(-not $?\\) { \"Directory is empty or does not exist\" })"
+      "PowerShell(if \\(-not $?\\) { \"Directory is empty or does not exist\" })",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\20231118\\\\schoenflies_python\\\\reference\\\\src\\\\\" -Recurse -File | Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\20231118\\\\schoenflies_python\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(ConvertTo-Csv -NoTypeInformation)",
+      "Bash(Write-Output)",
+      "Bash(grep -E \"\\\\.\\(h|cpp\\)$\")",
+      "Bash(python -m pytest tests/test_structure.py -v)",
+      "Bash(pip install *)"
     ]
   }
 }

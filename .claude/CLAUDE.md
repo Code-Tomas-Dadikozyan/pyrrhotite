@@ -18,7 +18,6 @@ schoenflies_python/
 ├── reference/              ← READ ONLY. Original C++ source. Never modify.
 ├── schoenflies/      ← Primary working directory. All new code goes here.
 ├── tests/            ← Test files. You may create and run these.
-├── version1/               ← READ ONLY. Archived earlier attempt. Never modify.
 │
 ├── .gitignore              ← Do not modify.
 ├── CHANGELOG.md            ← Update when meaningful changes are made.
@@ -36,7 +35,7 @@ schoenflies_python/
 - Install packages explicitly listed under dependencies in `pyproject.toml`
 
 ### You MAY NOT
-- Modify anything inside `reference/` or `version1/`
+- Modify anything inside `reference/`
 - Modify `pyproject.toml`, `.gitignore`, or `.claudeignore` unless explicitly asked
 - Install packages not listed in `pyproject.toml` without asking first
 - Refactor working, tested code unless explicitly instructed
