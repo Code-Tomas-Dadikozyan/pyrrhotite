@@ -8,10 +8,10 @@ class OperationLabelCount:
 
     COUNT_INF: int = 0  # sentinel for infinite multiplicity (C∞v, D∞h)
 
-    def __init__(self, label: OperationLabel, count: int = 1) -> None:
-        """Construct an OperationLabelCount with a label and optional count (default 1)."""
-        self._label = label
+    def __init__(self, count: int, label: OperationLabel) -> None:
+        """Construct an OperationLabelCount with a count and label."""
         self._count = count
+        self._label = label
 
     # ------------------------------------------------------------------
     # Factory classmethods mirroring C++ overloaded constructors
@@ -20,12 +20,12 @@ class OperationLabelCount:
     @classmethod
     def from_label(cls, label: OperationLabel) -> OperationLabelCount:
         """Create an OperationLabelCount with count=1."""
-        return cls(label, count=1)
+        return cls(1, label)
 
     @classmethod
     def from_count_and_label(cls, count: int, label: OperationLabel) -> OperationLabelCount:
         """Create an OperationLabelCount with explicit count."""
-        return cls(label, count=count)
+        return cls(count, label)
 
     # ------------------------------------------------------------------
     # Getters

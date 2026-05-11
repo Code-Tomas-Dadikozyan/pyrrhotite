@@ -2,5 +2,6 @@
 
 from .structure import Structure
 from .rotor_class import RotorClass
+from .symmetry import Symmetry
 
-__all__ = ["Structure", "RotorClass"]
+__all__ = ["Structure", "RotorClass", "Symmetry"]

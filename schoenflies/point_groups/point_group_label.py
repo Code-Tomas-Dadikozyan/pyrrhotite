@@ -250,3 +250,7 @@ class PointGroupLabel:
         if class_string not in mapping:
             raise RuntimeError("Invalid class encountered: " + class_string)
         return mapping[class_string]
+
+
+# Module-level alias used by operation_manager and other importers
+PGClass = PointGroupLabel.Class
