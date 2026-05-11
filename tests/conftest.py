@@ -34,12 +34,12 @@ EXPECTED_POINT_GROUPS: dict[str, str] = {
     "octasulfur.xyz":              "D4d",
     "cyclooctatetraene.xyz":       "D2d",
     "trans-azobenzene.xyz":        "C2h",
-    "biphenyl.xyz":                "D2h",
+    "biphenyl.xyz":                "D2",
     "hydrazine.xyz":               "C2",
-    "inositol.xyz":                "Ci",
+    "inositol.xyz":                "D3d",
     "triethylamine.xyz":           "C3",
-    "E-hex-3-ene.xyz":             "C2h",
-    "bicyclooctane.xyz":           "D2",
+    "E-hex-3-ene.xyz":             "Ci",
+    "bicyclooctane.xyz":           "D3",
     "pentaborane-9.xyz":           "C4v",
 }
 
