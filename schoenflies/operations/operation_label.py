@@ -47,7 +47,23 @@ class OperationLabel:
         plane: OperationLabel.Plane | None = None,
         prime: OperationLabel.Prime | None = None,
     ) -> None:
-        """Construct an OperationLabel with optional degree, multiple, plane, and prime."""
+        """Construct an OperationLabel with optional degree, multiple, plane, and prime.
+
+        Mirrors C++ overloaded constructors: if a Plane is passed as the second
+        positional argument (degree position), it is re-routed to plane.  If a
+        Prime is passed as the third positional argument (multiple position), it
+        is re-routed to prime.  This allows point_groups.py to use the same
+        compact call style as the C++ source (e.g. O(E.sigma, OPlane.h)).
+        """
+        # re-route positional Plane → plane kwarg (mirrors C++ overload resolution)
+        if isinstance(degree, OperationLabel.Plane):
+            plane = degree
+            degree = 0
+        # re-route positional Prime → prime kwarg
+        if isinstance(multiple, OperationLabel.Prime):
+            prime = multiple
+            multiple = 1
+
         self._element = element
         self._degree = degree
         self._multiple = multiple

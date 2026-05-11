@@ -120,3 +120,47 @@ class PointGroup:
             num_remaining -= num_required
 
         return num_remaining
+
+    # ------------------------------------------------------------------
+    # Display
+    # ------------------------------------------------------------------
+
+    def print_character_table(self) -> None:
+        """Print the character table to stdout in a human-readable grid format."""
+        import sys
+
+        def _safe(text: str) -> str:
+            """Replace characters that cannot be encoded in the terminal's codec."""
+            try:
+                text.encode(sys.stdout.encoding or "utf-8")
+                return text
+            except (UnicodeEncodeError, LookupError):
+                return (text
+                        .replace("σ", "s").replace("∞", "inf")
+                        .replace("′", "'").replace("″", "''")
+                        .replace("−", "-"))
+
+        name = _safe(self._label.get_name())
+        col_headers = [_safe(olc.get_short_name()) for olc in self._unique_operations]
+        row_headers = [_safe(ir.get_name()) for ir in self._irreps]
+
+        # column widths
+        col_w = [max(len(h), 6) for h in col_headers]
+        row_w = max((len(r) for r in row_headers), default=4)
+
+        # format a character value: show as int when possible
+        def fmt(v: float) -> str:
+            return str(int(v)) if v == int(v) else f"{v:.4f}".rstrip("0")
+
+        header = f"{name:{row_w}} | " + " | ".join(
+            f"{h:>{w}}" for h, w in zip(col_headers, col_w)
+        )
+        separator = "-" * len(header)
+
+        print(header)
+        print(separator)
+        for row_label, char_row in zip(row_headers, self._characters):
+            values = " | ".join(
+                f"{fmt(v):>{w}}" for v, w in zip(char_row, col_w)
+            )
+            print(f"{row_label:{row_w}} | {values}")

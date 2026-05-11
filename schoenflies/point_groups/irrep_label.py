@@ -46,7 +46,24 @@ class IrrepLabel:
         parity: IrrepLabel.Parity | None = None,
         prime: IrrepLabel.Prime | None = None,
     ) -> None:
-        """Construct an IrrepLabel with optional subscript, parity, and prime."""
+        """Construct an IrrepLabel with optional subscript, parity, and prime.
+
+        Mirrors C++ overloaded constructors: if a Parity is passed as the second
+        positional argument (subscript position), it is re-routed to parity.
+        If a Prime is passed in the subscript or parity position, it is re-routed
+        to prime.  This allows point_groups.py to use compact positional calls
+        matching the C++ source style.
+        """
+        if isinstance(subscript, IrrepLabel.Parity):
+            parity = subscript
+            subscript = 0
+        elif isinstance(subscript, IrrepLabel.Prime):
+            prime = subscript
+            subscript = 0
+        if isinstance(parity, IrrepLabel.Prime):
+            prime = parity
+            parity = None
+
         self._mulliken = mulliken
         self._subscript = subscript
         self._parity = parity if parity is not None else IrrepLabel.Parity.none
