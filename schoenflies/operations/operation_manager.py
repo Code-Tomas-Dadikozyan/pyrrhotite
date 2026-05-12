@@ -177,6 +177,97 @@ class OperationManager:
         operation_group.set_infinite_multiplicity(True)
         self._point_group_operations_order.append(operation_group)
 
+    # ------------------------------------------------------------------
+    # Structured output
+    # ------------------------------------------------------------------
+
+    def summarize(self) -> dict[str, list[Operation]]:
+        """Return point-group operations grouped by symmetry element type.
+
+        Keys are the standard symbols: "Cn", "Sn", "i", "σ".
+        Only keys with at least one operation are included.
+        Call after generate_point_group_operations().
+        """
+        E = OperationLabel.Element
+        buckets: dict[str, list[Operation]] = {"Cn": [], "Sn": [], "i": [], "σ": []}
+        for op in self._point_group_operations.values():
+            elem = op.get_label().get_element()
+            if elem == E.ProperRotation:
+                buckets["Cn"].append(op)
+            elif elem == E.ImproperRotation:
+                buckets["Sn"].append(op)
+            elif elem == E.Inversion:
+                buckets["i"].append(op)
+            elif elem == E.Reflection:
+                buckets["σ"].append(op)
+        return {k: v for k, v in buckets.items() if v}
+
+    def print_operations(self) -> None:
+        """Print all point-group operations with geometric annotation.
+
+        For each operation shows:
+          - Its short name (e.g. C3, σv, C2′)
+          - Axis direction for rotations, plane normal for reflections
+          - How many atoms lie on the axis / in the plane
+          - [molecular plane] tag when a reflection contains every atom
+
+        Call after generate_point_group_operations().
+        """
+        import sys
+
+        def _safe(text: str) -> str:
+            try:
+                text.encode(sys.stdout.encoding or "utf-8")
+                return text
+            except (UnicodeEncodeError, LookupError):
+                return (text
+                        .replace("σ", "s").replace("∞", "inf")
+                        .replace("′", "'").replace("″", "''")
+                        .replace("−", "-"))
+
+        def _fmt_vec(v: object) -> str:
+            return f"({v[0]:+.3f}, {v[1]:+.3f}, {v[2]:+.3f})"
+
+        E = OperationLabel.Element
+        n = self._structure.num_atoms
+        name_w = 10  # column width for operation name
+
+        print(_safe(f"{'Operation':<{name_w}}  {'Axis / Normal':<26}  Notes"))
+        print("─" * 70)
+
+        for group in self._point_group_operations_order:
+            if group.get_infinite_multiplicity():
+                label = group._operation_label
+                print(_safe(f"{label.get_short_name() + ' (∞)':<{name_w}}  {'':26}"))
+                continue
+
+            for op_id in group.get_operation_ids():
+                if op_id not in self._point_group_operations:
+                    continue
+                op = self._point_group_operations[op_id]
+                elem = op.get_label().get_element()
+                short = _safe(op.get_label().get_short_name())
+                notes_parts: list[str] = []
+
+                if elem == E.Inversion:
+                    axis_str = "—"
+                elif elem in (E.ProperRotation, E.ImproperRotation):
+                    axis_str = _fmt_vec(op.get_axis())
+                    on_axis = op.get_atoms_on_axis(self._structure)
+                    if on_axis:
+                        notes_parts.append(f"{len(on_axis)}/{n} atoms on axis")
+                elif elem == E.Reflection:
+                    axis_str = f"n={_fmt_vec(op.get_axis())}"
+                    in_plane = op.get_atoms_in_plane(self._structure)
+                    notes_parts.append(f"{len(in_plane)}/{n} atoms in plane")
+                    if op.is_molecular_plane(self._structure):
+                        notes_parts.append("[molecular plane]")
+                else:
+                    axis_str = ""
+
+                notes = "  ".join(notes_parts)
+                print(_safe(f"{short:<{name_w}}  {axis_str:<26}  {notes}"))
+
     def _copy_operation(self, operation: Operation) -> Operation:
         """Return a deep copy of operation with a fresh ID."""
         op_copy = copy.deepcopy(operation)

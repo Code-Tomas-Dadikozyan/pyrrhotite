@@ -251,3 +251,43 @@ class Operation:
     def calculate_fractional_matrix(self, f: float) -> np.ndarray:
         """Return the transformation matrix at animation fraction f ∈ [0, 1]."""
         return self._calculate_matrix(f)
+
+    # ------------------------------------------------------------------
+    # Geometric atom queries
+    # ------------------------------------------------------------------
+
+    def get_atoms_on_axis(self, structure: Structure, threshold: float = 0.3) -> list[int]:
+        """Return indices of atoms within threshold Å of the rotation axis.
+
+        Uses perpendicular distance (vector rejection from the axis direction).
+        Only meaningful for ProperRotation and ImproperRotation operations.
+        """
+        result = []
+        for i, coord in enumerate(structure.coordinates):
+            proj = np.dot(coord, self.axis)
+            perp_dist = float(np.linalg.norm(coord - proj * self.axis))
+            if perp_dist < threshold:
+                result.append(i)
+        return result
+
+    def get_atoms_in_plane(self, structure: Structure, threshold: float = 0.3) -> list[int]:
+        """Return indices of atoms within threshold Å of the mirror plane.
+
+        Uses the signed distance |r · n| where n is the plane normal (self.axis).
+        Only meaningful for Reflection operations.
+        """
+        result = []
+        for i, coord in enumerate(structure.coordinates):
+            dist = abs(float(np.dot(coord, self.axis)))
+            if dist < threshold:
+                result.append(i)
+        return result
+
+    def is_molecular_plane(self, structure: Structure, threshold: float = 0.3) -> bool:
+        """Return True if every atom in structure lies within threshold Å of this plane.
+
+        A True result means this mirror plane is (or contains) the molecular plane —
+        relevant for planar molecules where σh coincides with the molecular plane.
+        Only meaningful for Reflection operations.
+        """
+        return len(self.get_atoms_in_plane(structure, threshold)) == structure.num_atoms

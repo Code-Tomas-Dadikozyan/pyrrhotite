@@ -113,3 +113,16 @@ class Structure:
         if self.description:
             return f"{self.description} – {self.filename}"
         return self.filename
+
+    def print_atom_list(self) -> None:
+        """Print a numbered atom index table: index, element symbol, and coordinates.
+
+        Use this alongside get_atoms_on_axis() / get_atoms_in_plane() results
+        to identify which atoms correspond to returned indices.
+        """
+        print(f"{'#':>4}  {'El':>2}  {'x (Å)':>10}  {'y (Å)':>10}  {'z (Å)':>10}")
+        print("─" * 46)
+        for i in range(self.num_atoms):
+            sym = get_element(int(self.atomic_numbers[i])).symbol
+            x, y, z = self.coordinates[i]
+            print(f"{i:>4}  {sym:>2}  {x:>10.4f}  {y:>10.4f}  {z:>10.4f}")

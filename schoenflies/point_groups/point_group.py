@@ -1,8 +1,43 @@
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 from ..operations.operation_label import OperationLabel
+
+# ---------------------------------------------------------------------------
+# Symbolic display for irrational character-table values
+# ---------------------------------------------------------------------------
+# Each entry: (positive float value, symbol string).
+# Covers every 2cos(nπ/m) constant that appears in the hardcoded point groups.
+# Matching is tried for both x and -x; negatives get a leading "−".
+_SYMBOL_TABLE: list[tuple[float, str]] = [
+    (2.0 * math.cos(math.pi / 4),   "√2"),           # ≈ 1.4142  (C4, D4h, …)
+    (2.0 * math.cos(math.pi / 5),   "φ"),             # ≈ 1.6180  golden ratio (Ih)
+    (2.0 * math.cos(2 * math.pi / 5), "φ−1"),         # ≈ 0.6180  (Ih, C5v, …)
+    (2.0 * math.cos(math.pi / 6),   "√3"),            # ≈ 1.7321  (C6, D6h, …)
+    (2.0 * math.cos(math.pi / 7),   "2cos(π/7)"),     # ≈ 1.8019  (C7, D7, …)
+    (2.0 * math.cos(2 * math.pi / 7), "2cos(2π/7)"),  # ≈ 1.2470
+    (2.0 * math.cos(3 * math.pi / 7), "2cos(3π/7)"),  # ≈ 0.4450
+    (2.0 * math.cos(math.pi / 8),   "2cos(π/8)"),     # ≈ 1.8478  (C8, S8, …)
+    (2.0 * math.cos(3 * math.pi / 8), "2cos(3π/8)"),  # ≈ 0.7654
+    (2.0 * math.cos(math.pi / 9),   "2cos(π/9)"),     # ≈ 1.8794  (C9, …)
+    (2.0 * math.cos(2 * math.pi / 9), "2cos(2π/9)"),  # ≈ 1.5321
+    (2.0 * math.cos(4 * math.pi / 9), "2cos(4π/9)"),  # ≈ 0.3473
+    (2.0 * math.cos(math.pi / 10),  "2cos(π/10)"),    # ≈ 1.9021  (C10, …)
+    (2.0 * math.cos(3 * math.pi / 10), "2cos(3π/10)"),# ≈ 1.1756
+]
+_SYMBOL_TOL = 1e-4
+
+
+def _float_to_symbol(v: float) -> str | None:
+    """Return a symbolic string for v if it matches a known irrational constant, else None."""
+    for val, sym in _SYMBOL_TABLE:
+        if abs(v - val) < _SYMBOL_TOL:
+            return sym
+        if abs(v + val) < _SYMBOL_TOL:
+            return "−" + sym
+    return None
 from ..operations.operation_label_count import OperationLabelCount
 from .irrep_label import IrrepLabel
 from .point_group_label import PointGroupLabel
@@ -144,13 +179,22 @@ class PointGroup:
         col_headers = [_safe(olc.get_short_name()) for olc in self._unique_operations]
         row_headers = [_safe(ir.get_name()) for ir in self._irreps]
 
-        # column widths
-        col_w = [max(len(h), 6) for h in col_headers]
         row_w = max((len(r) for r in row_headers), default=4)
 
-        # format a character value: show as int when possible
+        # format a character value: symbolic > integer > decimal
         def fmt(v: float) -> str:
+            sym = _float_to_symbol(v)
+            if sym is not None:
+                return sym
             return str(int(v)) if v == int(v) else f"{v:.4f}".rstrip("0")
+
+        # column widths: at least as wide as the header, 6, or the widest formatted value
+        def _col_width(h: str, char_col: list[float]) -> int:
+            max_val_w = max((len(fmt(v)) for v in char_col), default=1)
+            return max(len(h), 6, max_val_w)
+
+        col_w = [_col_width(h, [row[j] for row in self._characters])
+                 for j, h in enumerate(col_headers)]
 
         header = f"{name:{row_w}} | " + " | ".join(
             f"{h:>{w}}" for h, w in zip(col_headers, col_w)
