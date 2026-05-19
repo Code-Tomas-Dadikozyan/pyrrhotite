@@ -1,3 +1,39 @@
+"""
+Hardcoded character tables for all standard Schoenflies point groups.
+
+Why hardcoded rather than generated?
+-------------------------------------
+For low-order groups (roughly n ≤ 10), hardcoding the character tables is
+more reliable than generating them analytically:
+- Polyhedral groups (T, Td, Th, O, Oh, I, Ih) and special groups (Cs, Ci,
+  C1) have irregular structures that do not fit the axial generator formulas.
+- For high-order axial groups not listed here, the character_table_generator
+  module produces tables analytically on demand.
+
+How to read this file
+---------------------
+Each entry is a PointGroup() constructor call.  The positional arguments are:
+  1. label          — PointGroupLabel(class, order), e.g. Label(Class.C2v, 2)
+  2. order          — total number of symmetry operations in the group
+  3. num_inversions — 0 or 1 (1 if the group has an inversion centre)
+  4. num_proper_rotations   — dict {degree: count}, e.g. {2: 1} for one C2
+  5. num_improper_rotations — dict {degree: count}
+  6. num_reflections        — integer count of σ planes
+  7. unique_operations      — list[OperationLabelCount] giving the character
+                              table column headers (E is implicit / not listed)
+  8. irreps          — list[IrrepLabel] giving the row labels
+  9. characters      — list[list[float]], outer index = irrep, inner = column
+                       (first inner element is always χ(E) = dimension)
+
+Trigonometric constants
+-----------------------
+The constants TCaP b = 2 cos(a·π / b) appear as irrational character values
+in groups with 5-, 7-, 8-, 9-, and 10-fold axes.  Storing them as named
+constants (rather than inline floats) keeps the character table entries
+exact and readable.  For example, TC1P5 ≈ 1.6180 is the golden ratio φ,
+which appears in the character tables of icosahedral groups.
+"""
+
 from __future__ import annotations
 
 import math
@@ -17,12 +53,13 @@ from .point_group import PointGroup
 
 # ---------------------------------------------------------------------------
 # Trigonometric constants  (C++ header: point_groups.h)
-# TC<numerator>P<denominator>  =  2 * cos(numerator * π / denominator)
+# Naming: TC<a>P<b>  =  2 * cos(a * π / b)
+# These values appear as exact character values for axes of order 5, 7, 8, 9, 10.
 # ---------------------------------------------------------------------------
-TC1P4  = 2.0 * math.cos(1.0 * math.pi / 4.0)   # ≈  1.4142
-TC1P5  = 2.0 * math.cos(1.0 * math.pi / 5.0)   # ≈  1.6180
-TC2P5  = 2.0 * math.cos(2.0 * math.pi / 5.0)   # ≈  0.6180
-TC1P6  = 2.0 * math.cos(1.0 * math.pi / 6.0)   # ≈  1.7321
+TC1P4  = 2.0 * math.cos(1.0 * math.pi / 4.0)   # ≈  1.4142  (√2)
+TC1P5  = 2.0 * math.cos(1.0 * math.pi / 5.0)   # ≈  1.6180  (golden ratio φ)
+TC2P5  = 2.0 * math.cos(2.0 * math.pi / 5.0)   # ≈  0.6180  (φ − 1)
+TC1P6  = 2.0 * math.cos(1.0 * math.pi / 6.0)   # ≈  1.7321  (√3)
 TC1P7  = 2.0 * math.cos(1.0 * math.pi / 7.0)   # ≈  1.8019
 TC2P7  = 2.0 * math.cos(2.0 * math.pi / 7.0)   # ≈  1.2470
 TC3P7  = 2.0 * math.cos(3.0 * math.pi / 7.0)   # ≈  0.4450
@@ -34,19 +71,22 @@ TC4P9  = 2.0 * math.cos(4.0 * math.pi / 9.0)   # ≈  0.3473
 TC1P10 = 2.0 * math.cos(1.0 * math.pi / 10.0)  # ≈  1.9021
 TC3P10 = 2.0 * math.cos(3.0 * math.pi / 10.0)  # ≈  1.1756
 
-# Sentinel values used where n → ∞  (e.g. C∞v, D∞h)
+# Sentinel values used where n → ∞  (e.g. C∞v, D∞h).
+# The integer 0 is used as a stand-in for infinity in axis degree and count.
 DEGREE_INF = 0
 COUNT_INF  = 0
 
 # ---------------------------------------------------------------------------
 # Short aliases  (mirror the C++ typedefs in point_groups.h)
+# These single-letter aliases keep the PointGroup() calls below compact and
+# readable.  Compare with the C++ source, which uses identical short names.
 # ---------------------------------------------------------------------------
 Label   = PointGroupLabel
 Class   = PGClass
-O       = OperationLabel
+O       = OperationLabel     # O for Operation-label
 E       = Element
 OPlane  = Plane
-I       = IrrepLabel
+I       = IrrepLabel         # I for Irrep-label
 M       = Mulliken
 IParity = IrrepParity
 IPrime  = IrrepPrime
@@ -63,13 +103,14 @@ IPrime  = IrrepPrime
 #
 # unique_operations uses OperationLabelCount(count, OperationLabel(...)).
 # The identity E column is always first in the character table but is NOT
-# listed in unique_operations (it is implicit, as in the C++ source).
+# listed in unique_operations — it is implicit (χ(E) = dimension of irrep).
 # ---------------------------------------------------------------------------
 
 POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Nonaxial symmetries  (3 groups)
+    # No rotation axes (or only trivial identity); the simplest groups.
     # -----------------------------------------------------------------------
 
     # C1 ─ trivial group, only the identity
@@ -100,6 +141,7 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Cyclic groups  Cn  (9 groups: C2 … C10)
+    # Only a Cn rotation axis; no mirrors, no inversion.  Always chiral.
     # -----------------------------------------------------------------------
 
     # C2
@@ -217,6 +259,8 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Reflection / horizontal groups  Cnh  (9 groups: C2h … C10h)
+    # Cn axis + σh.  Even n → inversion centre (g/u irreps).
+    # Odd n → no inversion (′/″ irreps).
     # -----------------------------------------------------------------------
 
     # C2h
@@ -425,6 +469,8 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Pyramidal groups  Cnv  (9 groups: C2v … C10v)
+    # Cn axis + n vertical mirrors σv.  Examples: C2v = water, C3v = ammonia.
+    # Even n → σv and σd planes; odd n → all σv equivalent.
     # -----------------------------------------------------------------------
 
     # C2v
@@ -573,6 +619,7 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Improper rotation groups  Sn  (4 groups: S4, S6, S8, S10)
+    # Only an Sn axis; no independent σ or Cn.  S6 and S10 have inversion.
     # -----------------------------------------------------------------------
 
     # S4
@@ -635,6 +682,8 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Dihedral groups  Dn  (9 groups: D2 … D10)
+    # Cn axis + n horizontal C2 axes; no mirrors.  Chiral.
+    # Even n → two sets of C2′/C2″; odd n → one set of n C2′.
     # -----------------------------------------------------------------------
 
     # D2
@@ -782,6 +831,8 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Prismatic groups  Dnh  (9 groups: D2h … D10h)
+    # Dn + σh; the "prism" groups.  Even n → inversion + g/u; odd n → ′/″.
+    # Examples: D2h = ethylene, D3h = BF3, D6h = benzene.
     # -----------------------------------------------------------------------
 
     # D2h
@@ -1058,6 +1109,8 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Antiprismatic groups  Dnd  (9 groups: D2d … D10d)
+    # Dn + dihedral mirrors σd (+ S_{2n} axis).  Examples: D2d = allene,
+    # D3d = staggered ethane.  Odd n → inversion centre.
     # -----------------------------------------------------------------------
 
     # D2d
@@ -1281,6 +1334,11 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Polyhedral groups  (7 groups: T, Td, Th, O, Oh, I, Ih)
+    # No single principal axis; symmetry based on the Platonic solid geometry.
+    # These cannot be generated by the axial formula, so they are hardcoded.
+    # T/Td/Th → tetrahedral (methane, neopentane).
+    # O/Oh    → octahedral  (SF6, [PtCl6]^2-).
+    # I/Ih    → icosahedral (C60 fullerene).
     # -----------------------------------------------------------------------
 
     # T ─ chiral tetrahedral symmetry
@@ -1415,6 +1473,9 @@ POINT_GROUPS: list[PointGroup] = [
 
     # -----------------------------------------------------------------------
     # Linear groups  (2 groups: C∞v, D∞h)
+    # Infinite-order rotation axis C∞.  Handled specially: degree 0 = ∞.
+    # C∞v: linear, no inversion (e.g. HCN, CO).
+    # D∞h: linear, with inversion (e.g. CO2, H2, N2).
     # -----------------------------------------------------------------------
 
     # C∞v ─ linear with a mirror plane (no inversion)

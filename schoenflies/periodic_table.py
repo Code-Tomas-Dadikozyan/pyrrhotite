@@ -12,7 +12,26 @@ import numpy as np
 
 @dataclass(frozen=True)
 class Element:
-    """Represents a chemical element with display and physical properties."""
+    """Represents a chemical element with display and physical properties.
+
+    Fields
+    ------
+    symbol : str
+        Standard chemical symbol, e.g. "C" for carbon.
+    name : str
+        Full element name, e.g. "carbon".
+    radius : float
+        Covalent radius in Ångströms (1 Å = 1e-10 m).  Used to decide whether
+        two atoms are close enough to be considered bonded — see
+        Structure.calculate_bond_pairs().  Hydrogen is unusually small (0.25 Å);
+        most main-group elements sit near 0.4–0.8 Å; metals are ~1.2 Å.
+    mass : float
+        Atomic mass in unified atomic mass units (u ≈ 1.66054e-27 kg).
+        Used to compute the centre of mass when centring the molecule.
+    colour : tuple[float, float, float]
+        RGB display colour in the range [0, 1].  Follows the CPK colouring
+        convention (white for H, grey for C, red for O, blue for N, etc.).
+    """
 
     symbol: str
     name: str
@@ -22,6 +41,9 @@ class Element:
 
 
 # fmt: off
+# Maps element symbols to their atomic numbers (position in the periodic table).
+# This lets the XYZ parser convert a text symbol like "Fe" into an integer key
+# that can index into ATOMIC_NUMBER_TO_ELEMENT below.
 SYMBOL_TO_ATOMIC_NUMBER: dict[str, int] = {
     "H": 1,   "He": 2,  "Li": 3,  "Be": 4,  "B": 5,   "C": 6,   "N": 7,   "O": 8,
     "F": 9,   "Ne": 10, "Na": 11, "Mg": 12, "Al": 13, "Si": 14, "P": 15,  "S": 16,
@@ -40,6 +62,10 @@ SYMBOL_TO_ATOMIC_NUMBER: dict[str, int] = {
     "Nh": 113,"Fl": 114,"Mc": 115,"Lv": 116,"Ts": 117,"Og": 118,
 }
 
+# Maps atomic numbers to Element objects.  The radius and mass values here are
+# taken from the reference C++ implementation; radii approximate the covalent
+# radii compiled by Alvarez (2008).  Elements 104-118 use fallback radii (1.2 Å)
+# because experimental covalent radii are not well established for transactinides.
 ATOMIC_NUMBER_TO_ELEMENT: dict[int, Element] = {
     1  : Element("H" , "hydrogen"     , 0.25, 1.008   , (1        , 1        , 1        )),
     2  : Element("He", "helium"       , 0.4 , 4.002602, (0.8509804, 1        , 1        )),
@@ -164,7 +190,11 @@ ATOMIC_NUMBER_TO_ELEMENT: dict[int, Element] = {
 
 
 def get_atomic_number(symbol: str) -> int:
-    """Return the atomic number for the given element symbol."""
+    """Return the atomic number for the given element symbol.
+
+    Called by the XYZ file parser to convert symbol strings (e.g. "C", "Fe")
+    into integer keys used throughout the rest of the algorithm.
+    """
     if not symbol:
         raise ValueError("No element symbol supplied.")
     try:
@@ -174,7 +204,12 @@ def get_atomic_number(symbol: str) -> int:
 
 
 def get_element(atomic_number: int) -> Element:
-    """Return the Element record for the given atomic number."""
+    """Return the Element record for the given atomic number.
+
+    Used wherever the algorithm needs a physical property of an atom — its
+    covalent radius for bond detection or its mass for centre-of-mass
+    calculation.
+    """
     try:
         return ATOMIC_NUMBER_TO_ELEMENT[atomic_number]
     except KeyError:

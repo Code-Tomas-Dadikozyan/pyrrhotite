@@ -1,3 +1,36 @@
+"""
+OperationLabel: encodes a Schoenflies symmetry operation symbol.
+
+Schoenflies notation primer
+---------------------------
+Every symmetry operation is written as a symbol like C3^2, S4, σv, or i.
+The parts are:
+
+  Element  : the type of operation
+               C  — proper rotation (Cn rotates 360°/n)
+               S  — improper rotation (Sn = Cn followed by σ⊥)
+               σ  — reflection (mirror plane)
+               i  — inversion
+
+  Degree   : the subscript n in Cn / Sn (0 = infinite, e.g. C∞ for linear
+             molecules)
+
+  Multiple : the superscript k in Cn^k — the k-th power of the operation
+             (e.g. C3^2 is rotating by 240°)
+
+  Plane    : subscript on σ distinguishing plane orientation:
+               σh  — horizontal (perpendicular to the principal axis)
+               σv  — vertical (containing the principal axis)
+               σd  — dihedral (bisecting pairs of C2 axes)
+
+  Prime    : ′ or ″ appended to C2 labels in dihedral groups to distinguish
+             two sets of C2 axes that are geometrically inequivalent.
+             e.g. in D6h: C2′ axes pass through opposite vertices of the hexagon;
+                          C2″ axes pass through edge midpoints.
+
+This class stores all five fields and provides display/matching methods.
+"""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -9,35 +42,35 @@ class OperationLabel:
     DEGREE_INF: int = 0  # sentinel for infinite-order axes (C∞, S∞)
 
     class Element(Enum):
-        """Symmetry element type."""
-        ProperRotation = 0
-        Inversion = 1
-        ImproperRotation = 2
-        Reflection = 3
+        """Symmetry element type — the letter part of the Schoenflies symbol."""
+        ProperRotation = 0    # C: a pure rotation
+        Inversion = 1         # i: maps r → -r through the origin
+        ImproperRotation = 2  # S: rotation + perpendicular reflection
+        Reflection = 3        # σ: reflection through a plane
 
-        # aliases
+        # Short single-letter aliases matching the conventional symbols
         C = 0
         I = 1
         S = 2
         sigma = 3
 
     class Plane(Enum):
-        """Mirror-plane orientation."""
+        """Mirror-plane orientation — the subscript on σ."""
         none = 0
-        Horizontal = 1
-        Vertical = 2
-        Dihedral = 3
+        Horizontal = 1  # σh: perpendicular to the principal (highest-order) axis
+        Vertical = 2    # σv: contains the principal axis, vertical in standard orientation
+        Dihedral = 3    # σd: contains the principal axis AND bisects adjacent C2 axes
 
-        # aliases
+        # Short aliases
         h = 1
         v = 2
         d = 3
 
     class Prime(Enum):
-        """Prime modifier distinguishing similar operations."""
+        """Prime modifier — ′ or ″ — distinguishing two sets of equivalent C2 axes."""
         none = 0
-        Single = 1
-        Double = 2
+        Single = 1  # ′  (first set of C2 axes)
+        Double = 2  # ″  (second set of C2 axes)
 
     def __init__(
         self,
@@ -280,7 +313,13 @@ class OperationLabel:
     # ------------------------------------------------------------------
 
     def matches(self, other: OperationLabel) -> bool:
-        """Return True if labels match ignoring the multiple field."""
+        """Return True if labels match ignoring the multiple field.
+
+        Used when searching character tables for a matching operation class:
+        a C3 and a C3^2 have the same element/degree/plane/prime but different
+        multiples, yet they belong to the same conjugacy class in the group and
+        should map to the same column of the character table.
+        """
         return (
             self._element == other._element
             and self._degree == other._degree
@@ -289,7 +328,13 @@ class OperationLabel:
         )
 
     def matches_strict(self, other: OperationLabel) -> bool:
-        """Return True if labels match including abs(multiple)."""
+        """Return True if labels match including abs(multiple).
+
+        Used when distinguishing Cn^k from Cn^(n-k): the sign of multiple
+        does not matter (rotation clockwise vs anticlockwise by the same angle
+        is the same operation), but the magnitude does distinguish them when
+        we want an exact match.  Example: C4^1 ≠ C4^3 in strict mode.
+        """
         return self.matches(other) and (
             self._multiple == other._multiple or self._multiple == -other._multiple
         )

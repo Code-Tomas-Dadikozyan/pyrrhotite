@@ -1,3 +1,39 @@
+"""
+IrrepLabel: encodes a Mulliken irreducible representation symbol.
+
+Reading Mulliken symbols
+------------------------
+An irrep label like A1g, B2u, E′, or T2g encodes several pieces of
+information about how functions (orbitals, vibrations) transform:
+
+  Letter (Mulliken symbol) — the degeneracy:
+    A — singly degenerate, symmetric under the principal rotation Cn
+        (character +1 under Cn)
+    B — singly degenerate, antisymmetric under Cn
+        (character -1 under Cn)
+    E — doubly degenerate (2D irrep); the two basis functions are related
+        by the symmetry and cannot be separated
+    T — triply degenerate (3D); seen in cubic/octahedral groups
+    G — quadruply degenerate (4D); seen in icosahedral group Ih
+    H — quintuply degenerate (5D); seen in icosahedral group Ih
+
+  Subscript number (1 or 2, sometimes higher):
+    For A and B: 1 means symmetric under a C2 axis perpendicular to the
+    principal axis (or under σv), 2 means antisymmetric.
+    For E, T, …: just a sequential index when multiple of the same type exist.
+
+  Parity (g/u) — only in groups with an inversion centre:
+    g (gerade)   — symmetric under inversion: χ(i) = +dimension
+    u (ungerade) — antisymmetric:             χ(i) = -dimension
+
+  Prime modifier (′/″) — only in groups without inversion but with σh:
+    ′  — symmetric under σh: χ(σh) = +dimension
+    ″  — antisymmetric under σh: χ(σh) = -dimension
+
+Example: A1g in Oh (octahedral) is the totally symmetric, non-degenerate,
+gerade representation — the "breathing" mode of an octahedral molecule.
+"""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -7,15 +43,20 @@ class IrrepLabel:
     """Label for an irreducible representation using Mulliken notation."""
 
     class Mulliken(Enum):
-        """Mulliken symbol encoding the degeneracy of the representation."""
-        SingleSymmetric = 0
-        SingleAntisymmetric = 1
-        DoublyDegenerate = 2
-        TriplyDegenerate = 3
-        QuadruplyDegenerate = 4
-        QuintuplyDegenerate = 5
+        """Mulliken symbol encoding the degeneracy of the representation.
 
-        # aliases
+        The letter is the primary indicator of how many-dimensional the
+        irrep is and whether it is symmetric (A) or antisymmetric (B)
+        under the principal rotation axis.
+        """
+        SingleSymmetric = 0       # A: 1D, symmetric under Cn (χ(Cn) = +1)
+        SingleAntisymmetric = 1   # B: 1D, antisymmetric under Cn (χ(Cn) = -1)
+        DoublyDegenerate = 2      # E: 2D pair of degenerate functions
+        TriplyDegenerate = 3      # T: 3D triple; found in cubic groups (T, O, I)
+        QuadruplyDegenerate = 4   # G: 4D; found in icosahedral groups
+        QuintuplyDegenerate = 5   # H: 5D; found in icosahedral groups
+
+        # Short single-letter aliases matching the conventional notation
         A = 0
         B = 1
         E = 2
@@ -24,20 +65,30 @@ class IrrepLabel:
         H = 5
 
     class Parity(Enum):
-        """Symmetry with respect to a centre of inversion."""
-        none = 0
-        Gerade = 1
-        Ungerade = 2
+        """Symmetry with respect to a centre of inversion.
 
-        # aliases
+        Only relevant for groups containing i (inversion).  The parity
+        describes whether the basis function is preserved (g) or negated (u)
+        when all coordinates are reflected through the origin.
+        """
+        none = 0
+        Gerade = 1    # g: symmetric under inversion, χ(i) = +dimension
+        Ungerade = 2  # u: antisymmetric, χ(i) = -dimension
+
+        # Short aliases
         g = 1
         u = 2
 
     class Prime(Enum):
-        """Symmetry with respect to a horizontal mirror plane."""
+        """Symmetry with respect to a horizontal mirror plane σh.
+
+        Used in groups (e.g. Cnh, Dnh with odd n) that contain σh but not i.
+        A single prime (′) means the function is symmetric under σh; double
+        prime (″) means antisymmetric.
+        """
         none = 0
-        Single = 1
-        Double = 2
+        Single = 1    # ′: symmetric under σh
+        Double = 2    # ″: antisymmetric under σh
 
     def __init__(
         self,

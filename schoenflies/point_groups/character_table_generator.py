@@ -5,8 +5,40 @@ Implements the analytical formulas from:
     "Automatic procedure for generating symmetry adapted wavefunctions."
     J. Cheminformatics 9, 36. https://doi.org/10.1186/s13321-017-0193-3
 
-Core formula for E-type irreps (from the paper):
-    χ(E_j, C_n^k) = 2 cos(2π j k / n)
+Character table primer
+----------------------
+A *character table* is a square array that compactly summarises all the
+symmetry properties of a point group.  Each *row* corresponds to an
+*irreducible representation* (irrep) — a minimal, indivisible way that
+functions (orbitals, vibrations, …) can transform under the group's
+symmetry operations.  Each *column* corresponds to a *conjugacy class* —
+a set of equivalent symmetry operations (e.g. all three C2 axes in D3h
+form one class).
+
+The *character* χ(Γ, R) in row Γ, column R is the trace of the
+matrix that represents operation R in irrep Γ.  For 1D irreps the
+matrix is just a number (+1 or -1); for 2D irreps it is a 2×2 matrix.
+
+Why 2cos(2πjk/n)?
+-----------------
+A Cn^k rotation by angle 2πk/n has eigenvalues e^(±2πijk/n) in 2D.
+The trace (sum of eigenvalues) of the corresponding 2×2 rotation matrix
+is therefore e^(2πijk/n) + e^(-2πijk/n) = 2cos(2πjk/n).  This is the
+character of the j-th two-dimensional E irrep under Cn^k.
+
+Gerade / ungerade parity
+------------------------
+Groups with an inversion centre (Cnh with even n, Dnh, etc.) split every
+irrep into two: a *gerade* (g, subscript) version that is symmetric under
+inversion (χ(i) = +dim) and an *ungerade* (u) version that is
+antisymmetric (χ(i) = -dim).  The g/u distinction is essential for
+selection rules in spectroscopy.
+
+Prime / double-prime notation
+------------------------------
+Cnh groups with *odd* n lack an inversion centre, so the g/u split does
+not apply.  Instead the two sets of irreps are distinguished by a prime
+(′, symmetric under σh) and a double-prime (″, antisymmetric under σh).
 
 This module generates PointGroup objects for the seven axial families
 (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) for arbitrary order n, and exposes a
@@ -37,7 +69,21 @@ _C = PointGroupLabel.Class
 # ---------------------------------------------------------------------------
 
 class _RotClass(NamedTuple):
-    """A column in a character table derived from a rotation class."""
+    """A column in a character table derived from a rotation class.
+
+    In a Cn group, the conjugacy classes are {E}, {Cn^1, Cn^(n-1)},
+    {Cn^2, Cn^(n-2)}, …  Pairs {Cn^k, Cn^(n-k)} collapse to a single column
+    with count=2 because the two operations produce identical characters for
+    every irrep (rotating clockwise by 2πk/n and anticlockwise by the same
+    amount give the same trace).  When k = n/2 exactly (only possible for even
+    n), the operation is its own inverse (C2 = Cn^(n/2)) and count=1.
+
+    Fields
+    ------
+    count : int   Number of operations in this class (1 or 2).
+    label : OL    The Schoenflies label written in the column header.
+    k : int       The power index k; used in χ = 2cos(2πjk/n).
+    """
     count: int          # multiplicity (1 or 2)
     label: OL           # operation label for the column header
     k: int              # power index used in character formulas
@@ -113,7 +159,13 @@ def _num_proper_cn(n: int) -> dict[int, int]:
 # ---------------------------------------------------------------------------
 
 def _chi_cn_k(j: int, k: int, n: int) -> float:
-    """χ(E_j, C_n^k) = 2 cos(2π j k / n)."""
+    """χ(E_j, C_n^k) = 2 cos(2π j k / n).
+
+    This is the character of the j-th doubly-degenerate (E-type) irrep
+    under the conjugacy class containing Cn^k.  The derivation is given in
+    the module docstring.  For the non-degenerate irreps (A, B) the
+    characters are ±1 and are handled separately.
+    """
     return 2.0 * math.cos(2.0 * math.pi * j * k / n)
 
 
@@ -122,7 +174,17 @@ def _chi_cn_k(j: int, k: int, n: int) -> float:
 # ---------------------------------------------------------------------------
 
 def _cn_irreps(n: int) -> list[IrrepLabel]:
-    """Mulliken irrep labels for Cn."""
+    """Mulliken irrep labels for Cn.
+
+    Cn has n irreps in total (one per conjugacy class):
+    - One A irrep (symmetric under all Cn rotations — character = 1 always).
+    - One B irrep if n is even (alternates ±1 under rotations; B does not
+      exist for odd n because there is no half-turn C2 = Cn^(n/2)).
+    - (n-2)/2 doubly-degenerate E irreps for even n, (n-1)/2 for odd n.
+      They are numbered E1, E2, … when more than one exists.
+
+    Total check: A (1) + B (0 or 1) + 2*(num_E) = n ✓
+    """
     irreps: list[IrrepLabel] = [IrrepLabel(_M.A)]
     if n % 2 == 0:
         irreps.append(IrrepLabel(_M.B))
@@ -143,7 +205,17 @@ def _e_subscript(j: int, num_e: int) -> int:
 # ---------------------------------------------------------------------------
 
 def _build_cn(n: int) -> PointGroup:
-    """Generate the character table for cyclic group Cn (n ≥ 2)."""
+    """Generate the character table for cyclic group Cn (n ≥ 2).
+
+    Cn is the simplest axial group: just one n-fold rotation axis Cn with no
+    mirror planes or inversion.  Examples: H2O2 in its twisted conformation
+    (C2), a chiral propeller shape (C3), etc.
+
+    Structure of the character table:
+    - Columns: E (identity, implicit), then one column per conjugacy class
+      {Cn^k, Cn^(n-k)} for k=1..n/2.
+    - Rows: A irrep (all 1s), B irrep (only for even n), E_j irreps.
+    """
     rot_cls = _rotation_classes_cn(n)
     num_cols = 1 + len(rot_cls)  # E (implicit) + rotation cols
 
@@ -189,11 +261,29 @@ def _build_cn(n: int) -> PointGroup:
 # ---------------------------------------------------------------------------
 
 def _build_cnh(n: int) -> PointGroup:
-    """Generate the character table for Cnh (n ≥ 2)."""
+    """Generate the character table for Cnh (n ≥ 2).
+
+    Cnh adds a horizontal mirror plane σh perpendicular to the Cn axis.
+    This doubles the number of operations (and irreps) compared to Cn.
+    Example: C2h (trans-N2F2, trans-1,2-dibromoethene).
+
+    Even n vs odd n — a fundamental split
+    --------------------------------------
+    When n is even, Cnh contains an inversion centre i (because σh combined
+    with the C2 = Cn^(n/2) gives i).  The irreps then come in gerade (g)
+    and ungerade (u) pairs — every Cn irrep appears twice, once symmetric
+    under i (g) and once antisymmetric (u).  Column order follows the
+    convention: [Cn rotation cols, i, S cols, σh].
+
+    When n is odd, no inversion centre exists (σh ∘ Cn^(n/2) would require
+    n/2 to be an integer, which it isn't for odd n).  Instead, the doubling
+    is expressed by a prime (′, symmetric under σh) vs double-prime (″,
+    antisymmetric under σh) labelling.  Column order: [Cn cols, σh, S cols].
+    """
     rot_cls = _rotation_classes_cn(n)
 
     if n % 2 == 0:
-        # Even n: Cn × Ci  →  g/u parity
+        # Even n: Cnh = Cn × Ci, so every irrep pairs as g/u
         # Column order: [Cn rotation cols, i, S cols k=1..n/2-1, σh]
         s_cls = _improper_classes_cnh_even(n)
 
@@ -210,8 +300,9 @@ def _build_cnh(n: int) -> PointGroup:
         irreps = irreps_g + irreps_u
 
         # character table: Cn-part + [i=E-col, S-cols same as rot cols, σh=C2-col]
-        # extra col chars for g: same as Cn col chars
-        # extra col chars for u: negated Cn col chars
+        # For gerade (g) irreps, the extra columns (i, S, σh) have the same
+        # characters as the corresponding Cn columns (symmetric under inversion).
+        # For ungerade (u) irreps, all extra-column characters are negated.
         num_rot_cols = 1 + len(rot_cls)
         num_extra = 1 + len(s_cls) + 1    # i + S cols + σh
 
@@ -332,12 +423,30 @@ def _add_parity(ir: IrrepLabel, par: IrrepLabel.Parity) -> IrrepLabel:
 # ---------------------------------------------------------------------------
 
 def _build_cnv(n: int) -> PointGroup:
-    """Generate the character table for Cnv (n ≥ 2)."""
+    """Generate the character table for Cnv (n ≥ 2).
+
+    Cnv adds n vertical mirror planes σv containing the Cn axis (no inversion).
+    Examples: C2v (water, SO2), C3v (ammonia, PCl3), C4v (SF5Cl).
+
+    For even n, the n planes split into two sets of n/2:
+        σv planes pass through atoms (or bonds)
+        σd planes bisect pairs of adjacent σv planes (dihedral mirrors)
+    These give two separate columns in the character table.
+
+    For odd n, all n planes are equivalent (one σv column).
+
+    Key characters for the reflection columns:
+        A1: +1 (symmetric under all reflections)
+        A2: -1 (antisymmetric under all reflections)
+        B1/B2: ±1 (for even n, distinguishing σv from σd)
+        E_j:   0  (the 2D representations are zero for reflections — the trace
+                   of a 2D reflection matrix is always 0)
+    """
     rot_cls = _rotation_classes_cn(n)
     num_e = (n - 2) // 2 if n % 2 == 0 else (n - 1) // 2
 
     if n % 2 == 0:
-        # n/2 σv + n/2 σd columns
+        # n/2 σv + n/2 σd columns — two inequivalent sets of vertical planes
         n_sigma_v = n // 2
         n_sigma_d = n // 2
         unique_ops = [OperationLabelCount(rc.count, rc.label) for rc in rot_cls]
@@ -406,6 +515,26 @@ def _build_cnv(n: int) -> PointGroup:
 
 def _build_sn(n: int) -> PointGroup:
     """Generate the character table for Sn (n even, n ≥ 4).
+
+    Sn is the "improper rotation group": it contains only an n-fold improper
+    rotation axis Sn (rotation + perpendicular reflection) and its powers.
+    No mirror planes and no Cn axis are independently present.
+    Examples: S4 (allene at non-equilibrium twist angle), S6 (staggered ethane).
+
+    The powers S_n^k alternate between proper and improper:
+        k odd  → S_n^k is a genuine improper rotation
+        k even → S_n^k = C_{n/2}^{k/2} is a proper rotation
+
+    Why even n only?
+    ----------------
+    For odd n, S_n contains a horizontal mirror (S_n^n = σh), which makes it
+    a Cnh group instead.  The pure "improper only" Sn groups require even n.
+
+    n ≡ 2 mod 4 special case (S6, S10, …)
+    --------------------------------------
+    When n ≡ 2 mod 4, the group contains an inversion centre (S_n^{n/2} = i),
+    so irreps split into g/u pairs.  The column order is rearranged to match
+    the convention: proper columns first, then i, then improper columns.
 
     Sn contains alternating proper (S_n^even = C_{n/2}^k) and improper
     (S_n^odd) operations.  The universal formula χ(E_j, S_n^k) = 2cos(2πjk/n)
@@ -537,7 +666,20 @@ def _build_sn(n: int) -> PointGroup:
 # ---------------------------------------------------------------------------
 
 def _build_dn(n: int) -> PointGroup:
-    """Generate the character table for Dn (n ≥ 2)."""
+    """Generate the character table for Dn (n ≥ 2).
+
+    Dn adds n horizontal C2 axes perpendicular to the principal Cn axis
+    (no mirror planes or inversion centre).  Example: D2 (twisted allene),
+    D3 (tris(en)Co³⁺ tris-chelate propeller), D6 (coronene with a twist).
+
+    For even n, the n horizontal C2 axes split into two inequivalent sets
+    of n/2 each:
+        C2′  axes pass through pairs of opposite vertices/atoms
+        C2″  axes bisect pairs of C2′ axes
+    These contribute two separate columns and give rise to B1/B2 irreps.
+
+    For odd n, all n C2 axes are equivalent — one column, no B1/B2.
+    """
     rot_cls = _rotation_classes_cn(n)
     num_e = (n - 2) // 2 if n % 2 == 0 else (n - 1) // 2
 
@@ -612,8 +754,20 @@ def _build_dn(n: int) -> PointGroup:
 def _build_dnh(n: int) -> PointGroup:
     """Generate the character table for Dnh (n ≥ 2).
 
-    Dnh = Dn × Cs  (direct product with the horizontal reflection).
-    g/u (n even) or '/ '' (n odd) doubles all Dn irreps.
+    Dnh = Dn + σh (horizontal mirror).  Adding σh to Dn doubles the group
+    order and doubles the number of irreps.  Examples: D2h (ethylene, naphthalene),
+    D3h (BF3, cyclopropane), D6h (benzene, coronene).
+
+    The doubling works exactly as in Cnh:
+    - Even n: Dnh contains an inversion centre → g/u splitting.
+    - Odd n: no inversion → ′/″ prime splitting.
+
+    Column order (even n): [Cn rotation cols, C2', C2'', i, Sn cols, σh, σv, σd]
+    Column order (odd n):  [Cn rotation cols, C2', σh, Sn cols, σv]
+
+    Character generation for the extra (improper) columns follows the same
+    +parity / -parity rule as _build_cnh: each g or ′ irrep repeats the Dn
+    characters with a +1 factor; each u or ″ irrep uses a -1 factor.
     """
     rot_cls = _rotation_classes_cn(n)
     num_e = (n - 2) // 2 if n % 2 == 0 else (n - 1) // 2
@@ -784,7 +938,28 @@ def _add_prime(ir: IrrepLabel, pri: IrrepLabel.Prime) -> IrrepLabel:
 def _build_dnd(n: int) -> PointGroup:
     """Generate the character table for Dnd (n ≥ 2).
 
+    Dnd adds n dihedral mirror planes σd (bisecting adjacent C2′ axes) to Dn,
+    and consequently also contains a S_{2n} improper rotation axis.  Examples:
+    D2d (allene, methane at staggered-like geometry), D3d (staggered ethane),
+    D5d (staggered ferrocene).
+
     The group has order 4n and contains a S_{2n} improper rotation axis.
+
+    Interleaved columns (even n)
+    ----------------------------
+    For even n, the columns of the character table interleave S_{2n} and C_n
+    operations:  (S_{2n}^1, C_n^1), (S_{2n}^3, C_n^2), …  This matches the
+    ordering in standard textbook Dnd tables.  The character formula uses a
+    unified cosine expression — both S and C columns evaluate as
+    2cos(πjk/n) where k is the S_{2n}^k index, because for the proper columns
+    k = 2p gives 2cos(π·j·2p/n) = 2cos(2πjp/n), which is the standard E formula.
+
+    Even n vs odd n — inversion again
+    ----------------------------------
+    For odd n, S_{2n}^n = i (inversion), so the group contains i and the
+    irreps split into g/u pairs.  For even n, S_{2n}^n = σh which is absent
+    from Dnd (it would make it Dnh), so no inversion and no g/u split.
+
     For even n: no inversion (A/B/E irreps).
     For odd n: has inversion i = S_{2n}^n (g/u labeling).
 
@@ -971,6 +1146,15 @@ _BUILDERS = {
 
 def generate_point_group(label: PointGroupLabel) -> PointGroup:
     """Generate a PointGroup with full character table for any axial point group.
+
+    This is the public entry point called by symmetry.py when no hardcoded
+    character table matches the detected operations (e.g. a molecule with a
+    C15 axis).  It dispatches to the appropriate _build_* function based on
+    the group class (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd).
+
+    Polyhedral groups (T, O, I) and linear groups (C∞v, D∞h) are NOT supported
+    here — they use hardcoded tables in point_groups.py because their structure
+    does not fit the uniform axial formulas.
 
     Supported families: Cn, Cnh, Cnv, Sn (n even ≥ 4), Dn, Dnh, Dnd.
     Raises ValueError for unsupported families (polyhedral, linear, n < 2).
