@@ -5,7 +5,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-16"
 
 from schoenflies import Structure, Symmetry
 
-s = Structure("tests\\files\\benzene.xyz")
+s = Structure("tests\\files\\methane.xyz")
 sym = Symmetry(s)
 mgr = sym.get_operation_manager()
 
