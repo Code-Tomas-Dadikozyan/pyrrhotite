@@ -193,7 +193,9 @@ class PointGroup:
             max_val_w = max((len(fmt(v)) for v in char_col), default=1)
             return max(len(h), 6, max_val_w)
 
-        col_w = [_col_width(h, [row[j] for row in self._characters])
+        # Characters are stored as [E, unique_op_0, unique_op_1, ...]; col_headers
+        # covers only the unique_ops (E is implicit), so offset index by 1.
+        col_w = [_col_width(h, [row[j + 1] for row in self._characters])
                  for j, h in enumerate(col_headers)]
 
         header = f"{name:{row_w}} | " + " | ".join(
@@ -205,6 +207,6 @@ class PointGroup:
         print(separator)
         for row_label, char_row in zip(row_headers, self._characters):
             values = " | ".join(
-                f"{fmt(v):>{w}}" for v, w in zip(char_row, col_w)
+                f"{fmt(v):>{w}}" for v, w in zip(char_row[1:], col_w)
             )
             print(f"{row_label:{row_w}} | {values}")

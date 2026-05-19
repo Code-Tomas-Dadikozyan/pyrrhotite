@@ -17,6 +17,7 @@ from .operations.operation_manager import OperationManager
 from .point_groups.point_group import PointGroup
 from .point_groups.point_group_label import PointGroupLabel as _PGL
 from .point_groups.point_groups import POINT_GROUPS
+from .point_groups.character_table_generator import generate_point_group as _generate_pg
 
 
 class Symmetry:
@@ -369,7 +370,11 @@ class Symmetry:
     # ------------------------------------------------------------------
 
     def _find_point_group(self) -> None:
-        """Pick the point group with the smallest non-negative operation surplus."""
+        """Pick the point group with the smallest non-negative operation surplus.
+
+        Falls back to the character-table generator for axial groups whose order
+        exceeds the hardcoded list (n > 10 for most families).
+        """
         ops = self._operation_manager.get_operations()
         min_diff = float("inf")
         best: PointGroup | None = None
@@ -378,7 +383,74 @@ class Symmetry:
             if diff >= 0 and diff < min_diff:
                 min_diff = diff
                 best = pg
+        if best is None:
+            best = self._generate_point_group_from_ops(ops)
         self._point_group = best
+
+    def _generate_point_group_from_ops(
+        self, ops: list
+    ) -> PointGroup | None:
+        """Infer an axial point-group label from the detected operations and generate it.
+
+        Used when no match is found in the hardcoded POINT_GROUPS list.
+        """
+        # Count operation types
+        n_inv = sum(1 for op in ops
+                    if op.get_label().get_element() == _OL.Element.Inversion)
+        n_ref = sum(1 for op in ops
+                    if op.get_label().get_element() == _OL.Element.Reflection)
+        n_impr = sum(1 for op in ops
+                     if op.get_label().get_element() == _OL.Element.ImproperRotation)
+
+        # Highest-order proper rotation axis
+        proper_degs = [op.get_degree() for op in ops
+                       if op.get_label().get_element() == _OL.Element.ProperRotation]
+        if not proper_degs:
+            return None
+        n = max(proper_degs)
+
+        # Count C2 operations (potential C2' axes perpendicular to Cn)
+        n_c2 = sum(1 for op in ops
+                   if op.get_label().get_element() == _OL.Element.ProperRotation
+                   and op.get_degree() == 2)
+        # Subtract one C2 if it belongs to the main Cn axis (n even → C2 = Cn^(n/2))
+        n_c2_prime = n_c2 - (1 if n % 2 == 0 else 0)
+
+        has_c2_prime = n_c2_prime >= n   # at least n perpendicular C2 axes
+        has_sigma_h = any(
+            op.get_label().get_element() == _OL.Element.Reflection
+            and op.get_label().get_plane() == _OL.Plane.Horizontal
+            for op in ops
+        )
+        has_sigma_v_or_d = any(
+            op.get_label().get_element() == _OL.Element.Reflection
+            and op.get_label().get_plane() in (_OL.Plane.Vertical, _OL.Plane.Dihedral)
+            for op in ops
+        )
+
+        try:
+            if has_c2_prime and (has_sigma_h or n_inv > 0):
+                pg_class = _PGL.Class.Dh
+            elif has_c2_prime and has_sigma_v_or_d:
+                pg_class = _PGL.Class.Dh
+            elif has_c2_prime:
+                pg_class = _PGL.Class.D
+            elif has_sigma_h and has_sigma_v_or_d:
+                pg_class = _PGL.Class.Dh
+            elif has_sigma_h:
+                pg_class = _PGL.Class.Ch
+            elif has_sigma_v_or_d:
+                pg_class = _PGL.Class.Cv
+            elif n_impr > 0 and n_inv > 0 and not has_sigma_v_or_d:
+                # S_{2n} with inversion — check if it's Sn or Dnd
+                pg_class = _PGL.Class.S
+            elif n_impr > 0:
+                pg_class = _PGL.Class.Dd
+            else:
+                pg_class = _PGL.Class.C
+            return _generate_pg(_PGL(pg_class, n))
+        except (ValueError, Exception):
+            return None
 
     def _find_cartesian_axes(self) -> None:
         """Determine x, y, z Cartesian axes from symmetry and molecular geometry."""

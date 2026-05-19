@@ -5,6 +5,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- `schoenflies/point_groups/character_table_generator.py` — automatic character table generator for all seven axial point group families (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) for arbitrary order n ≥ 2, implementing the analytical formulas from Johansson & Veryazov (2017). Exposes `generate_point_group(label)` and `get_or_generate_point_group(label)`.
+- `Symmetry._generate_point_group_from_ops` fallback in `_find_point_group`: when no hardcoded group matches the detected operations (e.g. n > 10), the family and order are inferred and the table is generated on-the-fly.
+- `tests/test_character_table_generator.py` — 120 tests: consistency against all hardcoded axial tables, off-diagonal row orthogonality for n > 10, structural sanity checks, and spot-checks of known analytical values.
+
 ## [0.1.0] - 2026-05-11
 
 ### Added
