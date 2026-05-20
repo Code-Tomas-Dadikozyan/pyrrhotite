@@ -59,6 +59,28 @@ jobs:
           pip install pytest
           pytest tests/
 
+  code_coverage:
+    needs: [test_wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels
+          path: dist
+      - name: Run coverage
+        run: |
+          pip install dist/*.whl
+          pip install pytest coverage
+          coverage run -m pytest tests/
+          coverage xml
+      - uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   build_sdist:
     needs: [check-version-strings, test_wheels]
     runs-on: ubuntu-latest

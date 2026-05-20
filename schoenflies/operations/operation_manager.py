@@ -100,7 +100,15 @@ class OperationManager:
         return True
 
     def _check_operation(self, operation: Operation) -> bool:
-        """Run the operation on the structure and return True if error < 0.1."""
+        """Run the operation on the structure and return True if error < 0.1.
+
+        The 0.1 Å threshold is an empirical value from the reference C++
+        implementation.  It is large enough to accept operations whose
+        validity is obscured by XYZ coordinate rounding (typical precision
+        is 3-4 decimal places, giving errors up to ~0.001 Å), but small
+        enough to reject candidate axes that genuinely do not map atoms onto
+        atoms (errors typically >> 0.1 Å for wrong axes).
+        """
         operation.do_operation(self._structure)
         return operation.get_error() < 0.1
 
@@ -134,6 +142,12 @@ class OperationManager:
         deg = operation_label.get_degree()
 
         is_infinite_group = pg_class in (PGClass.Cinfv, PGClass.Dinfh)
+        # In C∞v and D∞h, there are infinitely many C2′ axes (perpendicular to
+        # the molecular axis) and infinitely many σv planes.  We cannot enumerate
+        # them all, so instead we insert a single placeholder group marked as
+        # having "infinite multiplicity" — enough for display purposes.
+        # `is_infinite_op` selects exactly those two operation types: degree-2
+        # proper rotations (the C2′ axes) and any reflection (the σv planes).
         is_infinite_op = (
             elem == OperationLabel.Element.ProperRotation and deg == 2
             or elem == OperationLabel.Element.Reflection
@@ -151,7 +165,14 @@ class OperationManager:
                 self._point_group_operations[match.get_id()] = match
                 operation_group.add_operation_id(match.get_id())
         else:
-            # Determine which multiples to generate
+            # Determine which multiples to generate.
+            # For a Cn axis with n > 2, the character table has one column for
+            # each conjugacy class {Cn^k, Cn^(n-k)}.  Both Cn^k (forward) and
+            # Cn^(n-k) = Cn^(-k) (backward/inverse) are physically distinct
+            # operations even though they are in the same class, so we generate
+            # both (+multiple and -multiple) to populate the display list.
+            # For C2 the inverse of C2^1 is C2^1 itself (a half-turn is its own
+            # inverse), so only one multiple is needed.
             base_multiple = operation_label.get_multiple()
             if deg > 2:
                 multiples = [base_multiple, -base_multiple]
@@ -215,6 +236,7 @@ class OperationManager:
         """
         import sys
 
+        # Fallback for terminals that cannot render Schoenflies Unicode symbols.
         def _safe(text: str) -> str:
             try:
                 text.encode(sys.stdout.encoding or "utf-8")
@@ -225,6 +247,7 @@ class OperationManager:
                         .replace("′", "'").replace("″", "''")
                         .replace("−", "-"))
 
+        # Format a 3-vector as "(+x.xxx, +y.yyy, +z.zzz)" for axis display.
         def _fmt_vec(v: object) -> str:
             return f"({v[0]:+.3f}, {v[1]:+.3f}, {v[2]:+.3f})"
 

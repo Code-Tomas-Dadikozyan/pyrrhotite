@@ -111,7 +111,13 @@ class PointGroup:
         integer counting how many found operations are not required by this group
         (the surplus).  The caller selects the group with the smallest surplus.
         """
-        # start with total found; subtract each required class that matches
+        # Algorithm: start with the total count of found operations, then
+        # subtract one for each operation that the group *requires*.
+        # If any required type is missing entirely, return -1 immediately.
+        # Whatever remains after all subtractions is the "surplus" — extra
+        # operations we found that this group does not need.  A surplus of 0
+        # is a perfect match; a small positive surplus is a near-match.
+        # The caller picks the group with the smallest non-negative surplus.
         num_remaining = len(operations)
 
         # count inversions and reflections in the found set
@@ -160,12 +166,34 @@ class PointGroup:
     # Display
     # ------------------------------------------------------------------
 
-    def print_character_table(self) -> None:
-        """Print the character table to stdout in a human-readable grid format."""
+    def print_character_table(self, *, complex: bool = False, plain: bool = False) -> None:
+        """Print the character table to stdout.
+
+        Parameters
+        ----------
+        complex:
+            When True, split each real 2D E-type irrep into two complex 1D rows
+            showing ε^(jk) and ε^*(jk) characters (only for pure cyclic / Sn groups
+            where this is meaningful; other groups fall back to real rows).
+        plain:
+            When True, use the plain-text formatter regardless of whether `rich`
+            is installed.  When False (default), use the `rich` table renderer for
+            a cleaner, terminal-width-aware layout; falls back to plain text if
+            `rich` is not available.
+        """
         import sys
+        import math as _math
+
+        # ------------------------------------------------------------------
+        # Shared helpers
+        # ------------------------------------------------------------------
 
         def _safe(text: str) -> str:
-            """Replace characters that cannot be encoded in the terminal's codec."""
+            # Some terminals (Windows cmd, certain SSH sessions) cannot encode
+            # the Unicode characters used in Schoenflies/Mulliken notation.
+            # We try to encode the string first; if that raises an exception
+            # we fall back to ASCII-safe substitutions so output is never garbled.
+            # Substitutions:  σ→s, ∞→inf, ′→', ″→'', −→-, ε→e, ²→^2, ¹→(nothing)
             try:
                 text.encode(sys.stdout.encoding or "utf-8")
                 return text
@@ -173,40 +201,228 @@ class PointGroup:
                 return (text
                         .replace("σ", "s").replace("∞", "inf")
                         .replace("′", "'").replace("″", "''")
-                        .replace("−", "-"))
+                        .replace("−", "-").replace("ε", "e")
+                        .replace("²", "^2").replace("¹", ""))
 
-        name = _safe(self._label.get_name())
-        col_headers = [_safe(olc.get_short_name()) for olc in self._unique_operations]
-        row_headers = [_safe(ir.get_name()) for ir in self._irreps]
-
-        row_w = max((len(r) for r in row_headers), default=4)
-
-        # format a character value: symbolic > integer > decimal
         def fmt(v: float) -> str:
+            # Format a single character-table value for display.
+            # Three rules, tried in order:
+            #   1. If the value matches a known irrational constant (e.g. √2, φ),
+            #      return the symbolic name — avoids ugly floats like "1.4142".
+            #   2. If the value is an exact integer (e.g. 1.0, -1.0, 2.0),
+            #      return the integer string — "1" not "1.0000".
+            #   3. Otherwise, show 4 decimal places and strip trailing zeros.
             sym = _float_to_symbol(v)
             if sym is not None:
                 return sym
             return str(int(v)) if v == int(v) else f"{v:.4f}".rstrip("0")
 
-        # column widths: at least as wide as the header, 6, or the widest formatted value
-        def _col_width(h: str, char_col: list[float]) -> int:
-            max_val_w = max((len(fmt(v)) for v in char_col), default=1)
-            return max(len(h), 6, max_val_w)
+        # ------------------------------------------------------------------
+        # Complex-mode helpers
+        # ------------------------------------------------------------------
 
-        # Characters are stored as [E, unique_op_0, unique_op_1, ...]; col_headers
-        # covers only the unique_ops (E is implicit), so offset index by 1.
-        col_w = [_col_width(h, [row[j + 1] for row in self._characters])
-                 for j, h in enumerate(col_headers)]
+        def _eps_symbol(exp: int, n: int) -> str:
+            """Return symbolic ε^exp for the group of order n (ε = e^(2πi/n))."""
+            e = exp % n
+            if e == 0:
+                return "1"
+            if e == n // 2 and n % 2 == 0:
+                return "-1"
+            return "ε" if e == 1 else f"ε^{e}"
 
-        header = f"{name:{row_w}} | " + " | ".join(
-            f"{h:>{w}}" for h, w in zip(col_headers, col_w)
-        )
-        separator = "-" * len(header)
+        def _is_pure_cyclic() -> bool:
+            """True if this group has no reflections and no inversion (Cn or Sn)."""
+            return self._num_reflections == 0 and self._num_inversions == 0
 
-        print(header)
-        print(separator)
-        for row_label, char_row in zip(row_headers, self._characters):
-            values = " | ".join(
-                f"{fmt(v):>{w}}" for v, w in zip(char_row[1:], col_w)
+        def _group_order_n() -> int | None:
+            """Infer n from the principal-axis column (first unique op), or None."""
+            if not self._unique_operations:
+                return None
+            lbl = self._unique_operations[0].get_label()
+            from ..operations.operation_label import OperationLabel as _OL
+            if lbl.get_element() in (_OL.Element.ProperRotation, _OL.Element.ImproperRotation):
+                return lbl.get_degree()
+            return None
+
+        def _build_rows() -> list[tuple[str, list[str]]]:
+            """Build the list of (row_label, [cell_strings]) for the table body.
+
+            Each irrep normally produces one row.  In *complex mode* (enabled
+            when `complex=True` and the group is a pure cyclic/Sn group), each
+            doubly-degenerate E_j irrep is instead split into two complex
+            conjugate rows:
+                top row  — characters ε^(jk), where ε = e^(2πi/n)
+                bottom row — characters ε^(-jk) (= complex conjugate)
+            This is the "complex character table" form used in some textbooks
+            to make the E-type characters look like 1D representations.
+            The label of the top row gets a "{" suffix to visually pair the rows.
+
+            For non-E irreps (A, B) and for groups where complex mode does not
+            apply, each irrep gives a single real-valued row using the `fmt`
+            formatter.
+            """
+            rows: list[tuple[str, list[str]]] = []
+            use_complex = complex and _is_pure_cyclic()
+            n = _group_order_n() if use_complex else None
+
+            for irrep, char_row in zip(self._irreps, self._characters):
+                label = _safe(irrep.get_name())
+                is_e_type = (irrep.get_mulliken() == IrrepLabel.Mulliken.E)
+
+                if use_complex and is_e_type and n is not None:
+                    # Recover j (the E-type index) from the irrep subscript.
+                    # E1 → j=1, E2 → j=2, …  A single E with no subscript → j=1.
+                    sub = irrep.get_subscript()
+                    j = sub if sub else 1
+                    row_top: list[str] = ["1"]   # χ(E) = 1 for both conjugate rows
+                    row_bot: list[str] = ["1"]
+                    for rc in self._unique_operations:
+                        from ..operations.operation_label import OperationLabel as _OL
+                        elem = rc.get_label().get_element()
+                        if elem in (_OL.Element.ProperRotation, _OL.Element.ImproperRotation):
+                            k = rc.get_label().get_multiple() or 1
+                            d = rc.get_label().get_degree()
+                            # Convert (degree d, multiple k) to the S_n power index p.
+                            # Each step of degree d corresponds to n/d steps of the
+                            # fundamental S_n rotation, so p = k * (n // d).
+                            p = k * (n // d) if n else k
+                            row_top.append(_safe(_eps_symbol(j * p, n)))
+                            row_bot.append(_safe(_eps_symbol(-j * p, n)))
+                        else:
+                            # Non-rotation columns (σ, i) have real characters;
+                            # use the stored float value directly.
+                            idx = self._unique_operations.index(rc)
+                            row_top.append(fmt(char_row[idx + 1]))
+                            row_bot.append(fmt(char_row[idx + 1]))
+                    rows.append((f"{label}{{", row_top))
+                    rows.append(("", row_bot))
+                else:
+                    cells = [fmt(v) for v in char_row]
+                    rows.append((label, cells))
+            return rows
+
+        col_headers = ["E"] + [_safe(olc.get_short_name()) for olc in self._unique_operations]
+        name = _safe(self._label.get_name())
+        data_rows = _build_rows()
+
+        # ------------------------------------------------------------------
+        # Basis function columns
+        # ------------------------------------------------------------------
+        from .basis_functions import compute_basis_functions
+        try:
+            bf = compute_basis_functions(self)
+        except Exception:
+            bf = {}
+
+        lin_col: list[str] = []
+        quad_col: list[str] = []
+        for label, _ in data_rows:
+            clean = label.rstrip("{").strip()
+            lin_col.append(_safe(", ".join(bf.get(clean, {}).get("linear", []))))
+            quad_col.append(_safe(", ".join(bf.get(clean, {}).get("quadratic", []))))
+
+        has_bf = any(v for v in lin_col) or any(v for v in quad_col)
+
+        # ------------------------------------------------------------------
+        # Plain-text renderer
+        # ------------------------------------------------------------------
+
+        def _render_plain() -> None:
+            """Render the character table as a plain-text fixed-width grid.
+
+            Layout:
+              - `row_w` : width of the leftmost "irrep label" column
+              - `col_w` : list of widths, one per character table column
+              - Each cell is right-aligned within its column width.
+              - Columns are separated by " | ".
+              - If basis functions were computed, two extra columns
+                ("Lin/Rot" and "Quadratic") are appended.
+            """
+            row_labels = [r[0] for r in data_rows]
+            row_w = max((len(r) for r in row_labels), default=4)
+
+            def _col_width(h: str, col_vals: list[str]) -> int:
+                # Minimum width of 6 ensures that values like "-1" and "2cos(π/7)"
+                # always fit without truncation and columns are never unreadably thin.
+                return max(len(h), 6, max((len(v) for v in col_vals), default=1))
+
+            col_w = [_col_width("E", [r[1][0] for r in data_rows])]
+            for ci, h in enumerate(col_headers[1:], start=1):
+                col_vals = [r[1][ci] if ci < len(r[1]) else "" for r in data_rows]
+                col_w.append(_col_width(h, col_vals))
+
+            extra_headers = (["Lin/Rot", "Quadratic"] if has_bf else [])
+            lin_w  = max(len("Lin/Rot"),  max((len(v) for v in lin_col),  default=1)) if has_bf else 0
+            quad_w = max(len("Quadratic"), max((len(v) for v in quad_col), default=1)) if has_bf else 0
+
+            parts = [f"{name:{row_w}}"]
+            for h, w in zip(col_headers, col_w):
+                parts.append(f"{h:>{w}}")
+            if has_bf:
+                parts.append(f"{'Lin/Rot':>{lin_w}}")
+                parts.append(f"{'Quadratic':>{quad_w}}")
+            header = " | ".join(parts)
+            print(header)
+            print("-" * len(header))
+
+            for (rl, cells), lv, qv in zip(data_rows, lin_col, quad_col):
+                row_parts = [f"{rl:{row_w}}"]
+                for ci, w in enumerate(col_w):
+                    row_parts.append(f"{(cells[ci] if ci < len(cells) else ''):>{w}}")
+                if has_bf:
+                    row_parts.append(f"{lv:>{lin_w}}")
+                    row_parts.append(f"{qv:>{quad_w}}")
+                print(" | ".join(row_parts))
+
+        # ------------------------------------------------------------------
+        # Rich renderer
+        # ------------------------------------------------------------------
+
+        def _render_rich() -> None:
+            """Render the character table using the `rich` library for a
+            cleaner, terminal-width-aware layout with aligned columns and
+            styled headers.
+
+            `rich` is an optional dependency.  If it is not installed, this
+            function raises ImportError and the caller falls back to
+            `_render_plain()`.  The `box.SIMPLE_HEAVY` style draws a heavy
+            header separator and no outer border, which suits dense tabular data.
+            """
+            from rich.table import Table
+            from rich import box
+            from rich.console import Console
+
+            table = Table(
+                title=name,
+                box=box.SIMPLE_HEAVY,
+                show_header=True,
+                header_style="bold",
+                title_style="bold cyan",
             )
-            print(f"{row_label:{row_w}} | {values}")
+            table.add_column("Irrep", style="bold", no_wrap=True)
+            for h in col_headers:
+                table.add_column(h, justify="right", no_wrap=True)
+            if has_bf:
+                table.add_column("Lin / Rot", justify="left", style="dim")
+                table.add_column("Quadratic", justify="left", style="dim")
+
+            for (rl, cells), lv, qv in zip(data_rows, lin_col, quad_col):
+                row = [rl] + [cells[i] if i < len(cells) else "" for i in range(len(col_headers))]
+                if has_bf:
+                    row += [lv, qv]
+                table.add_row(*row)
+
+            Console().print(table)
+
+        # ------------------------------------------------------------------
+        # Dispatch
+        # ------------------------------------------------------------------
+
+        if plain:
+            _render_plain()
+            return
+
+        try:
+            _render_rich()
+        except ImportError:
+            _render_plain()
