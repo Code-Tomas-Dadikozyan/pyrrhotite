@@ -43,37 +43,119 @@ print(sym.get_point_group().get_label().get_name())   # e.g. "C3v"
 
 ### As a Python library
 
+#### Point group determination
+
 ```python
 from schoenflies import Structure, Symmetry
 
 s = Structure("ammonia.xyz")
 sym = Symmetry(s)
 
-# Point group label
 pg = sym.get_point_group()
 print(pg.get_label().get_name())        # "C3v"
+print(pg.get_order())                   # 6  (total number of symmetry operations)
+```
 
-# Character table
+#### Character table
+
+```python
+# Print with rich formatting (falls back to plain if rich is not installed)
 pg.print_character_table()
 
-# Rotor classification
+# Plain text
+pg.print_character_table(plain=True)
+
+# ε-notation for cyclic / Sn groups
+pg.print_character_table(complex=True)
+
+# Access the data directly
+print(pg.get_irreps())        # list of IrrepLabel objects
+print(pg.get_characters())    # list[list[float]] — [irrep][operation class]
+print(pg.get_unique_operations())  # conjugacy classes (excluding E)
+```
+
+#### Character table for any group — no XYZ needed
+
+```python
+from schoenflies.point_groups.character_table_generator import (
+    parse_point_group_name,
+    get_or_generate_point_group,
+    print_character_table_for,
+)
+
+# Quickest: print directly by name
+print_character_table_for("D4h")
+
+# Or get the PointGroup object for any axial group (including high-n)
+label = parse_point_group_name("C12v")
+pg = get_or_generate_point_group(label)
+pg.print_character_table()
+```
+
+Accepts all 18 Schoenflies classes: `C1`, `Cs`, `Ci`, `Cn`, `Cnh`, `Cnv`, `Sn`, `Dn`, `Dnh`, `Dnd`, `T`, `Td`, `Th`, `O`, `Oh`, `I`, `Ih`, `Cinfv` / `C∞v`, `Dinfh` / `D∞h`.
+
+#### Rotor classification and principal axes
+
+```python
 print(sym.get_rotor_class())            # RotorClass.ProlateSymmetricTop
 
-# Found symmetry operations
-for op in sym.get_operation_manager().get_operations():
-    print(op.get_label().get_short_name())   # "C3", "sv", ...
-
-# Cartesian axes (columns = x, y, z)
-print(sym.get_cartesian_axes())
+pm = sym.get_principal_moments()        # np.ndarray shape (3,) — Ia ≤ Ib ≤ Ic in u·Å²
+axes = sym.get_principal_axes()         # np.ndarray shape (3, 3) — eigenvectors as columns
+cart = sym.get_cartesian_axes()         # 3×3 matrix [x | y | z] in the conventional frame
 ```
 
-**Character table output** (ammonia, C3v):
+#### Symmetry operations
+
+```python
+manager = sym.get_operation_manager()
+
+# All found operations
+for op in manager.get_operations():
+    print(op.get_label().get_short_name())   # "C3", "C3^2", "σv", "i", …
+    print(op.get_axis())                     # unit-vector axis / plane normal
+    print(op.get_error())                    # worst-case atom mis-mapping distance (Å)
+
+# Filter by type
+manager.get_proper_rotations()      # Cn only
+manager.get_improper_rotations()    # Sn only
+manager.get_reflections()           # σ only
+manager.get_inversions()            # i only
+
+# Atoms lying on a symmetry element
+structure = sym.get_structure()
+for op in manager.get_operations():
+    label = op.get_label()
+    if label.get_element() == label.Element.Reflection:
+        atom_indices = op.get_atoms_in_plane(structure)
+    else:
+        atom_indices = op.get_atoms_on_axis(structure)
 ```
-C3v |   2 C3 |   3 sv
----------------------
-A1  |      1 |      1
-A2  |      1 |      1
-E   |      2 |     -1
+
+#### Basis functions (irreducible representations)
+
+```python
+from schoenflies.point_groups.basis_functions import compute_basis_functions
+
+basis = compute_basis_functions(pg)
+# Returns dict[irrep_name, {"linear": [...], "quadratic": [...]}]
+# e.g. {"A1": {"linear": ["z"], "quadratic": ["z²", "x²+y²"]}, "E": {...}, ...}
+for irrep, funcs in basis.items():
+    print(irrep, funcs["linear"], funcs["quadratic"])
+```
+
+#### Element data
+
+```python
+from schoenflies.periodic_table import get_element, get_atomic_number
+
+el = get_element(6)          # Element for carbon
+print(el.symbol)             # "C"
+print(el.name)               # "carbon"
+print(el.mass)               # 12.011
+print(el.radius)             # covalent radius in Å
+print(el.colour)             # CPK RGB tuple (0–1)
+
+n = get_atomic_number("Fe")  # 26
 ```
 
 ### As a command-line tool
@@ -82,26 +164,65 @@ E   |      2 |     -1
 # Single molecule
 schoenflies molecule.xyz
 
-# Multiple files
+# Multiple files at once
 schoenflies tests/files/*.xyz
 
 # Verbose: show rotor class and all found operations
 schoenflies -v ammonia.xyz
+
+# Print the character table for the determined point group
+schoenflies -ct ammonia.xyz
+
+# Character table with ε-notation (cyclic / Sn groups)
+schoenflies -ct --complex ammonia.xyz
+
+# Show principal moments of inertia and Cartesian axes
+schoenflies -m ammonia.xyz
+
+# Show which atoms lie on each symmetry axis / mirror plane
+schoenflies -od ammonia.xyz
+
+# All flags combined
+schoenflies -v -ct -m -od ammonia.xyz
+
+# Force plain-text output (no rich formatting)
+schoenflies -ct --plain ammonia.xyz
+
+# Print a character table for any named group — no XYZ file needed
+schoenflies -g C3v
+schoenflies -g D6h --plain
+schoenflies -g Oh --complex
 ```
 
-**Example output:**
-```
-ammonia.xyz: C3v
+#### Full flag reference
 
-# with -v:
+| Flag | Description |
+|------|-------------|
+| `-v`, `--verbose` | Show rotor class and all found symmetry operations |
+| `-ct`, `--character-table` | Print the full character table (with basis functions) for the determined point group |
+| `--complex` | Use ε-notation in the character table (meaningful for cyclic / Sn groups) |
+| `-m`, `--moments` | Show the three principal moments of inertia (Ia, Ib, Ic in u·Å²) and the 3×3 Cartesian axes matrix |
+| `-od`, `--operations-detail` | For each symmetry operation list the atom symbols and indices lying on its axis or in its plane |
+| `--plain` | Force plain-text output (suppress `rich` table formatting) |
+| `-g NAME`, `--group NAME` | Standalone mode: print the character table for a named group without an XYZ file. Accepts all Schoenflies symbols, e.g. `C1`, `Cs`, `C3v`, `D4h`, `S8`, `Oh`, `Ih`, `Cinfv`, `Dinfh`. Mutually exclusive with FILE arguments. |
+
+**Example output** (`schoenflies -v -ct --plain ammonia.xyz`):
+```
 ammonia.xyz
   Point group : C3v
   Rotor class : ProlateSymmetricTop
   Operations  : 4 found
     C3
-    sv
-    sv
-    sv
+    C3^2
+    σv
+    σv
+    σv
+
+C3v |      E |   2 C3 |   3 σv | Lin/Rot |         Quadratic
+--------------------------------------------------------------
+A1  |      1 |      1 |      1 |       z |         z², x²+y²
+A2  |      1 |      1 |     -1 |      Rz |
+E   |      2 |     -1 |      0 | x, y, Rx, Ry | x²-y², xy, xz, yz
 ```
 
 ---
@@ -171,7 +292,7 @@ The test suite covers 32 reference molecules spanning all major point group fami
 ## Known limitations
 
 - **Maximum Cₙ order is 8.** Higher-order axes (C₉, C₁₀, …) are not searched. Covers all common chemical cases.
-- **Character tables are hardcoded.** Only the 54+ listed groups have character tables. Arbitrary or exotic groups are not supported.
+- **Character tables for polyhedral groups are hardcoded.** T, Td, Th, O, Oh, I, Ih, and the linear groups (C∞v, D∞h) use pre-computed tables. All axial groups (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) are generated analytically for any order n.
 - **Fixed tolerance.** All geometry checks use a tolerance of 10% of the distance to the symmetry element. Slightly distorted geometries may be misclassified.
 - **No visualisation.** This package is the algorithm layer only. The original C++ application includes a full Qt5/OpenGL molecular viewer with real-time symmetry animation; that GUI is not part of this translation.
 - **No periodic structures.** Single isolated molecules only; crystal structures and space groups are not supported.
