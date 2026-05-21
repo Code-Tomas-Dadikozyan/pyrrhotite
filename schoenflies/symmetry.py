@@ -9,7 +9,7 @@ Given a molecule whose coordinates are centred at the centre of mass, this
 module determines the Schoenflies point group in six stages:
 
   1. _determine_principal_axes
-       Build the 3×3 inertia tensor and diagonalise it.  The eigenvectors
+       Build the 3x3 inertia tensor and diagonalise it.  The eigenvectors
        become the principal axes; the eigenvalues (principal moments of
        inertia) classify the rotor type.
 
