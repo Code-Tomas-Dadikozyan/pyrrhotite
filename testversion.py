@@ -1,4 +1,4 @@
-"""Validate that version strings in pyproject.toml, _version.py, and meta.yaml all match."""
+﻿"""Validate that version strings in pyproject.toml, _version.py, and meta.yaml all match."""
 
 import re
 
@@ -13,12 +13,12 @@ def get_version_projecttoml() -> list[int]:
 
 
 def get_version_versionpy() -> list[int]:
-    with open("schoenflies/_version.py") as f:
+    with open("pyrrhotite/_version.py") as f:
         for line in f:
             m = re.search(r'__version__\s*=\s*"([^"]+)"', line)
             if m:
                 return [int(x) for x in m.group(1).split(".")]
-    raise RuntimeError("Version not found in schoenflies/_version.py")
+    raise RuntimeError("Version not found in pyrrhotite/_version.py")
 
 
 def get_version_metayaml() -> list[int]:

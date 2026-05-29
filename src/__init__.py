@@ -1,4 +1,4 @@
-"""Schoenflies point group determination package."""
+"""Pyrrhotite: Schoenflies point group determination package."""
 
 from ._version import __version__
 from .structure import Structure

@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "schoenflies_python"
+name = "pyrrhotite"
 version = "0.1.0"
 description = "Automatic Schoenflies point group determination from molecular coordinates"
 requires-python = ">=3.10"
@@ -18,7 +18,10 @@ dev = ["pytest"]
 vis = ["matplotlib"]
 
 [project.scripts]
-schoenflies = "schoenflies.__main__:main"
+pyrrhotite = "pyrrhotite.__main__:main"
 
-[tool.setuptools.packages.find]
-where = ["."]
+[tool.setuptools]
+packages = ["pyrrhotite", "pyrrhotite.operations", "pyrrhotite.point_groups"]
+
+[tool.setuptools.package-dir]
+pyrrhotite = "src"

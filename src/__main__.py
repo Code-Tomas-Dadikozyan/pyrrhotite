@@ -1,11 +1,11 @@
-"""
+﻿"""
 Command-line interface for Schoenflies point group determination.
 
 Usage:
-    schoenflies molecule.xyz
-    schoenflies mol1.xyz mol2.xyz ...
-    schoenflies -g C3v
-    python -m schoenflies molecule.xyz
+    pyrrhotite molecule.xyz
+    pyrrhotite mol1.xyz mol2.xyz ...
+    pyrrhotite -g C3v
+    python -m pyrrhotite molecule.xyz
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ def _analyse(
         if moments:
             pm = sym.get_principal_moments()
             axes = sym.get_principal_axes()
-            print(f"\n  Principal moments of inertia (u·Å²):")
+            print(f"\n  Principal moments of inertia (uÂ·Ã…Â²):")
             print(f"    Ia = {pm[0]:.6f}")
             print(f"    Ib = {pm[1]:.6f}")
             print(f"    Ic = {pm[2]:.6f}")
@@ -120,8 +120,8 @@ def _analyse(
 
 
 def main() -> None:
-    """Entry point for the schoenflies command."""
-    # Ensure stdout/stderr can represent Unicode symbols (σ, ′, ″, ε, …) on
+    """Entry point for the pyrrhotite command."""
+    # Ensure stdout/stderr can represent Unicode symbols (Ïƒ, â€², â€³, Îµ, â€¦) on
     # Windows consoles whose default encoding may not cover them.
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -130,7 +130,7 @@ def main() -> None:
             pass
 
     parser = argparse.ArgumentParser(
-        prog="schoenflies",
+        prog="pyrrhotite",
         description="Determine the Schoenflies point group of a molecule from an XYZ file.",
     )
     parser.add_argument(
@@ -152,7 +152,7 @@ def main() -> None:
     parser.add_argument(
         "--complex",
         action="store_true",
-        help="Use ε-notation in the character table (cyclic/Sn groups only); only meaningful with -ct or -g",
+        help="Use Îµ-notation in the character table (cyclic/Sn groups only); only meaningful with -ct or -g",
     )
     parser.add_argument(
         "-m", "--moments",

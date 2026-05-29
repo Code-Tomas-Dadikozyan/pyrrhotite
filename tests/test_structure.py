@@ -1,11 +1,11 @@
-"""Unit tests for Structure: XYZ loading, COM centering, closest-index lookup."""
+﻿"""Unit tests for Structure: XYZ loading, COM centering, closest-index lookup."""
 
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from schoenflies.structure import Structure
+from pyrrhotite.structure import Structure
 
 XYZ_DIR = Path(__file__).parent / "files"
 
@@ -20,7 +20,7 @@ def test_load_water():
 def test_com_at_origin_water():
     """After loading, the centre of mass must be at the origin."""
     s = Structure(str(XYZ_DIR / "water.xyz"))
-    from schoenflies.periodic_table import get_element
+    from pyrrhotite.periodic_table import get_element
     masses = np.array([get_element(int(z)).mass for z in s.atomic_numbers])
     com = np.average(s.coordinates, axis=0, weights=masses)
     np.testing.assert_allclose(com, np.zeros(3), atol=1e-10)
@@ -28,7 +28,7 @@ def test_com_at_origin_water():
 
 def test_com_at_origin_buckminsterfullerene():
     s = Structure(str(XYZ_DIR / "buckminsterfullerene.xyz"))
-    from schoenflies.periodic_table import get_element
+    from pyrrhotite.periodic_table import get_element
     masses = np.array([get_element(int(z)).mass for z in s.atomic_numbers])
     com = np.average(s.coordinates, axis=0, weights=masses)
     np.testing.assert_allclose(com, np.zeros(3), atol=1e-10)
@@ -45,7 +45,7 @@ def test_atomic_numbers_water():
 def test_find_closest_index():
     """find_closest_index must return the index of the nearest atom of the given element."""
     s = Structure(str(XYZ_DIR / "water.xyz"))
-    # Query the O position itself — must get back the O index.
+    # Query the O position itself â€” must get back the O index.
     o_idx = int(np.where(s.atomic_numbers == 8)[0][0])
     result = s.find_closest_index(s.coordinates[o_idx], 8)
     assert result == o_idx

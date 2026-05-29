@@ -1,4 +1,4 @@
-"""Tests for the automatic character table generator.
+﻿"""Tests for the automatic character table generator.
 
 Verification strategy:
 1. Consistency: generated tables match hardcoded tables for all axial groups
@@ -13,9 +13,9 @@ import math
 
 import pytest
 
-from schoenflies.point_groups.character_table_generator import generate_point_group
-from schoenflies.point_groups.point_group_label import PointGroupLabel as PGL
-from schoenflies.point_groups.point_groups import POINT_GROUPS
+from pyrrhotite.point_groups.character_table_generator import generate_point_group
+from pyrrhotite.point_groups.point_group_label import PointGroupLabel as PGL
+from pyrrhotite.point_groups.point_groups import POINT_GROUPS
 
 _TOL = 1e-9
 _MATCH_TOL = 1e-4   # tolerance for comparing to hardcoded tables (match float rounding)
@@ -42,7 +42,7 @@ def _check_orthogonality(pg_label: PGL) -> None:
         f"{pg_label.get_name()}: col count mismatch {n_cols} vs {len(multiplicities)}"
     )
 
-    # Off-diagonal row orthogonality: Σ_R h_R χ_i(R) χ_j(R) = 0 for i≠j.
+    # Off-diagonal row orthogonality: Î£_R h_R Ï‡_i(R) Ï‡_j(R) = 0 for iâ‰ j.
     # This holds universally for real character tables (including combined
     # complex-pair "E" irreps in abelian/cyclic groups).
     for i in range(n_irreps):
@@ -56,7 +56,7 @@ def _check_orthogonality(pg_label: PGL) -> None:
                 f"irreps {i},{j}  got {val:.6f}"
             )
 
-    # Diagonal row orthogonality: Σ_R h_R χ_i(R)^2 = k_i * |G|
+    # Diagonal row orthogonality: Î£_R h_R Ï‡_i(R)^2 = k_i * |G|
     # where k_i = 1 for genuine irreps (A, B, and non-abelian E/T)
     # and k_i = 2 for combined complex-pair E irreps (abelian cyclic groups).
     # We only verify it is a positive integer multiple of |G|.
@@ -111,7 +111,7 @@ def _hardcoded_axial_groups():
 
 @pytest.mark.parametrize("lbl,hc_pg", list(_hardcoded_axial_groups()))
 def test_generated_matches_hardcoded(lbl, hc_pg):
-    """Generated character values must match the hardcoded table (±1e-4)."""
+    """Generated character values must match the hardcoded table (Â±1e-4)."""
     gen_pg = generate_point_group(lbl)
     hc_chars = hc_pg.get_characters()
     gen_chars = gen_pg.get_characters()
@@ -240,17 +240,17 @@ def test_dnd_order(n, expected_order):
 # ---------------------------------------------------------------------------
 
 def test_c11_e_irrep_first_class():
-    """C11 E_1 at 2C11: χ = 2cos(2π/11)."""
+    """C11 E_1 at 2C11: Ï‡ = 2cos(2Ï€/11)."""
     pg = generate_point_group(PGL(_C.C, 11))
     chars = pg.get_characters()
-    # irrep order: A, E1, E2, E3, E4, E5  (n=11 odd → 6 irreps)
+    # irrep order: A, E1, E2, E3, E4, E5  (n=11 odd â†’ 6 irreps)
     e1_row = chars[1]   # E1
     expected = 2.0 * math.cos(2.0 * math.pi / 11)
     assert abs(e1_row[1] - expected) < _TOL
 
 
 def test_c12_b_irrep():
-    """C12 B at C12 class: χ = (-1)^1 = -1."""
+    """C12 B at C12 class: Ï‡ = (-1)^1 = -1."""
     pg = generate_point_group(PGL(_C.C, 12))
     chars = pg.get_characters()
     # irrep order: A, B, E1, E2, ..., E5
@@ -259,13 +259,13 @@ def test_c12_b_irrep():
 
 
 def test_c12v_a2_at_sigma():
-    """C12v A2 character at σv column must be −1."""
+    """C12v A2 character at Ïƒv column must be âˆ’1."""
     pg = generate_point_group(PGL(_C.Cv, 12))
     chars = pg.get_characters()
     a2_row = chars[1]   # A2
-    sigma_col = len(pg.get_unique_operations()) - 1   # last col = σd
-    sigma_v_col = len(pg.get_unique_operations()) - 2  # second-to-last = σv
-    # A2 is −1 at both σv and σd
+    sigma_col = len(pg.get_unique_operations()) - 1   # last col = Ïƒd
+    sigma_v_col = len(pg.get_unique_operations()) - 2  # second-to-last = Ïƒv
+    # A2 is âˆ’1 at both Ïƒv and Ïƒd
     assert abs(a2_row[1 + sigma_v_col] - (-1.0)) < _TOL
     assert abs(a2_row[1 + sigma_col] - (-1.0)) < _TOL
 
