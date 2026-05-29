@@ -1,35 +1,27 @@
-# schoenflies_python
+# pyrrhotite
 
-A Python package for automatic Schoenflies point group determination from molecular coordinates. Given a molecular geometry in `.xyz` format, it identifies the molecule's Schoenflies point group symbol by numerically detecting all present symmetry elements.
+Automatic Schoenflies point group determination from molecular coordinates.
 
-Python translation of the C++ library by Luuk Kempen (https://gitlab.com/lkkmpn/schoenflies).
+Given a molecular geometry in `.xyz` format, `pyrrhotite` identifies the molecule's Schoenflies point group symbol by numerically detecting all present symmetry elements (rotations, reflections, inversions, and improper rotations).
 
----
-
-## What is a point group?
-
-A **point group** is the complete set of symmetry operations that leave a molecule's geometry unchanged — rotations, reflections, inversions, and combinations thereof. Every molecule belongs to exactly one point group, and its label (e.g. C₂ᵥ, D₆ₕ, Td, Oₕ) encodes its full symmetry in compact notation.
-
-Point group symmetry determines which molecular orbitals can mix, which vibrational modes are IR- or Raman-active, and how a molecule interacts with polarised light. Knowing the point group is a prerequisite for interpreting spectra, predicting reactivity, and building quantum-chemical models.
+Python adaptation of the C++ library by Luuk Kempen (https://gitlab.com/lkkmpn/schoenflies).
 
 ---
 
 ## Installation
 
 ```bash
-git clone https://github.com/Code-Tomas-Dadikozyan/schoenflies_python.git
-cd schoenflies_python
-pip install -e .
+pip install pyrrhotite
 ```
 
-**Requirements:** Python 3.10+, `numpy`, `scipy`
+**Requirements:** Python 3.10+
 
 ---
 
 ## Quick start
 
 ```python
-from schoenflies import Structure, Symmetry
+from pyrrhotite import Structure, Symmetry
 
 s = Structure("molecule.xyz")
 sym = Symmetry(s)
@@ -37,16 +29,31 @@ sym = Symmetry(s)
 print(sym.get_point_group().get_label().get_name())   # e.g. "C3v"
 ```
 
+Or from the command line:
+
+```bash
+pyrrhotite molecule.xyz
+pyrrhotite -v -ct ammonia.xyz   # verbose + character table
+```
+
+---
+
+## What is a point group?
+
+A **point group** is the complete set of symmetry operations that leave a molecule's geometry unchanged. Every molecule belongs to exactly one point group, and its label (e.g. C₂ᵥ, D₆ₕ, Td, Oₕ) encodes its full symmetry in compact notation.
+
+Point group symmetry determines which molecular orbitals can mix, which vibrational modes are IR- or Raman-active, and how a molecule interacts with polarised light.
+
 ---
 
 ## Usage
 
-### As a Python library
+### Python library
 
 #### Point group determination
 
 ```python
-from schoenflies import Structure, Symmetry
+from pyrrhotite import Structure, Symmetry
 
 s = Structure("ammonia.xyz")
 sym = Symmetry(s)
@@ -69,24 +76,22 @@ pg.print_character_table(plain=True)
 pg.print_character_table(complex=True)
 
 # Access the data directly
-print(pg.get_irreps())        # list of IrrepLabel objects
-print(pg.get_characters())    # list[list[float]] — [irrep][operation class]
+print(pg.get_irreps())             # list of IrrepLabel objects
+print(pg.get_characters())         # list[list[float]] — [irrep][operation class]
 print(pg.get_unique_operations())  # conjugacy classes (excluding E)
 ```
 
 #### Character table for any group — no XYZ needed
 
 ```python
-from schoenflies.point_groups.character_table_generator import (
+from pyrrhotite.point_groups.character_table_generator import (
     parse_point_group_name,
     get_or_generate_point_group,
     print_character_table_for,
 )
 
-# Quickest: print directly by name
 print_character_table_for("D4h")
 
-# Or get the PointGroup object for any axial group (including high-n)
 label = parse_point_group_name("C12v")
 pg = get_or_generate_point_group(label)
 pg.print_character_table()
@@ -109,36 +114,24 @@ cart = sym.get_cartesian_axes()         # 3×3 matrix [x | y | z] in the convent
 ```python
 manager = sym.get_operation_manager()
 
-# All found operations
 for op in manager.get_operations():
     print(op.get_label().get_short_name())   # "C3", "C3^2", "σv", "i", …
     print(op.get_axis())                     # unit-vector axis / plane normal
     print(op.get_error())                    # worst-case atom mis-mapping distance (Å)
 
-# Filter by type
-manager.get_proper_rotations()      # Cn only
-manager.get_improper_rotations()    # Sn only
-manager.get_reflections()           # σ only
-manager.get_inversions()            # i only
-
-# Atoms lying on a symmetry element
-structure = sym.get_structure()
-for op in manager.get_operations():
-    label = op.get_label()
-    if label.get_element() == label.Element.Reflection:
-        atom_indices = op.get_atoms_in_plane(structure)
-    else:
-        atom_indices = op.get_atoms_on_axis(structure)
+manager.get_proper_rotations()
+manager.get_improper_rotations()
+manager.get_reflections()
+manager.get_inversions()
 ```
 
-#### Basis functions (irreducible representations)
+#### Basis functions
 
 ```python
-from schoenflies.point_groups.basis_functions import compute_basis_functions
+from pyrrhotite.point_groups.basis_functions import compute_basis_functions
 
 basis = compute_basis_functions(pg)
 # Returns dict[irrep_name, {"linear": [...], "quadratic": [...]}]
-# e.g. {"A1": {"linear": ["z"], "quadratic": ["z²", "x²+y²"]}, "E": {...}, ...}
 for irrep, funcs in basis.items():
     print(irrep, funcs["linear"], funcs["quadratic"])
 ```
@@ -146,67 +139,44 @@ for irrep, funcs in basis.items():
 #### Element data
 
 ```python
-from schoenflies.periodic_table import get_element, get_atomic_number
+from pyrrhotite.periodic_table import get_element, get_atomic_number
 
-el = get_element(6)          # Element for carbon
-print(el.symbol)             # "C"
-print(el.name)               # "carbon"
-print(el.mass)               # 12.011
-print(el.radius)             # covalent radius in Å
-print(el.colour)             # CPK RGB tuple (0–1)
+el = get_element(6)
+print(el.symbol)   # "C"
+print(el.mass)     # 12.011
 
-n = get_atomic_number("Fe")  # 26
+n = get_atomic_number("Fe")   # 26
 ```
 
-### As a command-line tool
+### Command-line tool
 
 ```bash
-# Single molecule
-schoenflies molecule.xyz
+pyrrhotite molecule.xyz
+pyrrhotite tests/files/*.xyz
 
-# Multiple files at once
-schoenflies tests/files/*.xyz
+pyrrhotite -v ammonia.xyz          # rotor class + all operations
+pyrrhotite -ct ammonia.xyz         # character table
+pyrrhotite -ct --complex ammonia.xyz
+pyrrhotite -m ammonia.xyz          # principal moments and axes
+pyrrhotite -od ammonia.xyz         # atoms on each symmetry element
+pyrrhotite -v -ct -m -od ammonia.xyz
 
-# Verbose: show rotor class and all found operations
-schoenflies -v ammonia.xyz
-
-# Print the character table for the determined point group
-schoenflies -ct ammonia.xyz
-
-# Character table with ε-notation (cyclic / Sn groups)
-schoenflies -ct --complex ammonia.xyz
-
-# Show principal moments of inertia and Cartesian axes
-schoenflies -m ammonia.xyz
-
-# Show which atoms lie on each symmetry axis / mirror plane
-schoenflies -od ammonia.xyz
-
-# All flags combined
-schoenflies -v -ct -m -od ammonia.xyz
-
-# Force plain-text output (no rich formatting)
-schoenflies -ct --plain ammonia.xyz
-
-# Print a character table for any named group — no XYZ file needed
-schoenflies -g C3v
-schoenflies -g D6h --plain
-schoenflies -g Oh --complex
+pyrrhotite -g C3v                  # character table with no XYZ file
+pyrrhotite -g D6h --plain
 ```
-
-#### Full flag reference
 
 | Flag | Description |
 |------|-------------|
 | `-v`, `--verbose` | Show rotor class and all found symmetry operations |
-| `-ct`, `--character-table` | Print the full character table (with basis functions) for the determined point group |
-| `--complex` | Use ε-notation in the character table (meaningful for cyclic / Sn groups) |
-| `-m`, `--moments` | Show the three principal moments of inertia (Ia, Ib, Ic in u·Å²) and the 3×3 Cartesian axes matrix |
-| `-od`, `--operations-detail` | For each symmetry operation list the atom symbols and indices lying on its axis or in its plane |
-| `--plain` | Force plain-text output (suppress `rich` table formatting) |
-| `-g NAME`, `--group NAME` | Standalone mode: print the character table for a named group without an XYZ file. Accepts all Schoenflies symbols, e.g. `C1`, `Cs`, `C3v`, `D4h`, `S8`, `Oh`, `Ih`, `Cinfv`, `Dinfh`. Mutually exclusive with FILE arguments. |
+| `-ct`, `--character-table` | Print the full character table (with basis functions) |
+| `--complex` | Use ε-notation in the character table |
+| `-m`, `--moments` | Show principal moments of inertia and Cartesian axes matrix |
+| `-od`, `--operations-detail` | List atoms lying on each symmetry axis or mirror plane |
+| `--plain` | Force plain-text output (suppress `rich` formatting) |
+| `-g NAME`, `--group NAME` | Print character table for a named group without an XYZ file |
 
-**Example output** (`schoenflies -v -ct --plain ammonia.xyz`):
+**Example output** (`pyrrhotite -v -ct --plain ammonia.xyz`):
+
 ```
 ammonia.xyz
   Point group : C3v
@@ -214,9 +184,7 @@ ammonia.xyz
   Operations  : 4 found
     C3
     C3^2
-    σv
-    σv
-    σv
+    σv  (×3)
 
 C3v |      E |   2 C3 |   3 σv | Lin/Rot |         Quadratic
 --------------------------------------------------------------
@@ -239,25 +207,7 @@ H   0.000000   0.756950  -0.478993
 H   0.000000  -0.756950  -0.478993
 ```
 
-- Line 1: number of atoms
-- Line 2: comment (ignored)
-- Lines 3+: element symbol followed by x y z coordinates
-
-The molecule does not need to be pre-centred; the code translates it to its centre of mass automatically.
-
----
-
-## How the algorithm works
-
-1. **Inertia tensor → principal axes.** The 3×3 inertia tensor is built and diagonalised via `numpy.linalg.eigh`, yielding three principal moments and axes.
-
-2. **Rotor classification.** The degeneracy of the moments classifies the molecule into one of five types: *Linear*, *Spherical Top*, *Prolate Symmetric Top*, *Oblate Symmetric Top*, or *Asymmetric Top*. This prunes the candidate search space before symmetry testing.
-
-3. **Symmetry element detection.** Candidate axes are generated from principal axes, atom positions, and pair midpoints. For high-symmetry spherical tops (Td, Oh, Ih) additional face-centroid axes are added. Each candidate is tested by applying the transformation matrix to every atom and checking that the result maps onto a same-element atom within a tolerance of 10% of the distance to the symmetry element. Elements detected: inversion centre (i), proper rotations Cₙ (n = 2–8 and ∞), mirror planes (σ), and improper rotations Sₙ.
-
-4. **Point group matching.** Detected operation counts are compared against a library of 54+ predefined point groups. The group with the smallest non-negative surplus of operations is selected.
-
-5. **Axis assignment and labelling.** The Cartesian frame is standardised: z along the highest-order proper rotation axis; x chosen to maximise atoms in the xz-plane. Mirror planes and C₂ axes are then labelled (σₕ, σᵥ, σd, C₂′, C₂′′).
+The molecule does not need to be pre-centred; coordinates are translated to the centre of mass automatically.
 
 ---
 
@@ -279,47 +229,36 @@ The molecule does not need to be pre-centred; the code translates it to its cent
 
 ---
 
+## How the algorithm works
+
+1. **Inertia tensor → principal axes.** The 3×3 inertia tensor is diagonalised via `numpy.linalg.eigh`, yielding three principal moments and axes.
+2. **Rotor classification.** Degeneracy of the moments classifies the molecule into one of five types (*Linear*, *Spherical Top*, *Prolate Symmetric Top*, *Oblate Symmetric Top*, *Asymmetric Top*), pruning the candidate search space.
+3. **Symmetry element detection.** Candidate axes are generated from principal axes, atom positions, and pair midpoints. Each candidate is tested by applying the transformation matrix and checking that every atom maps onto a same-element atom within a tolerance of 10% of the distance to the symmetry element.
+4. **Point group matching.** Detected operation counts are compared against a library of 54+ predefined point groups. The group with the smallest non-negative surplus of operations is selected.
+5. **Axis assignment and labelling.** The Cartesian frame is standardised (z along the highest-order proper rotation; x to maximise atoms in the xz-plane) and operations are labelled (σₕ, σᵥ, σd, C₂′, C₂′′).
+
+---
+
+## Known limitations
+
+- Maximum Cₙ order searched is 8.
+- Character tables for polyhedral groups (T, Td, Th, O, Oh, I, Ih) and linear groups are hardcoded; all axial groups are generated analytically.
+- Fixed 10% tolerance — slightly distorted geometries may be misclassified.
+- Single isolated molecules only; crystal structures and space groups are not supported.
+
+---
+
 ## Running tests
 
 ```bash
 python -m pytest tests/ -v
 ```
 
-The test suite covers 32 reference molecules spanning all major point group families, plus unit tests for matrix construction, operation equality, and character table integrity.
-
 ---
 
-## Known limitations
+## License
 
-- **Maximum Cₙ order is 8.** Higher-order axes (C₉, C₁₀, …) are not searched. Covers all common chemical cases.
-- **Character tables for polyhedral groups are hardcoded.** T, Td, Th, O, Oh, I, Ih, and the linear groups (C∞v, D∞h) use pre-computed tables. All axial groups (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) are generated analytically for any order n.
-- **Fixed tolerance.** All geometry checks use a tolerance of 10% of the distance to the symmetry element. Slightly distorted geometries may be misclassified.
-- **No visualisation.** This package is the algorithm layer only. The original C++ application includes a full Qt5/OpenGL molecular viewer with real-time symmetry animation; that GUI is not part of this translation.
-- **No periodic structures.** Single isolated molecules only; crystal structures and space groups are not supported.
-
----
-
-## Repository layout
-
-```
-schoenflies_python/
-├── schoenflies/            ← Python package
-│   ├── periodic_table.py   ← Atomic data (118 elements)
-│   ├── rotor_class.py      ← RotorClass enum
-│   ├── structure.py        ← XYZ loading, centre-of-mass centering
-│   ├── symmetry.py         ← Main pipeline (Symmetry class)
-│   ├── operations/         ← Operation, OperationLabel, OperationManager
-│   └── point_groups/       ← PointGroup, character tables, 54+ definitions
-├── tests/
-│   ├── files/              ← 32 reference XYZ molecules
-│   ├── test_structure.py
-│   ├── test_operation.py
-│   ├── test_point_groups.py
-│   └── test_symmetry.py
-├── reference/              ← Original C++ source (read-only)
-├── pyproject.toml
-└── CHANGELOG.md
-```
+GNU General Public License v3.0 — see [LICENSE](LICENSE) for details.
 
 ---
 
