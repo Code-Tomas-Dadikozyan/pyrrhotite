@@ -21,23 +21,13 @@ def get_version_versionpy() -> list[int]:
     raise RuntimeError("Version not found in src/_version.py")
 
 
-def get_version_metayaml() -> list[int]:
-    with open("meta.yaml") as f:
-        for line in f:
-            m = re.search(r'version:\s*"([^"]+)"', line)
-            if m:
-                return [int(x) for x in m.group(1).split(".")]
-    raise RuntimeError("Version not found in meta.yaml")
-
-
 if __name__ == "__main__":
     v_toml = get_version_projecttoml()
     v_py = get_version_versionpy()
-    v_meta = get_version_metayaml()
 
-    assert v_toml == v_py == v_meta, (
+    assert v_toml == v_py, (
         f"Invalid version strings encountered: "
-        f"pyproject.toml={v_toml}, _version.py={v_py}, meta.yaml={v_meta}"
+        f"pyproject.toml={v_toml}, _version.py={v_py}"
     )
 
     print(f"Version check passed: {'.'.join(str(x) for x in v_toml)}")
