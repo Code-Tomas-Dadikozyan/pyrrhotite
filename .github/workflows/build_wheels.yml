@@ -8,7 +8,7 @@ on:
       - main
       - develop
     tags:
-      - "v**"
+      - "v*"
   release:
     types:
       - published
@@ -78,8 +78,8 @@ jobs:
           coverage run -m pytest tests/
           coverage xml
       - uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   build_sdist:
     needs: [check-version-strings, test_wheels]
