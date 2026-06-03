@@ -3,6 +3,15 @@
 All notable changes to this project will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.1.1] - 2026-06-03
+
+### Added
+- PyPI long description: `README.md` rewritten for the project page — `pip install pyrrhotite` install instructions, quick-start example, full CLI flag reference, and example output
+
+### Fixed
+- `testversion.py` was reading `pyrrhotite/_version.py` instead of `src/_version.py`, causing the CI version-check job to fail (`FileNotFoundError`)
+- `testversion.py` was also attempting to open `meta.yaml`, which does not exist in the repository; the `meta.yaml` check has been removed
+
 ## [Unreleased]
 
 ### Added
