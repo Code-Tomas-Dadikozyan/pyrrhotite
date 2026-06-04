@@ -34,7 +34,7 @@ def test_c2_x_matrix():
 
 
 def test_c4_z_matrix():
-    """C4 about z rotates xâ†’y, yâ†’-x, zâ†’z."""
+    """C4 about z rotates x→y, y→-x, z→z."""
     op = Operation.rotation(E.ProperRotation, 4, np.array([0.0, 0.0, 1.0]))
     v = np.array([1.0, 0.0, 0.0])
     result = op.do_atom_operation(v)
@@ -42,7 +42,7 @@ def test_c4_z_matrix():
 
 
 def test_c3_z_matrix():
-    """C3 about z rotates by 120Â°."""
+    """C3 about z rotates by 120°."""
     op = Operation.rotation(E.ProperRotation, 3, np.array([0.0, 0.0, 1.0]))
     v = np.array([1.0, 0.0, 0.0])
     result = op.do_atom_operation(v)
@@ -63,7 +63,7 @@ def test_sigma_v_xz_matrix():
 
 
 def test_improper_rotation_s2_is_inversion():
-    """S2 = Ïƒh âˆ˜ C2 = inversion."""
+    """S2 = σh ∘ C2 = inversion."""
     op = Operation.rotation(E.ImproperRotation, 2, np.array([0.0, 0.0, 1.0]))
     np.testing.assert_allclose(op.matrix, -np.eye(3), atol=1e-10)
 
@@ -88,7 +88,7 @@ def test_c3_valid_on_ammonia():
     """C3 along the principal axis of ammonia should have low error."""
     s = Structure(str(XYZ_DIR / "ammonia.xyz"))
     # principal axis of ammonia is approximately z after COM centering
-    # use the Nâ†’centroid-of-H direction
+    # use the N→centroid-of-H direction
     h_indices = np.where(s.atomic_numbers == 1)[0]
     centroid = s.coordinates[h_indices].mean(axis=0)
     n_idx = int(np.where(s.atomic_numbers == 7)[0][0])

@@ -61,9 +61,9 @@ def test_cartesian_axes_orthonormal(filename: str) -> None:
     np.testing.assert_allclose(np.linalg.norm(x), 1.0, atol=1e-6, err_msg=f"{filename}: x not unit")
     np.testing.assert_allclose(np.linalg.norm(y), 1.0, atol=1e-6, err_msg=f"{filename}: y not unit")
     np.testing.assert_allclose(np.linalg.norm(z), 1.0, atol=1e-6, err_msg=f"{filename}: z not unit")
-    np.testing.assert_allclose(np.dot(x, y), 0.0, atol=1e-6, err_msg=f"{filename}: xÂ·y â‰  0")
-    np.testing.assert_allclose(np.dot(x, z), 0.0, atol=1e-6, err_msg=f"{filename}: xÂ·z â‰  0")
-    np.testing.assert_allclose(np.dot(y, z), 0.0, atol=1e-6, err_msg=f"{filename}: yÂ·z â‰  0")
+    np.testing.assert_allclose(np.dot(x, y), 0.0, atol=1e-6, err_msg=f"{filename}: x·y ≠ 0")
+    np.testing.assert_allclose(np.dot(x, z), 0.0, atol=1e-6, err_msg=f"{filename}: x·z ≠ 0")
+    np.testing.assert_allclose(np.dot(y, z), 0.0, atol=1e-6, err_msg=f"{filename}: y·z ≠ 0")
 
 
 # ------------------------------------------------------------------
@@ -79,7 +79,7 @@ def test_principal_moments_ascending():
 
 
 def test_linear_smallest_moment_near_zero():
-    """Linear molecules have Ia â‰ˆ 0."""
+    """Linear molecules have Ia ≈ 0."""
     s = Structure(str(XYZ_DIR / "carbon-dioxide.xyz"))
     sym = Symmetry(s)
     assert sym.get_principal_moments()[0] < 0.1, \

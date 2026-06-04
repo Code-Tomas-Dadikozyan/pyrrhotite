@@ -45,7 +45,7 @@ def test_atomic_numbers_water():
 def test_find_closest_index():
     """find_closest_index must return the index of the nearest atom of the given element."""
     s = Structure(str(XYZ_DIR / "water.xyz"))
-    # Query the O position itself â€” must get back the O index.
+    # Query the O position itself — must get back the O index.
     o_idx = int(np.where(s.atomic_numbers == 8)[0][0])
     result = s.find_closest_index(s.coordinates[o_idx], 8)
     assert result == o_idx

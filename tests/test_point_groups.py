@@ -16,7 +16,7 @@ PGC = PointGroupLabel.Class
 # ------------------------------------------------------------------
 
 def test_point_groups_count():
-    assert len(POINT_GROUPS) >= 54, f"Expected â‰¥54 point groups, got {len(POINT_GROUPS)}"
+    assert len(POINT_GROUPS) >= 54, f"Expected ≥54 point groups, got {len(POINT_GROUPS)}"
 
 
 def test_point_groups_no_duplicate_labels():
@@ -25,7 +25,7 @@ def test_point_groups_no_duplicate_labels():
 
 
 def test_point_groups_orders_positive():
-    # infinite groups (Câˆžv, Dâˆžh) have order=0 by convention
+    # infinite groups (C∞v, D∞h) have order=0 by convention
     for pg in POINT_GROUPS:
         if not pg.get_label().is_linear():
             assert pg.get_order() > 0, f"{pg.get_label().get_name()} has order 0"
@@ -86,7 +86,7 @@ def _make_ops(*specs) -> list[Operation]:
 
 
 def test_c1_matches_empty_operations():
-    """C1 requires no operations beyond E â€” any list has zero surplus."""
+    """C1 requires no operations beyond E — any list has zero surplus."""
     import numpy as np
     c1 = next(pg for pg in POINT_GROUPS if pg.get_label().get_name() == "C1")
     result = c1.compare_to_symmetry_operations([])
@@ -96,9 +96,9 @@ def test_c1_matches_empty_operations():
 def test_ci_requires_inversion():
     import numpy as np
     ci = next(pg for pg in POINT_GROUPS if pg.get_label().get_name() == "Ci")
-    # without inversion â†’ -1
+    # without inversion → -1
     assert ci.compare_to_symmetry_operations([]) == -1
-    # with inversion â†’ 0 surplus
+    # with inversion → 0 surplus
     ops = [Operation.inversion()]
     assert ci.compare_to_symmetry_operations(ops) == 0
 
@@ -116,10 +116,10 @@ def test_c2v_requires_c2_and_two_reflections():
     c2v = next(pg for pg in POINT_GROUPS if pg.get_label().get_name() == "C2v")
     # missing everything
     assert c2v.compare_to_symmetry_operations([]) == -1
-    # only C2 â€” still missing reflections
+    # only C2 — still missing reflections
     ops = [Operation.rotation(E.ProperRotation, 2, np.array([0.0, 0.0, 1.0]))]
     assert c2v.compare_to_symmetry_operations(ops) == -1
-    # C2 + two reflections â†’ 0 surplus
+    # C2 + two reflections → 0 surplus
     ops += [
         Operation.reflection(np.array([1.0, 0.0, 0.0])),
         Operation.reflection(np.array([0.0, 1.0, 0.0])),

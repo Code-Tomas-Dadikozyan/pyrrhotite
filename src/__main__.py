@@ -19,7 +19,7 @@ from .structure import Structure
 from .symmetry import Symmetry
 from .periodic_table import get_element
 from .operations.operation_label import OperationLabel
-from .point_groups.character_table_generator import (
+from .character_tables import (
     parse_point_group_name,
     get_or_generate_point_group,
 )
@@ -72,7 +72,7 @@ def _analyse(
         if moments:
             pm = sym.get_principal_moments()
             axes = sym.get_principal_axes()
-            print(f"\n  Principal moments of inertia (uÂ·Ã…Â²):")
+            print(f"\n  Principal moments of inertia (u·Ų):")
             print(f"    Ia = {pm[0]:.6f}")
             print(f"    Ib = {pm[1]:.6f}")
             print(f"    Ic = {pm[2]:.6f}")
@@ -121,7 +121,7 @@ def _analyse(
 
 def main() -> None:
     """Entry point for the pyrrhotite command."""
-    # Ensure stdout/stderr can represent Unicode symbols (Ïƒ, â€², â€³, Îµ, â€¦) on
+    # Ensure stdout/stderr can represent Unicode symbols (σ, ′, ″, ε, …) on
     # Windows consoles whose default encoding may not cover them.
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -152,7 +152,7 @@ def main() -> None:
     parser.add_argument(
         "--complex",
         action="store_true",
-        help="Use Îµ-notation in the character table (cyclic/Sn groups only); only meaningful with -ct or -g",
+        help="Use ε-notation in the character table (cyclic/Sn groups only); only meaningful with -ct or -g",
     )
     parser.add_argument(
         "-m", "--moments",

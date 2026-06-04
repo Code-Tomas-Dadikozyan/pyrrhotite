@@ -59,7 +59,7 @@ from .operations.operation_manager import OperationManager
 from .point_groups.point_group import PointGroup
 from .point_groups.point_group_label import PointGroupLabel as _PGL
 from .point_groups.point_groups import POINT_GROUPS
-from .point_groups.character_table_generator import generate_point_group as _generate_pg
+from .character_tables import generate_point_group as _generate_pg
 
 
 class Symmetry:
