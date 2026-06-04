@@ -15,8 +15,8 @@ symmetry operations.  Each *column* corresponds to a *conjugacy class* —
 a set of equivalent symmetry operations (e.g. all three C2 axes in D3h
 form one class).
 
-The *character* χ(Î", R) in row Î", column R is the trace of the
-matrix that represents operation R in irrep Î".  For 1D irreps the
+The *character* χ(Γ, R) in row Γ, column R is the trace of the
+matrix that represents operation R in irrep Γ.  For 1D irreps the
 matrix is just a number (+1 or -1); for 2D irreps it is a 2×2 matrix.
 
 Why 2cos(2πjk/n)?
@@ -139,7 +139,7 @@ def _improper_classes_cnh_odd(n: int) -> list[_RotClass]:
     Each odd-k pair contributes one column with its reduced improper degree.
     """
     classes: list[_RotClass] = []
-    for k in range(1, n, 2):          # k = 1, 3, 5, ..., n-2  (n is odd â†' n-1 is even)
+    for k in range(1, n, 2):          # k = 1, 3, 5, ..., n-2  (n is odd → n-1 is even)
         if k >= n:
             break
         g = math.gcd(n, k)
@@ -184,7 +184,7 @@ def _cn_irreps(n: int) -> list[IrrepLabel]:
     - (n-2)/2 doubly-degenerate E irreps for even n, (n-1)/2 for odd n.
       They are numbered E1, E2, … when more than one exists.
 
-    Total check: A (1) + B (0 or 1) + 2*(num_E) = n âœ"
+    Total check: A (1) + B (0 or 1) + 2*(num_E) = n ✓
     """
     irreps: list[IrrepLabel] = [IrrepLabel(_M.A)]
     if n % 2 == 0:
@@ -313,7 +313,7 @@ def _build_cnh(n: int) -> PointGroup:
             #   S^k cols correspond to matching rot col by same k,
             #   σh corresponds to C2 = last Cn col
             extra: list[float] = []
-            # i â†" E col (index 0)
+            # i ↔ E col (index 0)
             extra.append(cn_row[0] * parity)
             # S^k cols: same k-order as Cn rotation cols
             for sc in s_cls:
@@ -323,7 +323,7 @@ def _build_cnh(n: int) -> PointGroup:
                 )
                 val = cn_row[matching_idx] if matching_idx is not None else cn_row[0]
                 extra.append(val * parity)
-            # σh â†" C2 col (last Cn col)
+            # σh ↔ C2 col (last Cn col)
             extra.append(cn_row[-1] * parity)
             return cn_row + extra
 
@@ -465,9 +465,9 @@ def _build_cnv(n: int) -> PointGroup:
 
         # characters: [rot cols, σv col, σd col]
         # A1: all 1s
-        # A2: 1 at rotations, âˆ'1 at σv and σd
-        # B1: Cn-B chars at rotations, +1 at σv, âˆ'1 at σd
-        # B2: Cn-B chars at rotations, âˆ'1 at σv, +1 at σd
+        # A2: 1 at rotations, −1 at σv and σd
+        # B1: Cn-B chars at rotations, +1 at σv, −1 at σd
+        # B2: Cn-B chars at rotations, −1 at σv, +1 at σd
         # E_j: Cn-E_j chars at rotations, 0 at σv, 0 at σd
         b_rot = [1.0] + [float((-1) ** rc.k) for rc in rot_cls]
         chars = []
@@ -523,8 +523,8 @@ def _build_sn(n: int) -> PointGroup:
     Examples: S4 (allene at non-equilibrium twist angle), S6 (staggered ethane).
 
     The powers S_n^k alternate between proper and improper:
-        k odd  â†' S_n^k is a genuine improper rotation
-        k even â†' S_n^k = C_{n/2}^{k/2} is a proper rotation
+        k odd  → S_n^k is a genuine improper rotation
+        k even → S_n^k = C_{n/2}^{k/2} is a proper rotation
 
     Why even n only?
     ----------------
@@ -671,7 +671,7 @@ def _build_dn(n: int) -> PointGroup:
 
     Dn adds n horizontal C2 axes perpendicular to the principal Cn axis
     (no mirror planes or inversion centre).  Example: D2 (twisted allene),
-    D3 (tris(en)Co³âº tris-chelate propeller), D6 (coronene with a twist).
+    D3 (tris(en)Co³⁺ tris-chelate propeller), D6 (coronene with a twist).
 
     For even n, the n horizontal C2 axes split into two inequivalent sets
     of n/2 each:
@@ -760,8 +760,8 @@ def _build_dnh(n: int) -> PointGroup:
     D3h (BF3, cyclopropane), D6h (benzene, coronene).
 
     The doubling works exactly as in Cnh:
-    - Even n: Dnh contains an inversion centre â†' g/u splitting.
-    - Odd n: no inversion â†' ′/″ prime splitting.
+    - Even n: Dnh contains an inversion centre → g/u splitting.
+    - Odd n: no inversion → ′/″ prime splitting.
 
     Column order (even n): [Cn rotation cols, C2', C2'', i, Sn cols, σh, σv, σd]
     Column order (odd n):  [Cn rotation cols, C2', σh, Sn cols, σv]
@@ -796,7 +796,7 @@ def _build_dnh(n: int) -> PointGroup:
 
         # Dn character row (rotation + C2' + C2'' parts)
         def _dn_row(j: int) -> list[float]:
-            # j < 0: 1D irrep: j=-1 â†' A1, j=-2 â†' A2, j=-3 â†' B1, j=-4 â†' B2
+            # j < 0: 1D irrep: j=-1 → A1, j=-2 → A2, j=-3 → B1, j=-4 → B2
             if j == -1:   # A1: all 1s
                 return [1.0] * (1 + len(rot_cls)) + [1.0, 1.0]
             if j == -2:   # A2: rotations +1, C2' and C2'' -1
@@ -814,19 +814,19 @@ def _build_dnh(n: int) -> PointGroup:
         # For g: same sign as Dn row
         # For u: negated
         def _extra_dnh_even(dn_row: list[float], dn_j: int, parity: int) -> list[float]:
-            # i â†" E col (index 0)
+            # i ↔ E col (index 0)
             extra = [dn_row[0] * parity]
             # S cols (same k as Cn rotation cols)
             for sc in s_cls_even:
                 idx = next((i + 1 for i, rc in enumerate(rot_cls) if rc.k == sc.k), None)
                 val = dn_row[idx] if idx is not None else dn_row[0]
                 extra.append(val * parity)
-            # σh â†" C2 col (last Cn rotation col)
+            # σh ↔ C2 col (last Cn rotation col)
             extra.append(dn_row[len(rot_cls)] * parity)   # = Cn C2 col
-            # σv â†" C2' col
+            # σv ↔ C2' col
             c2p_idx = 1 + len(rot_cls)   # index of C2' in dn_row
             extra.append(dn_row[c2p_idx] * parity)
-            # σd â†" C2'' col
+            # σd ↔ C2'' col
             extra.append(dn_row[c2p_idx + 1] * parity)
             return dn_row + extra
 
@@ -879,7 +879,7 @@ def _build_dnh(n: int) -> PointGroup:
                 idx = next((i + 1 for i, rc in enumerate(rot_cls) if rc.k == k_canon), None)
                 val = dn_row[idx] if idx is not None else dn_row[0]
                 s_vals.append(val * sign)
-            # σv â†" C2' col
+            # σv ↔ C2' col
             c2p_val = dn_row[1 + len(rot_cls)]
             return dn_row + [sigma_h_val] + s_vals + [c2p_val * sign]
 
@@ -968,14 +968,14 @@ def _build_dnd(n: int) -> PointGroup:
       χ(C_n^k)       = 2 cos(2π j k / n)
       χ(S_{2n}^k)    = ±2 cos(π j k / n)
         + for even n (and u irreps of odd n)
-        âˆ' for g irreps of odd n
+        − for g irreps of odd n
     """
     rot_cls = _rotation_classes_cn(n)
     num_e_cn = (n - 2) // 2 if n % 2 == 0 else (n - 1) // 2
     two_n = 2 * n
 
     if n % 2 == 0:
-        # â"€â"€ even n: no inversion, interleaved S_{2n} / C_n columns â"€â"€â"€â"€â"€â"€â"€â"€â"€
+        # ── even n: no inversion, interleaved S_{2n} / C_n columns ─────────
         # Column order: (S_{2n}^1, C_n^1), (S_{2n}^3, C_n^2), ..., (S_{2n}^(n-1), C_2),
         #               n·C2', n·σd
         interleaved: list[_RotClass] = []
@@ -1012,7 +1012,7 @@ def _build_dnd(n: int) -> PointGroup:
         # character formula
         def _chi_dnd_even(j: int, rc: _RotClass) -> float:
             # Both S and C columns use 2cos(πjk/n) where k is the S_{2n}^k power index.
-            # For C_n^p: k=2p, so 2cos(πj·2p/n) = 2cos(2πjp/n) âœ"
+            # For C_n^p: k=2p, so 2cos(πj·2p/n) = 2cos(2πjp/n) ✓
             return 2.0 * math.cos(math.pi * j * rc.k / n)
 
         chars: list[list[float]] = []
@@ -1020,11 +1020,11 @@ def _build_dnd(n: int) -> PointGroup:
         chars.append([1.0] + [1.0] * len(interleaved) + [1.0, 1.0])
         # A2
         chars.append([1.0] + [1.0] * len(interleaved) + [-1.0, -1.0])
-        # B1: âˆ'1 at S_{2n} cols, +1 at C cols, +1 C2', âˆ'1 σd
+        # B1: −1 at S_{2n} cols, +1 at C cols, +1 C2', −1 σd
         b1 = [1.0] + [(-1.0 if rc.label.get_element() == _E.S else 1.0)
                        for rc in interleaved] + [1.0, -1.0]
         chars.append(b1)
-        # B2: âˆ'1 at S cols, +1 at C cols, âˆ'1 C2', +1 σd
+        # B2: −1 at S cols, +1 at C cols, −1 C2', +1 σd
         b2 = [1.0] + [(-1.0 if rc.label.get_element() == _E.S else 1.0)
                        for rc in interleaved] + [-1.0, 1.0]
         chars.append(b2)
@@ -1040,7 +1040,7 @@ def _build_dnd(n: int) -> PointGroup:
         np_rot[2] = np_rot.get(2, 0) + n
 
     else:
-        # â"€â"€ odd n: has inversion, g/u, Cn cols first then S_{2n} cols â"€â"€â"€â"€â"€â"€â"€
+        # ── odd n: has inversion, g/u, Cn cols first then S_{2n} cols ───────
         # Column order: Cn rotation cols, n·C2', i, S_{2n}^k (k=1,3,...,n-2), n·σd
         s_cols: list[_RotClass] = []
         for p in range(1, (n + 1) // 2):        # p = 1 .. (n-1)/2
@@ -1068,8 +1068,8 @@ def _build_dnd(n: int) -> PointGroup:
         # characters for odd-n Dnd:
         # Cn rotation columns: 2cos(2πjk/n)
         # C2' column: 0 for E, ±1 for A
-        # i column: +dim for g, âˆ'dim for u
-        # S_{2n}^k column: âˆ'2cos(πjk/n) for g, +2cos(πjk/n) for u
+        # i column: +dim for g, −dim for u
+        # S_{2n}^k column: −2cos(πjk/n) for g, +2cos(πjk/n) for u
         # σd column: 0 for E, ±1 for A
 
         def _build_dnd_odd_row(j: int, parity: int) -> list[float]:
@@ -1081,7 +1081,7 @@ def _build_dnd(n: int) -> PointGroup:
                 i_val = float(parity)
                 s_vals = [float(parity)] * len(s_cols)
                 sigma_d_val = float(parity)
-            elif j == -2:  # A2: C2'=âˆ'1, i=+parity, S=+parity, σd=âˆ'parity
+            elif j == -2:  # A2: C2'=−1, i=+parity, S=+parity, σd=−parity
                 rot_part = [1.0] * (1 + len(rot_cls))
                 c2p_val = -1.0
                 i_val = float(parity)
@@ -1221,7 +1221,7 @@ _FIXED_NAMES: dict[str, PointGroupLabel] = {
     "Dinfh":  PointGroupLabel(_C.Dinfh),
 }
 
-# Suffix â†' PointGroupLabel class for axial groups that carry a numeric order.
+# Suffix → PointGroupLabel class for axial groups that carry a numeric order.
 _SUFFIX_TO_CLASS: dict[str, _C] = {
     "h":  _C.Ch,
     "v":  _C.Cv,
