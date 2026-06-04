@@ -1,10 +1,13 @@
-﻿"""Validate that version strings in pyproject.toml, _version.py, and meta.yaml all match."""
+"""Validate that version strings in pyproject.toml, _version.py, and meta.yaml all match."""
 
 import re
+from pathlib import Path
+
+_ROOT = Path(__file__).parent.parent
 
 
 def get_version_projecttoml() -> list[int]:
-    with open("pyproject.toml") as f:
+    with open(_ROOT / "pyproject.toml") as f:
         for line in f:
             m = re.search(r'version\s*=\s*"([^"]+)"', line)
             if m:
@@ -13,7 +16,7 @@ def get_version_projecttoml() -> list[int]:
 
 
 def get_version_versionpy() -> list[int]:
-    with open("src/_version.py") as f:
+    with open(_ROOT / "src/_version.py") as f:
         for line in f:
             m = re.search(r'__version__\s*=\s*"([^"]+)"', line)
             if m:
