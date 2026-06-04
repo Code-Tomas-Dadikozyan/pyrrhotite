@@ -3,22 +3,6 @@
 All notable changes to this project will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.1.1] - 2026-06-03
-
-### Added
-- PyPI long description: `README.md` rewritten for the project page — `pip install pyrrhotite` install instructions, quick-start example, full CLI flag reference, and example output
-
-### Fixed
-- `testversion.py` was reading `pyrrhotite/_version.py` instead of `src/_version.py`, causing the CI version-check job to fail (`FileNotFoundError`)
-- `testversion.py` was also attempting to open `meta.yaml`, which does not exist in the repository; the `meta.yaml` check has been removed
-
-## [Unreleased]
-
-### Added
-- `schoenflies/point_groups/character_table_generator.py` — automatic character table generator for all seven axial point group families (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) for arbitrary order n ≥ 2, implementing the analytical formulas from Johansson & Veryazov (2017). Exposes `generate_point_group(label)` and `get_or_generate_point_group(label)`.
-- `Symmetry._generate_point_group_from_ops` fallback in `_find_point_group`: when no hardcoded group matches the detected operations (e.g. n > 10), the family and order are inferred and the table is generated on-the-fly.
-- `tests/test_character_table_generator.py` — 120 tests: consistency against all hardcoded axial tables, off-diagonal row orthogonality for n > 10, structural sanity checks, and spot-checks of known analytical values.
-
 ## [0.1.0] - 2026-05-11
 
 ### Added
@@ -39,3 +23,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `tests/files/` — 32 XYZ test molecules copied from `reference/test/files/` covering all major point-group families
 - `tests/conftest.py` — pytest fixtures and expected point-group label mapping for all 32 molecules
 - `tests/test_structure.py` — unit tests for XYZ loading, COM centering, `find_closest_index`, and `calculate_bond_pairs`
+
+## [0.1.1] - 2026-06-03
+
+### Added
+- `schoenflies/point_groups/character_table_generator.py` — automatic character table generator for all seven axial point group families (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) for arbitrary order n ≥ 2, implementing the analytical formulas from Johansson & Veryazov (2017). Exposes `generate_point_group(label)` and `get_or_generate_point_group(label)`.
+- `Symmetry._generate_point_group_from_ops` fallback in `_find_point_group`: when no hardcoded group matches the detected operations (e.g. n > 10), the family and order are inferred and the table is generated on-the-fly.
+- `tests/test_character_table_generator.py` — 120 tests: consistency against all hardcoded axial tables, off-diagonal row orthogonality for n > 10, structural sanity checks, and spot-checks of known analytical values.
+
+### Fixed
+- `testversion.py` was reading `pyrrhotite/_version.py` instead of `src/_version.py`, causing the CI version-check job to fail (`FileNotFoundError`)
+- `testversion.py` was also attempting to open `meta.yaml`, which does not exist in the repository; the `meta.yaml` check has been removed
+
+
+## [0.1.2] - 2026-06-03
+
+
+### Added
+- PyPI long description: `README.md` rewritten for the project page — `pip install pyrrhotite` install instructions, quick-start example, full CLI flag reference, and example output
