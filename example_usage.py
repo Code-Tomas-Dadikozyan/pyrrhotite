@@ -338,18 +338,10 @@ for i, z in enumerate(s.atomic_numbers):
     el_i = get_element(int(z))
     print(f"  Atom {i}: Z={int(z):3d}  symbol={el_i.symbol:<3}  mass={el_i.mass:.4f} u")
 
-# ---------------------------------------------------------------------------
-# Cleanup: remove generated output files
-# ---------------------------------------------------------------------------
-
-print()
-print(SEP)
-print("CLEANUP")
-print(SEP)
-
-for p in [tex_path, html_path, multi_tex, multi_html]:
-    p.unlink(missing_ok=True)
-    print(f"Removed {p}")
-
 print()
 print("Done. All sections completed successfully.")
+print()
+print("Cleaning up generated files:")
+for p in [tex_path, html_path, multi_tex, multi_html]:
+    p.unlink(missing_ok=True)
+    print(f"  Removed {p}")
