@@ -149,18 +149,21 @@ class OperationLabel:
         return cls(element, plane=plane, prime=prime)
 
     # ------------------------------------------------------------------
-    # Getters / setters
+    # Properties / setters
     # ------------------------------------------------------------------
 
-    def get_element(self) -> OperationLabel.Element:
+    @property
+    def element(self) -> OperationLabel.Element:
         """Return the symmetry element."""
         return self._element
 
-    def get_degree(self) -> int:
+    @property
+    def degree(self) -> int:
         """Return the degree of the symmetry axis (0 == infinite)."""
         return self._degree
 
-    def get_multiple(self) -> int:
+    @property
+    def multiple(self) -> int:
         """Return the multiple of the degree."""
         return self._multiple
 
@@ -168,7 +171,8 @@ class OperationLabel:
         """Set the multiple of the degree."""
         self._multiple = multiple
 
-    def get_plane(self) -> OperationLabel.Plane:
+    @property
+    def plane(self) -> OperationLabel.Plane:
         """Return the mirror-plane orientation."""
         return self._plane
 
@@ -176,7 +180,8 @@ class OperationLabel:
         """Set the mirror-plane orientation."""
         self._plane = plane
 
-    def get_prime(self) -> OperationLabel.Prime:
+    @property
+    def prime(self) -> OperationLabel.Prime:
         """Return the prime modifier."""
         return self._prime
 
@@ -208,7 +213,8 @@ class OperationLabel:
             case _:
                 raise RuntimeError("Unexpected symmetry element encountered.")
 
-    def get_short_name(self) -> str:
+    @property
+    def short_name(self) -> str:
         """Return the short plaintext name (e.g. 'C3^2', 'σv')."""
         degree_str = self._format_number(self._degree)
         multiple_str = self._format_number(self._multiple)
@@ -254,7 +260,8 @@ class OperationLabel:
 
         return name
 
-    def get_short_name_html(self) -> str:
+    @property
+    def short_name_html(self) -> str:
         """Return the short HTML-formatted name."""
         degree_str = self._format_number(self._degree)
         multiple_str = self._format_number(self._multiple)
@@ -300,13 +307,15 @@ class OperationLabel:
 
         return name
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         """Return the full plaintext name (short name + verbose suffix)."""
-        return self.get_short_name() + self._get_name_suffix()
+        return self.short_name + self._get_name_suffix()
 
-    def get_name_html(self) -> str:
+    @property
+    def name_html(self) -> str:
         """Return the full HTML-formatted name (short HTML name + verbose suffix)."""
-        return self.get_short_name_html() + self._get_name_suffix()
+        return self.short_name_html + self._get_name_suffix()
 
     # ------------------------------------------------------------------
     # Matching

@@ -132,14 +132,16 @@ class PointGroupLabel:
         return cls(point_group_class, order)
 
     # ------------------------------------------------------------------
-    # Getters
+    # Properties
     # ------------------------------------------------------------------
 
-    def get_class(self) -> PointGroupLabel.Class:
+    @property
+    def group_class(self) -> PointGroupLabel.Class:
         """Return the point-group class."""
         return self._class
 
-    def get_order(self) -> int:
+    @property
+    def order(self) -> int:
         """Return the order (0 for polyhedral and special cases)."""
         return self._order
 
@@ -212,7 +214,8 @@ class PointGroupLabel:
     # Name helpers
     # ------------------------------------------------------------------
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         """Return the plaintext name (e.g. 'C3v', 'D2h', 'Td', 'C∞v', 'D∞h')."""
         order = str(self._order)
         match self._class:
@@ -255,7 +258,8 @@ class PointGroupLabel:
             case _:
                 raise RuntimeError("Unexpected point group class encountered.")
 
-    def get_name_html(self) -> str:
+    @property
+    def name_html(self) -> str:
         """Return the HTML-formatted name."""
         order = str(self._order)
         match self._class:
@@ -303,7 +307,7 @@ class PointGroupLabel:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def get_class_from_string(class_string: str) -> PointGroupLabel.Class:
+    def class_from_string(class_string: str) -> PointGroupLabel.Class:
         """Return the Class enum value corresponding to a string key."""
         mapping = {
             "C": PointGroupLabel.Class.C,

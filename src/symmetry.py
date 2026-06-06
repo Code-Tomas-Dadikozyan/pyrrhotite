@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .periodic_table import get_element
+from .periodic_table import element as get_element
 from .rotor_class import RotorClass
 from .structure import Structure
 from .operations.operation import Operation as _Operation
@@ -94,43 +94,53 @@ class Symmetry:
     # Getters
     # ------------------------------------------------------------------
 
-    def get_structure(self) -> Structure:
+    @property
+    def structure(self) -> Structure:
         """Return the structure used for this symmetry determination."""
         return self._structure
 
-    def get_principal_moments(self) -> np.ndarray:
+    @property
+    def principal_moments(self) -> np.ndarray:
         """Return the three principal moments of inertia, sorted ascending."""
         return self._principal_moments
 
-    def get_principal_axes(self) -> np.ndarray:
+    @property
+    def principal_axes(self) -> np.ndarray:
         """Return the 3x3 matrix whose columns are the principal axes (eigenvectors)."""
         return self._principal_axes
 
-    def get_x_axis(self) -> np.ndarray:
+    @property
+    def x_axis(self) -> np.ndarray:
         """Return the Cartesian x axis (set after find_cartesian_axes)."""
         return self._x_axis
 
-    def get_y_axis(self) -> np.ndarray:
+    @property
+    def y_axis(self) -> np.ndarray:
         """Return the Cartesian y axis (set after find_cartesian_axes)."""
         return self._y_axis
 
-    def get_z_axis(self) -> np.ndarray:
+    @property
+    def z_axis(self) -> np.ndarray:
         """Return the Cartesian z axis (set after find_cartesian_axes)."""
         return self._z_axis
 
-    def get_cartesian_axes(self) -> np.ndarray:
+    @property
+    def cartesian_axes(self) -> np.ndarray:
         """Return the 3x3 Cartesian-axis matrix with columns [x, y, z]."""
         return np.column_stack([self._x_axis, self._y_axis, self._z_axis])
 
-    def get_rotor_class(self) -> RotorClass:
+    @property
+    def rotor_class(self) -> RotorClass:
         """Return the rotor classification of the structure."""
         return self._rotor_class
 
-    def get_point_group(self) -> PointGroup:
+    @property
+    def point_group(self) -> PointGroup:
         """Return the determined point group."""
         return self._point_group
 
-    def get_operation_manager(self) -> OperationManager:
+    @property
+    def operation_manager(self) -> OperationManager:
         """Return the operation manager holding all found symmetry operations."""
         return self._operation_manager
 
@@ -434,9 +444,9 @@ class Symmetry:
         found by taking cross products of pairs of known C2 axes.
         """
         c2s = [
-            op for op in self._operation_manager.get_operations()
-            if op.get_label().get_element() == _OL.Element.ProperRotation
-            and op.get_degree() == 2
+            op for op in self._operation_manager.operations
+            if op.label.element == _OL.Element.ProperRotation
+            and op.degree == 2
         ]
         n_c2 = len(c2s)
         if n_c2 in (3, 9):
@@ -462,7 +472,7 @@ class Symmetry:
         """For I symmetry: C3 and C5 axes are cross products of C2-axis pairs."""
         for i in range(len(c2s) - 1):
             for j in range(i + 1, len(c2s)):
-                axis = np.cross(c2s[i].get_axis(), c2s[j].get_axis())
+                axis = np.cross(c2s[i].axis, c2s[j].axis)
                 if float(np.dot(axis, axis)) == 0.0:
                     continue
                 for degree in (3, 5):
@@ -477,14 +487,14 @@ class Symmetry:
             self._operation_manager.add_operation(op)
             return
 
-        for existing in list(self._operation_manager.get_operations()):
-            if existing.get_label().get_element() != _OL.Element.ProperRotation:
+        for existing in list(self._operation_manager.operations):
+            if existing.label.element != _OL.Element.ProperRotation:
                 continue
             for degree_factor in (1, 2):
-                degree = existing.get_degree() * degree_factor
+                degree = existing.degree * degree_factor
                 if degree <= 2:
                     continue  # S1 = σ, S2 = i; handled separately
-                op = _Operation.rotation(_OL.Element.ImproperRotation, degree, existing.get_axis())
+                op = _Operation.rotation(_OL.Element.ImproperRotation, degree, existing.axis)
                 self._operation_manager.add_operation(op)
 
     def _find_reflection_planes(self) -> None:
@@ -495,9 +505,9 @@ class Symmetry:
         octahedral_or_icosahedral = False
         if self._rotor_class == RotorClass.SphericalTop:
             n_c2 = sum(
-                1 for op in self._operation_manager.get_operations()
-                if op.get_label().get_element() == _OL.Element.ProperRotation
-                and op.get_degree() == 2
+                1 for op in self._operation_manager.operations
+                if op.label.element == _OL.Element.ProperRotation
+                and op.degree == 2
             )
             if n_c2 in (9, 15):
                 octahedral_or_icosahedral = True
@@ -519,12 +529,12 @@ class Symmetry:
         self, only_c2s: bool
     ) -> None:
         """Test reflection planes whose normals coincide with proper rotation axes."""
-        for existing in self._operation_manager.get_operations():
-            if existing.get_label().get_element() != _OL.Element.ProperRotation:
+        for existing in self._operation_manager.operations:
+            if existing.label.element != _OL.Element.ProperRotation:
                 continue
-            if only_c2s and existing.get_degree() != 2:
+            if only_c2s and existing.degree != 2:
                 continue
-            op = _Operation.reflection(existing.get_axis())
+            op = _Operation.reflection(existing.axis)
             self._operation_manager.add_operation(op)
 
     def _find_reflection_planes_in_midpoints(self) -> None:
@@ -596,7 +606,7 @@ class Symmetry:
         infers the group class from the operation counts and calls the analytical
         character-table generator.  This handles arbitrarily high-order groups.
         """
-        ops = self._operation_manager.get_operations()
+        ops = self._operation_manager.operations
         min_diff = float("inf")
         best: PointGroup | None = None
         for pg in POINT_GROUPS:
@@ -617,35 +627,35 @@ class Symmetry:
         """
         # Count operation types
         n_inv = sum(1 for op in ops
-                    if op.get_label().get_element() == _OL.Element.Inversion)
+                    if op.label.element == _OL.Element.Inversion)
         n_ref = sum(1 for op in ops
-                    if op.get_label().get_element() == _OL.Element.Reflection)
+                    if op.label.element == _OL.Element.Reflection)
         n_impr = sum(1 for op in ops
-                     if op.get_label().get_element() == _OL.Element.ImproperRotation)
+                     if op.label.element == _OL.Element.ImproperRotation)
 
         # Highest-order proper rotation axis
-        proper_degs = [op.get_degree() for op in ops
-                       if op.get_label().get_element() == _OL.Element.ProperRotation]
+        proper_degs = [op.degree for op in ops
+                       if op.label.element == _OL.Element.ProperRotation]
         if not proper_degs:
             return None
         n = max(proper_degs)
 
         # Count C2 operations (potential C2' axes perpendicular to Cn)
         n_c2 = sum(1 for op in ops
-                   if op.get_label().get_element() == _OL.Element.ProperRotation
-                   and op.get_degree() == 2)
+                   if op.label.element == _OL.Element.ProperRotation
+                   and op.degree == 2)
         # Subtract one C2 if it belongs to the main Cn axis (n even → C2 = Cn^(n/2))
         n_c2_prime = n_c2 - (1 if n % 2 == 0 else 0)
 
         has_c2_prime = n_c2_prime >= n   # at least n perpendicular C2 axes
         has_sigma_h = any(
-            op.get_label().get_element() == _OL.Element.Reflection
-            and op.get_label().get_plane() == _OL.Plane.Horizontal
+            op.label.element == _OL.Element.Reflection
+            and op.label.plane == _OL.Plane.Horizontal
             for op in ops
         )
         has_sigma_v_or_d = any(
-            op.get_label().get_element() == _OL.Element.Reflection
-            and op.get_label().get_plane() in (_OL.Plane.Vertical, _OL.Plane.Dihedral)
+            op.label.element == _OL.Element.Reflection
+            and op.label.plane in (_OL.Plane.Vertical, _OL.Plane.Dihedral)
             for op in ops
         )
 
@@ -693,8 +703,8 @@ class Symmetry:
         directly to orient the frame.
         """
         num_rotations = sum(
-            1 for op in self._operation_manager.get_operations()
-            if op.get_label().get_element() == _OL.Element.ProperRotation
+            1 for op in self._operation_manager.operations
+            if op.label.element == _OL.Element.ProperRotation
         )
 
         if self._rotor_class == RotorClass.SphericalTop or num_rotations == 0:
@@ -732,19 +742,19 @@ class Symmetry:
         if self._rotor_class == RotorClass.SphericalTop:
             return
 
-        ops = self._operation_manager.get_operations()
+        ops = self._operation_manager.operations
         max_degree = max(
-            (op.get_degree() for op in ops
-             if op.get_label().get_element() == _OL.Element.ProperRotation),
+            (op.degree for op in ops
+             if op.label.element == _OL.Element.ProperRotation),
             default=0,
         )
         if max_degree == 0:
             return
 
         candidates = [
-            op.get_axis() for op in ops
-            if op.get_label().get_element() == _OL.Element.ProperRotation
-            and op.get_degree() == max_degree
+            op.axis for op in ops
+            if op.label.element == _OL.Element.ProperRotation
+            and op.degree == max_degree
         ]
 
         if len(candidates) == 1:
@@ -885,7 +895,7 @@ class Symmetry:
 
     def _label_proper_rotational_axes(self) -> None:
         """Dispatch rotation labelling for dihedral and octahedral groups."""
-        label = self._point_group.get_label()
+        label = self._point_group.label
         if label.is_dihedral():
             self._label_proper_rotational_axes_dihedral()
         if label.is_octahedral():
@@ -911,25 +921,25 @@ class Symmetry:
         in the first or last quarter of that step is labelled C2′ (aligned
         with x); one in the middle half is labelled C2″ (midway between).
         """
-        pg_label = self._point_group.get_label()
-        for op in self._operation_manager.get_operations():
-            lbl = op.get_label()
-            if lbl.get_element() != _OL.Element.ProperRotation:
+        pg_label = self._point_group.label
+        for op in self._operation_manager.operations:
+            lbl = op.label
+            if lbl.element != _OL.Element.ProperRotation:
                 continue
-            if op.get_degree() != 2:
+            if op.degree != 2:
                 continue
-            if abs(float(np.dot(op.get_axis(), self._z_axis))) > 1.0 - 0.02:
+            if abs(float(np.dot(op.axis, self._z_axis))) > 1.0 - 0.02:
                 continue  # C2 along z is the main axis — no prime label
-            if (pg_label.get_class() == _PGL.Class.Dd
-                    or pg_label.get_order() % 2 == 1):
+            if (pg_label.group_class == _PGL.Class.Dd
+                    or pg_label.order % 2 == 1):
                 # All horizontal C2 axes are equivalent — label them all C2′.
                 lbl.set_prime(_OL.Prime.Single)
                 continue
             # even-n D/Dh: distinguish C2' from C2'' by angular position relative to x
             theta_x = float(np.arccos(np.clip(
-                float(np.dot(op.get_axis(), self._x_axis)), -1.0, 1.0
+                float(np.dot(op.axis, self._x_axis)), -1.0, 1.0
             )))
-            divisor = 2.0 * np.pi / pg_label.get_order()
+            divisor = 2.0 * np.pi / pg_label.order
             remainder = float(np.fmod(theta_x, divisor))
             if remainder <= 0.25 * divisor or remainder > 0.75 * divisor:
                 lbl.set_prime(_OL.Prime.Single)   # close to x → C2′
@@ -938,14 +948,14 @@ class Symmetry:
 
     def _label_proper_rotational_axes_octahedral(self) -> None:
         """Label C2' axes in octahedral groups (those not parallel to a principal axis)."""
-        for op in self._operation_manager.get_operations():
-            lbl = op.get_label()
-            if lbl.get_element() != _OL.Element.ProperRotation:
+        for op in self._operation_manager.operations:
+            lbl = op.label
+            if lbl.element != _OL.Element.ProperRotation:
                 continue
-            if op.get_degree() != 2:
+            if op.degree != 2:
                 continue
             parallel = any(
-                abs(float(np.dot(op.get_axis(), self._principal_axes[:, j]))) > 1.0 - 0.02
+                abs(float(np.dot(op.axis, self._principal_axes[:, j]))) > 1.0 - 0.02
                 for j in range(3)
             )
             if not parallel:
@@ -953,7 +963,7 @@ class Symmetry:
 
     def _label_reflection_planes(self) -> None:
         """Dispatch reflection-plane labelling by point group class."""
-        pg_class = self._point_group.get_label().get_class()
+        pg_class = self._point_group.label.group_class
         if pg_class in (
             _PGL.Class.Cv, _PGL.Class.Ch, _PGL.Class.Cs,
             _PGL.Class.Dh, _PGL.Class.Dd,
@@ -979,32 +989,32 @@ class Symmetry:
         For even-order groups, the angular position relative to y distinguishes
         σv from σd by the same half-step test used for C2′/C2″.
         """
-        pg_label = self._point_group.get_label()
-        for op in self._operation_manager.get_operations():
-            lbl = op.get_label()
-            if lbl.get_element() != _OL.Element.Reflection:
+        pg_label = self._point_group.label
+        for op in self._operation_manager.operations:
+            lbl = op.label
+            if lbl.element != _OL.Element.Reflection:
                 continue
             # A plane is horizontal if its normal is parallel to z.
-            if abs(float(np.dot(op.get_axis(), self._z_axis))) > 1.0 - 0.02:
+            if abs(float(np.dot(op.axis, self._z_axis))) > 1.0 - 0.02:
                 lbl.set_plane(_OL.Plane.Horizontal)
                 continue
-            if pg_label.get_class() == _PGL.Class.Dd:
+            if pg_label.group_class == _PGL.Class.Dd:
                 lbl.set_plane(_OL.Plane.Dihedral)
                 continue
-            if pg_label.get_order() % 2 == 1:
+            if pg_label.order % 2 == 1:
                 # Odd-order groups have a single type of vertical plane.
                 lbl.set_plane(_OL.Plane.Vertical)
                 continue
             # For even-order groups, use angular position relative to y to distinguish σv/σd.
             theta_y = float(np.arccos(np.clip(
-                float(np.dot(op.get_axis(), self._y_axis)), -1.0, 1.0
+                float(np.dot(op.axis, self._y_axis)), -1.0, 1.0
             )))
-            divisor = 2.0 * np.pi / pg_label.get_order()
+            divisor = 2.0 * np.pi / pg_label.order
             remainder = float(np.fmod(theta_y, divisor))
             if remainder <= 0.25 * divisor or remainder > 0.75 * divisor:
                 lbl.set_plane(_OL.Plane.Vertical)
             else:
-                if pg_label.get_order() == 2:
+                if pg_label.order == 2:
                     # C2v special case: two vertical planes, label the second σv′
                     lbl.set_plane(_OL.Plane.Vertical)
                     lbl.set_prime(_OL.Prime.Single)
@@ -1013,25 +1023,25 @@ class Symmetry:
 
     def _label_reflection_planes_tetrahedral(self) -> None:
         """Label all planes σd (Td) or σh (Th)."""
-        pg_class = self._point_group.get_label().get_class()
+        pg_class = self._point_group.label.group_class
         if pg_class == _PGL.Class.Td:
             plane = _OL.Plane.Dihedral
         elif pg_class == _PGL.Class.Th:
             plane = _OL.Plane.Horizontal
         else:
             raise RuntimeError("Unexpected point group class in tetrahedral labelling.")
-        for op in self._operation_manager.get_operations():
-            if op.get_label().get_element() == _OL.Element.Reflection:
-                op.get_label().set_plane(plane)
+        for op in self._operation_manager.operations:
+            if op.label.element == _OL.Element.Reflection:
+                op.label.set_plane(plane)
 
     def _label_reflection_planes_octahedral(self) -> None:
         """Label planes σh (parallel to a principal axis) or σd."""
-        for op in self._operation_manager.get_operations():
-            lbl = op.get_label()
-            if lbl.get_element() != _OL.Element.Reflection:
+        for op in self._operation_manager.operations:
+            lbl = op.label
+            if lbl.element != _OL.Element.Reflection:
                 continue
             parallel = any(
-                abs(float(np.dot(op.get_axis(), self._principal_axes[:, j]))) > 1.0 - 0.02
+                abs(float(np.dot(op.axis, self._principal_axes[:, j]))) > 1.0 - 0.02
                 for j in range(3)
             )
             lbl.set_plane(_OL.Plane.Horizontal if parallel else _OL.Plane.Dihedral)

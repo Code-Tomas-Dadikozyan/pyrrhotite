@@ -145,18 +145,18 @@ def _classify_col(olc) -> tuple[str, float]:
     which has different characters from the principal-axis C2 (which is just
     Cn^(n/2) for even n).  The prime label distinguishes them.
     """
-    lbl = olc.get_label()
-    elem = lbl.get_element()
+    lbl = olc.label
+    elem = lbl.element
     E = OL.Element
 
     if elem == E.ProperRotation:
-        d = lbl.get_degree()
-        m = lbl.get_multiple() or 1
+        d = lbl.degree
+        m = lbl.multiple or 1
         theta = 2.0 * math.pi * m / d
         if d == 2:
             # A degree-2 rotation with a prime label is a perpendicular C2 axis
             # (C2′ passes through atoms/bonds; C2″ bisects them).
-            pr = lbl.get_prime()
+            pr = lbl.prime
             if pr != OL.Prime.none:
                 return ("C2pp" if pr == OL.Prime.Double else "C2p"), theta
             # No prime → principal axis C2 = Cn^(n/2); treat like any Cn rotation
@@ -164,8 +164,8 @@ def _classify_col(olc) -> tuple[str, float]:
         return "Cn", theta
 
     if elem == E.ImproperRotation:
-        d = lbl.get_degree()
-        m = lbl.get_multiple() or 1
+        d = lbl.degree
+        m = lbl.multiple or 1
         theta = 2.0 * math.pi * m / d
         return "Sn", theta
 
@@ -173,7 +173,7 @@ def _classify_col(olc) -> tuple[str, float]:
         return "i", 0.0
 
     if elem == E.Reflection:
-        pl = lbl.get_plane()
+        pl = lbl.plane
         if pl == OL.Plane.Horizontal:
             return "sigma_h", 0.0
         if pl == OL.Plane.Dihedral:
@@ -222,15 +222,15 @@ def compute_basis_functions(pg: PointGroup) -> dict[str, dict[str, list[str]]]:
     -------
     dict  irrep_name → {"linear": [...], "quadratic": [...]}
     """
-    lbl = pg.get_label()
+    lbl = pg.label
     # Only valid for axial groups
-    if lbl.is_polyhedral() or lbl.is_linear() or lbl.get_class().name in ("C1", "Ci", "Cs"):
+    if lbl.is_polyhedral() or lbl.is_linear() or lbl.group_class.name in ("C1", "Ci", "Cs"):
         return {}
 
-    chars = pg.get_characters()
-    irreps = pg.get_irreps()
-    unique_ops = pg.get_unique_operations()
-    order = pg.get_order()
+    chars = pg.characters
+    irreps = pg.irreps
+    unique_ops = pg.unique_operations
+    order = pg.order
 
     if not chars or order == 0:
         return {}
@@ -241,7 +241,7 @@ def compute_basis_functions(pg: PointGroup) -> dict[str, dict[str, list[str]]]:
     col_meta: list[tuple[str, float, int]] = [("E", 0.0, 1)]  # identity always first
     for olc in unique_ops:
         op_type, theta = _classify_col(olc)
-        col_meta.append((op_type, theta, olc.get_count()))
+        col_meta.append((op_type, theta, olc.count))
 
     counts = [cm[2] for cm in col_meta]
 
@@ -260,7 +260,7 @@ def compute_basis_functions(pg: PointGroup) -> dict[str, dict[str, list[str]]]:
     multiplicities = {k: _reduce(v, chars, counts, order) for k, v in sets.items()}
 
     result: dict[str, dict[str, list[str]]] = {
-        ir.get_name(): {"linear": [], "quadratic": []} for ir in irreps
+        ir.name: {"linear": [], "quadratic": []} for ir in irreps
     }
 
     def _assign(key: str, labels: list[str], category: str) -> None:
@@ -270,7 +270,7 @@ def compute_basis_functions(pg: PointGroup) -> dict[str, dict[str, list[str]]]:
         for i, ir in enumerate(irreps):
             mults = multiplicities[key]
             if i < len(mults) and round(mults[i]) >= 1:
-                result[ir.get_name()][category].extend(labels)
+                result[ir.name][category].extend(labels)
 
     # Map each computed basis-function set to its display label(s).
     # "linear" = translational and rotational functions (x, y, z, Rx, Ry, Rz)

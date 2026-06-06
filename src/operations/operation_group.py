@@ -13,14 +13,16 @@ class OperationGroup:
         self._infinite_multiplicity: bool = False
 
     # ------------------------------------------------------------------
-    # Getters / setters
+    # Properties / setters
     # ------------------------------------------------------------------
 
-    def get_operation_ids(self) -> list[int]:
+    @property
+    def operation_ids(self) -> list[int]:
         """Return the list of operation IDs in this group."""
         return self._operation_ids
 
-    def get_infinite_multiplicity(self) -> bool:
+    @property
+    def infinite_multiplicity(self) -> bool:
         """Return whether this group has infinite multiplicity."""
         return self._infinite_multiplicity
 
@@ -32,7 +34,8 @@ class OperationGroup:
         """Set whether this group has infinite multiplicity."""
         self._infinite_multiplicity = infinite_multiplicity
 
-    def get_num_operations(self) -> int:
+    @property
+    def num_operations(self) -> int:
         """Return the number of operations in this group."""
         return len(self._operation_ids)
 
@@ -40,18 +43,20 @@ class OperationGroup:
     # Name helpers
     # ------------------------------------------------------------------
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         """Return the plaintext group name with multiplicity annotation."""
-        name = self._operation_label.get_name()
+        name = self._operation_label.name
         n = len(self._operation_ids)
         if n > 1 or self._infinite_multiplicity:
             count = "∞" if self._infinite_multiplicity else str(n)
             name += "s (" + count + ")"
         return name
 
-    def get_name_html(self) -> str:
+    @property
+    def name_html(self) -> str:
         """Return the HTML-formatted group name with multiplicity annotation."""
-        name = self._operation_label.get_name_html()
+        name = self._operation_label.name_html
         n = len(self._operation_ids)
         if n > 1 or self._infinite_multiplicity:
             count = "∞" if self._infinite_multiplicity else str(n)

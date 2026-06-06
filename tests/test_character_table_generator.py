@@ -29,17 +29,17 @@ _C = PGL.Class
 def _check_orthogonality(pg_label: PGL) -> None:
     """Assert row and column orthogonality for the generated character table."""
     pg = generate_point_group(pg_label)
-    chars = pg.get_characters()
-    ops = pg.get_unique_operations()
-    order = pg.get_order()
+    chars = pg.characters
+    ops = pg.unique_operations
+    order = pg.order
 
     # Column multiplicities (E is implicit with count 1)
-    multiplicities = [1] + [olc.get_count() for olc in ops]
+    multiplicities = [1] + [olc.count for olc in ops]
 
     n_irreps = len(chars)
     n_cols = len(chars[0])
     assert n_cols == len(multiplicities), (
-        f"{pg_label.get_name()}: col count mismatch {n_cols} vs {len(multiplicities)}"
+        f"{pg_label.name}: col count mismatch {n_cols} vs {len(multiplicities)}"
     )
 
     # Off-diagonal row orthogonality: Σ_R h_R χ_i(R) χ_j(R) = 0 for i≠j.
@@ -52,7 +52,7 @@ def _check_orthogonality(pg_label: PGL) -> None:
                 for c in range(n_cols)
             )
             assert abs(val) < _TOL, (
-                f"{pg_label.get_name()} off-diag row orthog failed: "
+                f"{pg_label.name} off-diag row orthog failed: "
                 f"irreps {i},{j}  got {val:.6f}"
             )
 
@@ -62,10 +62,10 @@ def _check_orthogonality(pg_label: PGL) -> None:
     # We only verify it is a positive integer multiple of |G|.
     for i in range(n_irreps):
         val = sum(multiplicities[c] * chars[i][c] ** 2 for c in range(n_cols))
-        assert val > 0, f"{pg_label.get_name()} irrep {i} has non-positive diagonal"
+        assert val > 0, f"{pg_label.name} irrep {i} has non-positive diagonal"
         ratio = val / order
         assert abs(ratio - round(ratio)) < _TOL, (
-            f"{pg_label.get_name()} irrep {i}: diagonal {val:.6f} "
+            f"{pg_label.name} irrep {i}: diagonal {val:.6f} "
             f"is not a multiple of |G|={order}"
         )
 
@@ -73,25 +73,25 @@ def _check_orthogonality(pg_label: PGL) -> None:
 def _check_sanity(pg_label: PGL) -> None:
     """Check order, irrep count == class count, and E column = dimension."""
     pg = generate_point_group(pg_label)
-    chars = pg.get_characters()
-    ops = pg.get_unique_operations()
+    chars = pg.characters
+    ops = pg.unique_operations
     n_classes = 1 + len(ops)   # E (implicit) + listed
     n_irreps = len(chars)
 
     # Number of irreps must equal number of conjugacy classes
     assert n_irreps == n_classes, (
-        f"{pg_label.get_name()}: {n_irreps} irreps but {n_classes} classes"
+        f"{pg_label.name}: {n_irreps} irreps but {n_classes} classes"
     )
 
     # First column (E) must equal the dimension of each irrep
     dims_from_chars = [row[0] for row in chars]
     assert all(d > 0 for d in dims_from_chars), (
-        f"{pg_label.get_name()}: non-positive dimension in E column"
+        f"{pg_label.name}: non-positive dimension in E column"
     )
 
     # Sum of dim^2 >= |G| (due to real-rep grouping it may exceed |G|, but
     # the basic sanity check is that the order matches the group order stored)
-    assert pg.get_order() > 0
+    assert pg.order > 0
 
 
 # ---------------------------------------------------------------------------
@@ -104,8 +104,8 @@ _HARDCODED_AXIAL_CLASSES = {_C.C, _C.Ch, _C.Cv, _C.S, _C.D, _C.Dh, _C.Dd}
 def _hardcoded_axial_groups():
     """Yield (label, hardcoded_PointGroup) for all axial groups in POINT_GROUPS."""
     for pg in POINT_GROUPS:
-        lbl = pg.get_label()
-        if lbl.get_class() in _HARDCODED_AXIAL_CLASSES and lbl.get_order() >= 2:
+        lbl = pg.label
+        if lbl.group_class in _HARDCODED_AXIAL_CLASSES and lbl.order >= 2:
             yield lbl, pg
 
 
@@ -113,8 +113,8 @@ def _hardcoded_axial_groups():
 def test_generated_matches_hardcoded(lbl, hc_pg):
     """Generated character values must match the hardcoded table (±1e-4)."""
     gen_pg = generate_point_group(lbl)
-    hc_chars = hc_pg.get_characters()
-    gen_chars = gen_pg.get_characters()
+    hc_chars = hc_pg.characters
+    gen_chars = gen_pg.characters
 
     # Build value multisets for comparison (order-independent, since column
     # ordering may differ from hardcoded for some groups)
@@ -184,7 +184,7 @@ def test_sanity_large_n(lbl):
 ])
 def test_cn_order(n, expected_order):
     pg = generate_point_group(PGL(_C.C, n))
-    assert pg.get_order() == expected_order
+    assert pg.order == expected_order
 
 
 @pytest.mark.parametrize("n,expected_order", [
@@ -192,7 +192,7 @@ def test_cn_order(n, expected_order):
 ])
 def test_cnh_order(n, expected_order):
     pg = generate_point_group(PGL(_C.Ch, n))
-    assert pg.get_order() == expected_order
+    assert pg.order == expected_order
 
 
 @pytest.mark.parametrize("n,expected_order", [
@@ -200,7 +200,7 @@ def test_cnh_order(n, expected_order):
 ])
 def test_cnv_order(n, expected_order):
     pg = generate_point_group(PGL(_C.Cv, n))
-    assert pg.get_order() == expected_order
+    assert pg.order == expected_order
 
 
 @pytest.mark.parametrize("n,expected_order", [
@@ -208,7 +208,7 @@ def test_cnv_order(n, expected_order):
 ])
 def test_sn_order(n, expected_order):
     pg = generate_point_group(PGL(_C.S, n))
-    assert pg.get_order() == expected_order
+    assert pg.order == expected_order
 
 
 @pytest.mark.parametrize("n,expected_order", [
@@ -216,7 +216,7 @@ def test_sn_order(n, expected_order):
 ])
 def test_dn_order(n, expected_order):
     pg = generate_point_group(PGL(_C.D, n))
-    assert pg.get_order() == expected_order
+    assert pg.order == expected_order
 
 
 @pytest.mark.parametrize("n,expected_order", [
@@ -224,7 +224,7 @@ def test_dn_order(n, expected_order):
 ])
 def test_dnh_order(n, expected_order):
     pg = generate_point_group(PGL(_C.Dh, n))
-    assert pg.get_order() == expected_order
+    assert pg.order == expected_order
 
 
 @pytest.mark.parametrize("n,expected_order", [
@@ -232,7 +232,7 @@ def test_dnh_order(n, expected_order):
 ])
 def test_dnd_order(n, expected_order):
     pg = generate_point_group(PGL(_C.Dd, n))
-    assert pg.get_order() == expected_order
+    assert pg.order == expected_order
 
 
 # ---------------------------------------------------------------------------
@@ -242,7 +242,7 @@ def test_dnd_order(n, expected_order):
 def test_c11_e_irrep_first_class():
     """C11 E_1 at 2C11: χ = 2cos(2π/11)."""
     pg = generate_point_group(PGL(_C.C, 11))
-    chars = pg.get_characters()
+    chars = pg.characters
     # irrep order: A, E1, E2, E3, E4, E5  (n=11 odd → 6 irreps)
     e1_row = chars[1]   # E1
     expected = 2.0 * math.cos(2.0 * math.pi / 11)
@@ -252,7 +252,7 @@ def test_c11_e_irrep_first_class():
 def test_c12_b_irrep():
     """C12 B at C12 class: χ = (-1)^1 = -1."""
     pg = generate_point_group(PGL(_C.C, 12))
-    chars = pg.get_characters()
+    chars = pg.characters
     # irrep order: A, B, E1, E2, ..., E5
     b_row = chars[1]   # B
     assert abs(b_row[1] - (-1.0)) < _TOL
@@ -261,10 +261,10 @@ def test_c12_b_irrep():
 def test_c12v_a2_at_sigma():
     """C12v A2 character at σv column must be −1."""
     pg = generate_point_group(PGL(_C.Cv, 12))
-    chars = pg.get_characters()
+    chars = pg.characters
     a2_row = chars[1]   # A2
-    sigma_col = len(pg.get_unique_operations()) - 1   # last col = σd
-    sigma_v_col = len(pg.get_unique_operations()) - 2  # second-to-last = σv
+    sigma_col = len(pg.unique_operations) - 1   # last col = σd
+    sigma_v_col = len(pg.unique_operations) - 2  # second-to-last = σv
     # A2 is −1 at both σv and σd
     assert abs(a2_row[1 + sigma_v_col] - (-1.0)) < _TOL
     assert abs(a2_row[1 + sigma_col] - (-1.0)) < _TOL

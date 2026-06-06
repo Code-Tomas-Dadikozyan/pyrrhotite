@@ -28,14 +28,16 @@ class OperationLabelCount:
         return cls(count, label)
 
     # ------------------------------------------------------------------
-    # Getters
+    # Properties
     # ------------------------------------------------------------------
 
-    def get_count(self) -> int:
+    @property
+    def count(self) -> int:
         """Return the number of operations with this label (0 == infinite)."""
         return self._count
 
-    def get_label(self) -> OperationLabel:
+    @property
+    def label(self) -> OperationLabel:
         """Return the operation label."""
         return self._label
 
@@ -51,20 +53,24 @@ class OperationLabelCount:
             return "∞ "
         return ""
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         """Return the full plaintext name including count prefix and plural 's'."""
         plural = "s" if self._count > 1 else ""
-        return self._get_count_prefix() + self._label.get_name() + plural
+        return self._get_count_prefix() + self._label.name + plural
 
-    def get_name_html(self) -> str:
+    @property
+    def name_html(self) -> str:
         """Return the full HTML-formatted name including count prefix and plural 's'."""
         plural = "s" if self._count > 1 else ""
-        return self._get_count_prefix() + self._label.get_name_html() + plural
+        return self._get_count_prefix() + self._label.name_html + plural
 
-    def get_short_name(self) -> str:
+    @property
+    def short_name(self) -> str:
         """Return the short plaintext name including count prefix."""
-        return self._get_count_prefix() + self._label.get_short_name()
+        return self._get_count_prefix() + self._label.short_name
 
-    def get_short_name_html(self) -> str:
+    @property
+    def short_name_html(self) -> str:
         """Return the short HTML-formatted name including count prefix."""
-        return self._get_count_prefix() + self._label.get_short_name_html()
+        return self._get_count_prefix() + self._label.short_name_html

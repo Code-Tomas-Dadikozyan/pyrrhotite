@@ -46,12 +46,12 @@ _MULLIKEN_LETTER: dict[IrrepLabel.Mulliken, str] = {
 
 def _irrep_latex(ir: IrrepLabel) -> str:
     """Return a LaTeX math-mode string for an IrrepLabel, e.g. ``$A_{1g}$``."""
-    letter = _MULLIKEN_LETTER[ir.get_mulliken()]
+    letter = _MULLIKEN_LETTER[ir.mulliken]
 
     sub = ""
-    if ir.get_subscript() > 0:
-        sub += str(ir.get_subscript())
-    match ir.get_parity():
+    if ir.subscript > 0:
+        sub += str(ir.subscript)
+    match ir.parity:
         case IrrepLabel.Parity.Gerade:
             sub += "g"
         case IrrepLabel.Parity.Ungerade:
@@ -59,7 +59,7 @@ def _irrep_latex(ir: IrrepLabel) -> str:
 
     body = letter + ("_{" + sub + "}" if sub else "")
 
-    match ir.get_prime():
+    match ir.prime:
         case IrrepLabel.Prime.Single:
             prime = "'"
         case IrrepLabel.Prime.Double:
@@ -72,9 +72,9 @@ def _irrep_latex(ir: IrrepLabel) -> str:
 
 def _op_latex(op: OperationLabel) -> str:
     """Return a LaTeX math-mode string for an OperationLabel, e.g. ``$C_{3}^{2}$``."""
-    el = op.get_element()
-    deg = op.get_degree()
-    mul = op.get_multiple()
+    el = op.element
+    deg = op.degree
+    mul = op.multiple
 
     deg_str = r"\infty" if deg == OperationLabel.DEGREE_INF else str(deg)
 
@@ -90,7 +90,7 @@ def _op_latex(op: OperationLabel) -> str:
             if mul != 1:
                 body += "^{" + str(mul) + "}"
         case OperationLabel.Element.Reflection:
-            match op.get_plane():
+            match op.plane:
                 case OperationLabel.Plane.Horizontal:
                     body = r"\sigma_{h}"
                 case OperationLabel.Plane.Vertical:
@@ -102,7 +102,7 @@ def _op_latex(op: OperationLabel) -> str:
         case _:
             raise RuntimeError(f"Unexpected element: {el}")
 
-    match op.get_prime():
+    match op.prime:
         case OperationLabel.Prime.Single:
             body += "'"
         case OperationLabel.Prime.Double:
@@ -113,11 +113,11 @@ def _op_latex(op: OperationLabel) -> str:
 
 def _op_count_latex(olc: OperationLabelCount) -> str:
     """Return a LaTeX column header for an OperationLabelCount, e.g. ``$2C_{3}$``."""
-    count = olc.get_count()
-    label = olc.get_label()
-    el = label.get_element()
-    deg = label.get_degree()
-    mul = label.get_multiple()
+    count = olc.count
+    label = olc.label
+    el = label.element
+    deg = label.degree
+    mul = label.multiple
 
     deg_str = r"\infty" if deg == OperationLabel.DEGREE_INF else str(deg)
 
@@ -133,7 +133,7 @@ def _op_count_latex(olc: OperationLabelCount) -> str:
             if mul != 1:
                 body += "^{" + str(mul) + "}"
         case OperationLabel.Element.Reflection:
-            match label.get_plane():
+            match label.plane:
                 case OperationLabel.Plane.Horizontal:
                     body = r"\sigma_{h}"
                 case OperationLabel.Plane.Vertical:
@@ -145,7 +145,7 @@ def _op_count_latex(olc: OperationLabelCount) -> str:
         case _:
             raise RuntimeError(f"Unexpected element: {el}")
 
-    match label.get_prime():
+    match label.prime:
         case OperationLabel.Prime.Single:
             body += "'"
         case OperationLabel.Prime.Double:
@@ -164,7 +164,7 @@ def _op_count_latex(olc: OperationLabelCount) -> str:
 
 def _pg_label_latex(label: PointGroupLabel) -> str:
     """Return a LaTeX math-mode string for a PointGroupLabel, e.g. ``$C_{3v}$``."""
-    name = label.get_name()
+    name = label.name
     # Map plain text name to LaTeX: subscript everything after the leading letter(s)
     # e.g. "C3v" → "C_{3v}", "D6h" → "D_{6h}", "Oh" → "O_{h}", "Td" → "T_{d}"
     # Strategy: split at the first digit or at a trailing letter suffix after an initial letter(s)
@@ -201,16 +201,16 @@ def _fmt_char(val: float) -> str:
 
 def _table_latex(pg: PointGroup) -> str:
     """Return the LaTeX for one character table (table + tabular environment)."""
-    ops = pg.get_unique_operations()  # list[OperationLabelCount]
-    irreps = pg.get_irreps()           # list[IrrepLabel]
-    chars = pg.get_characters()        # list[list[float]]  [irrep][op]
+    ops = pg.unique_operations  # list[OperationLabelCount]
+    irreps = pg.irreps           # list[IrrepLabel]
+    chars = pg.characters        # list[list[float]]  [irrep][op]
 
     # unique_operations excludes the identity E; add it back as first column
     n_data_cols = 1 + len(ops)  # E + remaining operation classes
     col_spec = "l" + " r" * n_data_cols
 
     # Header row: group label, E, then remaining operation classes
-    group_tex = _pg_label_latex(pg.get_label())
+    group_tex = _pg_label_latex(pg.label)
     op_headers = "$E$" + (" & " if ops else "") + " & ".join(_op_count_latex(o) for o in ops)
     header = group_tex + " & " + op_headers + r" \\"
 
@@ -220,7 +220,7 @@ def _table_latex(pg: PointGroup) -> str:
         row_chars = " & ".join(_fmt_char(v) for v in chars[i])
         data_rows.append("    " + _irrep_latex(ir) + " & " + row_chars + r" \\")
 
-    caption = "Character table of " + _pg_label_latex(pg.get_label())
+    caption = "Character table of " + _pg_label_latex(pg.label)
 
     lines = [
         r"\begin{table}[h]",

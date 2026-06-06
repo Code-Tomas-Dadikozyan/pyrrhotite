@@ -333,7 +333,7 @@ def _build_cnh(n: int) -> PointGroup:
         chars += [_build_row_cnh_even(row, -1) for row in cn_chars]  # u
 
         num_inversions = 1
-        num_improper = {sc.label.get_degree(): 1 for sc in s_cls}
+        num_improper = {sc.label.degree: 1 for sc in s_cls}
 
     else:
         # Odd n: use ' / '' prime notation
@@ -412,8 +412,8 @@ def _cn_char_rows(n: int, rot_cls: list[_RotClass]) -> list[list[float]]:
 
 def _add_parity(ir: IrrepLabel, par: IrrepLabel.Parity) -> IrrepLabel:
     """Return a new IrrepLabel with the given parity appended."""
-    m = ir.get_mulliken()
-    s = ir.get_subscript()
+    m = ir.mulliken
+    s = ir.subscript
     if s:
         return IrrepLabel(m, s, par)
     return IrrepLabel(m, par)
@@ -580,10 +580,10 @@ def _build_sn(n: int) -> PointGroup:
     num_proper: dict[int, int] = {}
     num_improper: dict[int, int] = {}
     for rc in col_list:
-        if rc.label.get_element() == _E.C:
-            num_proper[rc.label.get_degree()] = 1
-        elif rc.label.get_element() == _E.S:
-            num_improper[rc.label.get_degree()] = 1
+        if rc.label.element == _E.C:
+            num_proper[rc.label.degree] = 1
+        elif rc.label.element == _E.S:
+            num_improper[rc.label.degree] = 1
 
     if has_inversion:
         # irreps: Ag, [E_jg], Au, [E_ju]
@@ -844,7 +844,7 @@ def _build_dnh(n: int) -> PointGroup:
         chars += [_extra_dnh_even(dn_rows[k], 0, -1) for k in key_order]  # u
 
         num_inversions = 1
-        num_improper = {sc.label.get_degree(): 1 for sc in s_cls_even}
+        num_improper = {sc.label.degree: 1 for sc in s_cls_even}
         np_rot = dict(_num_proper_cn(n))
         np_rot[2] = np_rot.get(2, 0) + n
 
@@ -925,8 +925,8 @@ def _dn_irreps(n: int) -> list[IrrepLabel]:
 
 def _add_prime(ir: IrrepLabel, pri: IrrepLabel.Prime) -> IrrepLabel:
     """Return a new IrrepLabel with the given prime appended."""
-    m = ir.get_mulliken()
-    s = ir.get_subscript()
+    m = ir.mulliken
+    s = ir.subscript
     if s:
         return IrrepLabel(m, s, pri)
     return IrrepLabel(m, pri)
@@ -1021,11 +1021,11 @@ def _build_dnd(n: int) -> PointGroup:
         # A2
         chars.append([1.0] + [1.0] * len(interleaved) + [-1.0, -1.0])
         # B1: −1 at S_{2n} cols, +1 at C cols, +1 C2', −1 σd
-        b1 = [1.0] + [(-1.0 if rc.label.get_element() == _E.S else 1.0)
+        b1 = [1.0] + [(-1.0 if rc.label.element == _E.S else 1.0)
                        for rc in interleaved] + [1.0, -1.0]
         chars.append(b1)
         # B2: −1 at S cols, +1 at C cols, −1 C2', +1 σd
-        b2 = [1.0] + [(-1.0 if rc.label.get_element() == _E.S else 1.0)
+        b2 = [1.0] + [(-1.0 if rc.label.element == _E.S else 1.0)
                        for rc in interleaved] + [-1.0, 1.0]
         chars.append(b2)
         for j in range(1, num_e_dnd + 1):
@@ -1160,8 +1160,8 @@ def generate_point_group(label: PointGroupLabel) -> PointGroup:
     Supported families: Cn, Cnh, Cnv, Sn (n even ≥ 4), Dn, Dnh, Dnd.
     Raises ValueError for unsupported families (polyhedral, linear, n < 2).
     """
-    cls = label.get_class()
-    n = label.get_order()
+    cls = label.group_class
+    n = label.order
 
     if cls not in _SUPPORTED_CLASSES:
         raise ValueError(
@@ -1178,7 +1178,7 @@ def generate_point_group(label: PointGroupLabel) -> PointGroup:
     return _BUILDERS[cls](n)
 
 
-def get_or_generate_point_group(label: PointGroupLabel) -> PointGroup | None:
+def find_point_group(label: PointGroupLabel) -> PointGroup | None:
     """Return a PointGroup by label: hardcoded table first, generator fallback.
 
     Returns None if the label is not in POINT_GROUPS and cannot be generated
@@ -1186,9 +1186,9 @@ def get_or_generate_point_group(label: PointGroupLabel) -> PointGroup | None:
     """
     # Search hardcoded list first
     for pg in POINT_GROUPS:
-        pg_lbl = pg.get_label()
-        if (pg_lbl.get_class() == label.get_class()
-                and pg_lbl.get_order() == label.get_order()):
+        pg_lbl = pg.label
+        if (pg_lbl.group_class == label.group_class
+                and pg_lbl.order == label.order):
             return pg
 
     # Try generator
@@ -1196,6 +1196,10 @@ def get_or_generate_point_group(label: PointGroupLabel) -> PointGroup | None:
         return generate_point_group(label)
     except ValueError:
         return None
+
+
+# Backward-compatible alias
+get_or_generate_point_group = find_point_group
 
 
 # ---------------------------------------------------------------------------
@@ -1355,7 +1359,7 @@ def print_character_table_for(name: str) -> None:
     ...generated C12v table for n=12...
     """
     label = parse_point_group_name(name)
-    pg = get_or_generate_point_group(label)
+    pg = find_point_group(label)
     if pg is None:
         raise ValueError(
             f"No character table available for '{name}'. "

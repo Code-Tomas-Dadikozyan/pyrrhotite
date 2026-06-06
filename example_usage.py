@@ -32,12 +32,12 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-16"
 # ---------------------------------------------------------------------------
 
 from pyrrhotite import Structure, Symmetry
-from pyrrhotite.periodic_table import get_element, get_atomic_number
+from pyrrhotite.periodic_table import element, atomic_number
 from pyrrhotite.operations.operation_label import OperationLabel
 from pyrrhotite.point_groups.basis_functions import compute_basis_functions
 from pyrrhotite.character_tables import (
     generate_point_group,
-    get_or_generate_point_group,
+    find_point_group,
     parse_point_group_name,
     print_character_table_for,
     format_latex,
@@ -59,6 +59,57 @@ def section(n: int, title: str) -> None:
     print(f"{n}. {title}")
     print(SEP)
 
+
+def print_bond_pairs(s: Structure) -> None:
+    for a, b in s.calculate_bond_pairs():
+        ea = element(int(s.atomic_numbers[a])).symbol
+        eb = element(int(s.atomic_numbers[b])).symbol
+        print(f"  {ea}{a} — {eb}{b}")
+
+
+def print_ops_with_atoms(ops, s: Structure) -> None:
+    for op in ops:
+        lbl = op.label
+        if lbl.element == OperationLabel.Element.Reflection:
+            atom_indices = op.atoms_in_plane(s)
+            loc = "in plane" + (" [molecular plane]" if op.is_molecular_plane(s) else "")
+        else:
+            atom_indices = op.atoms_on_axis(s)
+            loc = "on axis"
+        atoms = ", ".join(
+            f"{element(int(s.atomic_numbers[i])).symbol}{i}" for i in atom_indices
+        ) or "none"
+        print(f"  {lbl.short_name:<10}  {loc}: {atoms}")
+
+
+def print_basis_functions(pg) -> None:
+    bf = compute_basis_functions(pg)
+    print(f"  {'Irrep':<8}  {'Linear / Rotational':<26}  Quadratic")
+    print("  " + SEP2)
+    for irrep_name, funcs in bf.items():
+        lin  = ", ".join(funcs["linear"])    or "—"
+        quad = ", ".join(funcs["quadratic"]) or "—"
+        print(f"  {irrep_name:<8}  {lin:<26}  {quad}")
+
+
+def print_char_table_programmatic(pg) -> None:
+    irreps = pg.irreps
+    ops    = pg.unique_operations
+    chars  = pg.characters
+    print("Irreducible representations:")
+    for ir in irreps:
+        print(f"  {ir.name}")
+    print("\nConjugacy classes (from unique_operations, excluding E):")
+    for olc in ops:
+        print(f"  {olc.short_name:<12}  count={olc.count}")
+    print("\nFull character table (rows = irreps, columns = E then unique ops):")
+    header = f"  {'':>6}" + f"  {'E':>6}" + "".join(f"  {o.label.short_name:>6}" for o in ops)
+    print(header)
+    for i, ir in enumerate(irreps):
+        row = "  ".join(f"{v:6.3f}" for v in chars[i])
+        print(f"  {ir.name:<6}  {row}")
+
+
 # ---------------------------------------------------------------------------
 # 1. Structure loading & atom list
 # ---------------------------------------------------------------------------
@@ -75,10 +126,7 @@ print(f"Atomic numbers    : {s.atomic_numbers.tolist()}")
 
 print()
 print("Bond pairs (connectivity):")
-for a, b in s.calculate_bond_pairs():
-    ea = get_element(int(s.atomic_numbers[a])).symbol
-    eb = get_element(int(s.atomic_numbers[b])).symbol
-    print(f"  {ea}{a} — {eb}{b}")
+print_bond_pairs(s)
 
 print()
 print("Atom list (COM-centred coordinates):")
@@ -91,18 +139,18 @@ s.print_atom_list()
 section(2, "POINT GROUP DETERMINATION")
 
 sym = Symmetry(s)
-pg  = sym.get_point_group()
-mgr = sym.get_operation_manager()
+pg  = sym.point_group
+mgr = sym.operation_manager
 
-print(f"Point group : {pg.get_label().get_name()}")
-print(f"Group order : {pg.get_order()}   (total symmetry operations)")
+print(f"Point group : {pg.label.name}")
+print(f"Group order : {pg.order}   (total symmetry operations)")
 
 # Show a second molecule for comparison
-s_bz  = Structure(r"tests\files\benzene.xyz")
+s_bz   = Structure(r"tests\files\benzene.xyz")
 sym_bz = Symmetry(s_bz)
-pg_bz  = sym_bz.get_point_group()
+pg_bz  = sym_bz.point_group
 print()
-print(f"Benzene     : {pg_bz.get_label().get_name()}  (order {pg_bz.get_order()})")
+print(f"Benzene     : {pg_bz.label.name}  (order {pg_bz.order})")
 
 # ---------------------------------------------------------------------------
 # 3. Rotor classification & principal axes
@@ -110,28 +158,28 @@ print(f"Benzene     : {pg_bz.get_label().get_name()}  (order {pg_bz.get_order()}
 
 section(3, "ROTOR CLASSIFICATION & PRINCIPAL AXES")
 
-rc = sym.get_rotor_class()
+rc = sym.rotor_class
 print(f"Rotor class : {rc.name}")
 
-pm = sym.get_principal_moments()
+pm = sym.principal_moments
 print(f"\nPrincipal moments of inertia (u·Å²):")
 print(f"  Ia = {pm[0]:.6f}")
 print(f"  Ib = {pm[1]:.6f}")
 print(f"  Ic = {pm[2]:.6f}")
 
-axes = sym.get_principal_axes()
+axes = sym.principal_axes
 print(f"\nPrincipal axes (columns = eigenvectors along x, y, z):")
 print(f"  {'':6}  {'x':>12}  {'y':>12}  {'z':>12}")
 for i, row_label in enumerate(["x", "y", "z"]):
     vals = "  ".join(f"{axes[i, col]:12.6f}" for col in range(3))
     print(f"  {row_label:<6}  {vals}")
 
-print(f"\nCartesian x-axis : {sym.get_x_axis().round(4).tolist()}")
-print(f"Cartesian y-axis : {sym.get_y_axis().round(4).tolist()}")
-print(f"Cartesian z-axis : {sym.get_z_axis().round(4).tolist()}")
+print(f"\nCartesian x-axis : {sym.x_axis.round(4).tolist()}")
+print(f"Cartesian y-axis : {sym.y_axis.round(4).tolist()}")
+print(f"Cartesian z-axis : {sym.z_axis.round(4).tolist()}")
 
 print("\nFull Cartesian axes matrix:")
-print(sym.get_cartesian_axes())
+print(sym.cartesian_axes)
 
 # ---------------------------------------------------------------------------
 # 4. Symmetry operations
@@ -140,41 +188,27 @@ print(sym.get_cartesian_axes())
 section(4, "SYMMETRY OPERATIONS")
 
 print("All found operations:")
-for op in mgr.get_operations():
-    print(f"  {op.get_label().get_short_name():<10}  "
-          f"axis={op.get_axis().round(3).tolist()}  "
-          f"error={op.get_error():.4f} Å")
+for op in mgr.operations:
+    print(f"  {op.label.short_name:<10}  "
+          f"axis={op.axis.round(3).tolist()}  "
+          f"error={op.error:.4f} Å")
 
 print()
 print("Filtered by type:")
-print("  Proper rotations  :", [o.get_label().get_short_name() for o in mgr.get_proper_rotations()])
-print("  Improper rotations:", [o.get_label().get_short_name() for o in mgr.get_improper_rotations()])
-print("  Reflections       :", [o.get_label().get_short_name() for o in mgr.get_reflections()])
-print("  Inversions        :", [o.get_label().get_short_name() for o in mgr.get_inversions()])
+print("  Proper rotations  :", [o.label.short_name for o in mgr.proper_rotations])
+print("  Improper rotations:", [o.label.short_name for o in mgr.improper_rotations])
+print("  Reflections       :", [o.label.short_name for o in mgr.reflections])
+print("  Inversions        :", [o.label.short_name for o in mgr.inversions])
 
 print()
 print("Atoms on each symmetry element:")
-for op in mgr.get_operations():
-    label = op.get_label()
-    short = label.get_short_name()
-    if label.get_element() == OperationLabel.Element.Reflection:
-        atom_indices = op.get_atoms_in_plane(s)
-        location = "in plane"
-        if op.is_molecular_plane(s):
-            location += " [molecular plane]"
-    else:
-        atom_indices = op.get_atoms_on_axis(s)
-        location = "on axis"
-    atom_str = ", ".join(
-        f"{get_element(int(s.atomic_numbers[i])).symbol}{i}" for i in atom_indices
-    ) or "none"
-    print(f"  {short:<10}  {location}: {atom_str}")
+print_ops_with_atoms(mgr.operations, s)
 
 print()
 print("Operation summary (by type):")
 summary = mgr.summarize()
 for op_type, ops_list in summary.items():
-    print(f"  {op_type:<22}: {[o.get_label().get_short_name() for o in ops_list]}")
+    print(f"  {op_type:<22}: {[o.label.short_name for o in ops_list]}")
 
 # ---------------------------------------------------------------------------
 # 5. Character table display
@@ -191,7 +225,7 @@ pg.print_character_table(plain=True)
 
 print()
 print("-- Complex (ε) notation for a cyclic group C6 --")
-pg_c6 = get_or_generate_point_group(parse_point_group_name("C6"))
+pg_c6 = find_point_group(parse_point_group_name("C6"))
 pg_c6.print_character_table(complex=True)
 
 # ---------------------------------------------------------------------------
@@ -199,39 +233,14 @@ pg_c6.print_character_table(complex=True)
 # ---------------------------------------------------------------------------
 
 section(6, "BASIS FUNCTION ASSIGNMENT")
-
-bf = compute_basis_functions(pg)
-print(f"  {'Irrep':<8}  {'Linear / Rotational':<26}  Quadratic")
-print("  " + SEP2)
-for irrep_name, funcs in bf.items():
-    lin  = ", ".join(funcs["linear"])    or "—"
-    quad = ", ".join(funcs["quadratic"]) or "—"
-    print(f"  {irrep_name:<8}  {lin:<26}  {quad}")
+print_basis_functions(pg)
 
 # ---------------------------------------------------------------------------
 # 7. Programmatic character table access
 # ---------------------------------------------------------------------------
 
 section(7, "PROGRAMMATIC CHARACTER TABLE ACCESS")
-
-irreps  = pg.get_irreps()
-ops     = pg.get_unique_operations()
-chars   = pg.get_characters()
-
-print("Irreducible representations:")
-for ir in irreps:
-    print(f"  {ir.get_name()}")
-
-print("\nConjugacy classes (from unique_operations, excluding E):")
-for olc in ops:
-    print(f"  {olc.get_short_name():<12}  count={olc.get_count()}")
-
-print("\nFull character table (rows = irreps, columns = E then unique ops):")
-header = f"  {'':>6}" + "".join(f"  {'E':>6}") + "".join(f"  {o.get_label().get_short_name():>6}" for o in ops)
-print(header)
-for i, ir in enumerate(irreps):
-    row = "  ".join(f"{v:6.3f}" for v in chars[i])
-    print(f"  {ir.get_name():<6}  {row}")
+print_char_table_programmatic(pg)
 
 # ---------------------------------------------------------------------------
 # 8. Standalone character table generator (no XYZ needed)
@@ -239,15 +248,15 @@ for i, ir in enumerate(irreps):
 
 section(8, "STANDALONE CHARACTER TABLE GENERATOR  (no XYZ needed)")
 
-print("-- parse_point_group_name + get_or_generate_point_group --")
+print("-- parse_point_group_name + find_point_group --")
 label_d6h = parse_point_group_name("D6h")
-pg_d6h    = get_or_generate_point_group(label_d6h)
-print(f"D6h  order={pg_d6h.get_order()}  irreps={len(pg_d6h.get_irreps())}")
+pg_d6h    = find_point_group(label_d6h)
+print(f"D6h  order={pg_d6h.order}  irreps={len(pg_d6h.irreps)}")
 
 print()
 print("-- generate_point_group (always regenerates, bypasses cache) --")
 pg_d4d = generate_point_group(parse_point_group_name("D4d"))
-print(f"D4d  order={pg_d4d.get_order()}  irreps={len(pg_d4d.get_irreps())}")
+print(f"D4d  order={pg_d4d.order}  irreps={len(pg_d4d.irreps)}")
 
 print()
 print("-- print_character_table_for (one-liner display) --")
@@ -263,7 +272,7 @@ print_character_table_for("D4d")
 
 print()
 print("-- C24 (high-order generated group, plain to avoid truncation) --")
-pg_c24 = get_or_generate_point_group(parse_point_group_name("C24"))
+pg_c24 = find_point_group(parse_point_group_name("C24"))
 pg_c24.print_character_table(plain=True)
 
 # ---------------------------------------------------------------------------
@@ -324,18 +333,18 @@ print(f"format_latex(['C2v','C3v','C4v']) contains {table_count} \\begin{{table}
 
 section(12, "PERIODIC TABLE UTILITIES")
 
-el = get_element(6)
+el = element(6)
 print(f"Element 6  : symbol={el.symbol}, name={el.name}, mass={el.mass} u, "
       f"radius={el.radius} Å, colour={el.colour}")
 
-n_fe = get_atomic_number("Fe")
-fe   = get_element(n_fe)
+n_fe = atomic_number("Fe")
+fe   = element(n_fe)
 print(f"Iron       : atomic number={n_fe}, mass={fe.mass} u")
 
 print()
 print("Atoms in ammonia molecule:")
 for i, z in enumerate(s.atomic_numbers):
-    el_i = get_element(int(z))
+    el_i = element(int(z))
     print(f"  Atom {i}: Z={int(z):3d}  symbol={el_i.symbol:<3}  mass={el_i.mass:.4f} u")
 
 print()

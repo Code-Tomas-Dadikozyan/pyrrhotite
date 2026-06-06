@@ -55,23 +55,23 @@ def _analyse(
     try:
         structure = Structure(str(path))
         sym = Symmetry(structure)
-        pg = sym.get_point_group()
-        label = pg.get_label().get_name()
+        pg = sym.point_group
+        label = pg.label.name
 
         if verbose:
-            ops = sym.get_operation_manager().get_operations()
+            ops = sym.operation_manager.operations
             print(f"{path.name}")
             print(f"  Point group : {label}")
-            print(f"  Rotor class : {sym.get_rotor_class().name}")
+            print(f"  Rotor class : {sym.rotor_class.name}")
             print(f"  Operations  : {len(ops)} found")
             for op in ops:
-                print(f"    {op.get_label().get_short_name()}")
+                print(f"    {op.label.short_name}")
         else:
             print(f"{path.name}: {label}")
 
         if moments:
-            pm = sym.get_principal_moments()
-            axes = sym.get_principal_axes()
+            pm = sym.principal_moments
+            axes = sym.principal_axes
             print(f"\n  Principal moments of inertia (u·Ų):")
             print(f"    Ia = {pm[0]:.6f}")
             print(f"    Ib = {pm[1]:.6f}")
@@ -84,19 +84,19 @@ def _analyse(
                 print(f"    {row_label:8s}  {vals}")
 
         if operations_detail:
-            struct = sym.get_structure()
-            ops = sym.get_operation_manager().get_operations()
+            struct = sym.structure
+            ops = sym.operation_manager.operations
             print(f"\n  Symmetry operation geometry:")
             for op in ops:
-                short = op.get_label().get_short_name()
+                short = op.label.short_name
                 is_reflection = (
-                    op.get_label().get_element() == OperationLabel.Element.Reflection
+                    op.label.element == OperationLabel.Element.Reflection
                 )
                 if is_reflection:
-                    atom_indices = op.get_atoms_in_plane(struct)
+                    atom_indices = op.atoms_in_plane(struct)
                     location = "in plane"
                 else:
-                    atom_indices = op.get_atoms_on_axis(struct)
+                    atom_indices = op.atoms_on_axis(struct)
                     location = "on axis"
                 if atom_indices:
                     atom_symbols = [

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .periodic_table import get_atomic_number, get_element
+from .periodic_table import atomic_number, element, get_atomic_number, get_element
 
 
 class Structure:
@@ -155,7 +155,8 @@ class Structure:
                     pairs.append((i, j))
         return pairs
 
-    def get_description_filename(self) -> str:
+    @property
+    def description_filename(self) -> str:
         """Return a human-readable label combining description and filename."""
         if self.description:
             return f"{self.description} – {self.filename}"

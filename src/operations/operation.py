@@ -55,10 +55,10 @@ class Operation:
         self.degree: int = 0
         self.axis: np.ndarray = np.zeros(3, dtype=float)
         self.matrix: np.ndarray = np.eye(3, dtype=float)
-        # error is set by do_operation() to the worst-case mis-mapping distance.
+        # _error is set by do_operation() to the worst-case mis-mapping distance.
         # It starts as NaN so that reading it before the operation is applied
         # raises a clear error rather than returning a misleading 0.
-        self.error: float = float("nan")
+        self._error: float = float("nan")
         # result_indices_forwards[i] = j means: atom i maps to atom j under
         # one application of this operation.  result_indices_backwards is the
         # reverse map, needed for higher-order axes (e.g. C3 needs C3^-1 too).
@@ -103,52 +103,37 @@ class Operation:
         return op
 
     # ------------------------------------------------------------------
-    # Getters / setters
+    # Setters (public attributes serve as getters directly)
     # ------------------------------------------------------------------
-
-    def get_id(self) -> int:
-        """Return the unique ID assigned by OperationManager."""
-        return self.id
 
     def set_id(self, id: int) -> None:
         """Set the unique ID."""
         self.id = id
 
-    def get_label(self) -> OperationLabel:
-        """Return the mutable label of this operation."""
-        return self.label
-
     def set_label(self, label: OperationLabel) -> None:
         """Replace the label."""
         self.label = label
 
-    def get_error(self) -> float:
+    @property
+    def error(self) -> float:
         """Return the operation error (must call do_operation first)."""
-        if math.isnan(self.error):
+        if math.isnan(self._error):
             raise RuntimeError("Tried to get the error of a symmetry operation before it was computed.")
-        return self.error
+        return self._error
 
-    def get_degree(self) -> int:
-        """Return the rotation degree (0 == infinite)."""
-        return self.degree
-
-    def get_axis(self) -> np.ndarray:
-        """Return the rotation/reflection axis (unit vector)."""
-        return self.axis
-
-    def get_result_index(self, index: int) -> int:
+    def result_index(self, index: int) -> int:
         """Return the atom index that atom `index` maps to under this operation.
 
         For degree > 2, follows the chain abs(multiple) times using the
         forwards or backwards index map depending on the sign of multiple.
         """
-        if self.label.get_multiple() > 0:
+        if self.label.multiple > 0:
             result_indices = self.result_indices_forwards
         else:
             result_indices = self.result_indices_backwards
 
         result_index = index
-        for _ in range(abs(self.label.get_multiple())):
+        for _ in range(abs(self.label.multiple)):
             result_index = result_indices[result_index]
         return result_index
 
@@ -170,16 +155,16 @@ class Operation:
         """
         if not isinstance(other, Operation):
             return NotImplemented
-        if self.label.get_element() != other.label.get_element():
+        if self.label.element != other.label.element:
             return False
-        elem = self.label.get_element()
+        elem = self.label.element
         if elem == OperationLabel.Element.Inversion:
             # There is only one inversion centre (the origin), so two inversion
             # operations are always the same.
             return True
         if elem in (OperationLabel.Element.ProperRotation, OperationLabel.Element.ImproperRotation):
             return (
-                self.get_degree() == other.get_degree()
+                self.degree == other.degree
                 and 1 - abs(float(np.dot(self.axis, other.axis))) < 0.01
             )
         if elem == OperationLabel.Element.Reflection:
@@ -216,7 +201,7 @@ class Operation:
         self.result_indices_forwards = [0] * n
         # The backwards map is only needed for degree > 2 (e.g. C3 needs C3^-1
         # to follow chains of mappings in get_result_index).
-        if self.label.get_degree() > 2:
+        if self.label.degree > 2:
             self.result_indices_backwards = [0] * n
 
         for i in range(n):
@@ -231,10 +216,10 @@ class Operation:
             if error > max_error:
                 max_error = error
             self.result_indices_forwards[i] = closest
-            if self.label.get_degree() > 2:
+            if self.label.degree > 2:
                 self.result_indices_backwards[closest] = i
 
-        self.error = max_error
+        self._error = max_error
 
     def do_atom_operation(self, coordinates: np.ndarray) -> np.ndarray:
         """Apply the transformation matrix to a single atom coordinate vector."""
@@ -242,7 +227,7 @@ class Operation:
 
     def _get_distance_to_element(self, coordinates: np.ndarray) -> float:
         """Return the distance from coordinates to this operation's symmetry element."""
-        elem = self.label.get_element()
+        elem = self.label.element
         if elem == OperationLabel.Element.Inversion:
             return float(np.linalg.norm(coordinates))
         if elem in (OperationLabel.Element.ProperRotation, OperationLabel.Element.ImproperRotation):
@@ -259,7 +244,7 @@ class Operation:
 
     def _calculate_matrix(self, f: float = 1.0) -> np.ndarray:
         """Dispatch to the correct matrix-building method."""
-        elem = self.label.get_element()
+        elem = self.label.element
         if elem == OperationLabel.Element.Inversion:
             return self._calculate_matrix_inversion(f)
         if elem == OperationLabel.Element.ProperRotation:
@@ -304,7 +289,7 @@ class Operation:
         if self.degree == self.DEGREE_INF:
             return np.eye(3, dtype=float)
 
-        angle = 2.0 * math.pi / self.degree * self.label.get_multiple() * f
+        angle = 2.0 * math.pi / self.degree * self.label.multiple * f
         c = math.cos(angle)
         s = math.sin(angle)
         ux, uy, uz = self.axis[0], self.axis[1], self.axis[2]
@@ -357,7 +342,7 @@ class Operation:
     # Geometric atom queries
     # ------------------------------------------------------------------
 
-    def get_atoms_on_axis(self, structure: Structure, threshold: float = 0.3) -> list[int]:
+    def atoms_on_axis(self, structure: Structure, threshold: float = 0.3) -> list[int]:
         """Return indices of atoms within threshold Å of the rotation axis.
 
         Uses perpendicular distance (vector rejection from the axis direction).
@@ -371,7 +356,7 @@ class Operation:
                 result.append(i)
         return result
 
-    def get_atoms_in_plane(self, structure: Structure, threshold: float = 0.3) -> list[int]:
+    def atoms_in_plane(self, structure: Structure, threshold: float = 0.3) -> list[int]:
         """Return indices of atoms within threshold Å of the mirror plane.
 
         Uses the signed distance |r · n| where n is the plane normal (self.axis).
@@ -391,4 +376,4 @@ class Operation:
         relevant for planar molecules where σh coincides with the molecular plane.
         Only meaningful for Reflection operations.
         """
-        return len(self.get_atoms_in_plane(structure, threshold)) == structure.num_atoms
+        return len(self.atoms_in_plane(structure, threshold)) == structure.num_atoms

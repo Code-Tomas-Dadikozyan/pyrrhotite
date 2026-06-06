@@ -189,12 +189,8 @@ ATOMIC_NUMBER_TO_ELEMENT: dict[int, Element] = {
 # fmt: on
 
 
-def get_atomic_number(symbol: str) -> int:
-    """Return the atomic number for the given element symbol.
-
-    Called by the XYZ file parser to convert symbol strings (e.g. "C", "Fe")
-    into integer keys used throughout the rest of the algorithm.
-    """
+def atomic_number(symbol: str) -> int:
+    """Return the atomic number for the given element symbol."""
     if not symbol:
         raise ValueError("No element symbol supplied.")
     try:
@@ -203,14 +199,14 @@ def get_atomic_number(symbol: str) -> int:
         raise ValueError(f"Invalid element symbol: {symbol!r}")
 
 
-def get_element(atomic_number: int) -> Element:
-    """Return the Element record for the given atomic number.
-
-    Used wherever the algorithm needs a physical property of an atom — its
-    covalent radius for bond detection or its mass for centre-of-mass
-    calculation.
-    """
+def element(atomic_number: int) -> Element:
+    """Return the Element record for the given atomic number."""
     try:
         return ATOMIC_NUMBER_TO_ELEMENT[atomic_number]
     except KeyError:
         raise ValueError(f"Invalid atomic number: {atomic_number}")
+
+
+# Backward-compatible aliases used internally before this rename
+get_atomic_number = atomic_number
+get_element = element

@@ -68,5 +68,5 @@ def test_unsupported_format():
 
 def test_description_filename():
     s = Structure(str(XYZ_DIR / "water.xyz"))
-    label = s.get_description_filename()
+    label = s.description_filename
     assert "water.xyz" in label

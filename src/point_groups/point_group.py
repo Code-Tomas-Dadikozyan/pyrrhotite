@@ -80,23 +80,28 @@ class PointGroup:
     # Getters
     # ------------------------------------------------------------------
 
-    def get_label(self) -> PointGroupLabel:
+    @property
+    def label(self) -> PointGroupLabel:
         """Return the point-group label."""
         return self._label
 
-    def get_order(self) -> int:
+    @property
+    def order(self) -> int:
         """Return the total number of unique symmetry operations."""
         return self._order
 
-    def get_unique_operations(self) -> list[OperationLabelCount]:
+    @property
+    def unique_operations(self) -> list[OperationLabelCount]:
         """Return the list of unique operation labels with counts."""
         return self._unique_operations
 
-    def get_irreps(self) -> list[IrrepLabel]:
+    @property
+    def irreps(self) -> list[IrrepLabel]:
         """Return the irreducible representations of this point group."""
         return self._irreps
 
-    def get_characters(self) -> list[list[float]]:
+    @property
+    def characters(self) -> list[list[float]]:
         """Return the character table indexed as [irrep][operation class]."""
         return self._characters
 
@@ -124,7 +129,7 @@ class PointGroup:
         num_inversions = 0
         num_reflections = 0
         for op in operations:
-            element = op.get_label().get_element()
+            element = op.label.element
             if element == OperationLabel.Element.Inversion:
                 num_inversions += 1
             if element == OperationLabel.Element.Reflection:
@@ -142,8 +147,8 @@ class PointGroup:
         for degree, num_required in self._num_proper_rotations.items():
             num_found = sum(
                 1 for op in operations
-                if op.get_label().get_element() == OperationLabel.Element.ProperRotation
-                and op.get_degree() == degree
+                if op.label.element == OperationLabel.Element.ProperRotation
+                and op.degree == degree
             )
             if num_found < num_required:
                 return -1
@@ -153,8 +158,8 @@ class PointGroup:
         for degree, num_required in self._num_improper_rotations.items():
             num_found = sum(
                 1 for op in operations
-                if op.get_label().get_element() == OperationLabel.Element.ImproperRotation
-                and op.get_degree() == degree
+                if op.label.element == OperationLabel.Element.ImproperRotation
+                and op.degree == degree
             )
             if num_found < num_required:
                 return -1
@@ -238,10 +243,10 @@ class PointGroup:
             """Infer n from the principal-axis column (first unique op), or None."""
             if not self._unique_operations:
                 return None
-            lbl = self._unique_operations[0].get_label()
+            lbl = self._unique_operations[0].label
             from ..operations.operation_label import OperationLabel as _OL
-            if lbl.get_element() in (_OL.Element.ProperRotation, _OL.Element.ImproperRotation):
-                return lbl.get_degree()
+            if lbl.element in (_OL.Element.ProperRotation, _OL.Element.ImproperRotation):
+                return lbl.degree
             return None
 
         def _build_rows() -> list[tuple[str, list[str]]]:
@@ -266,22 +271,22 @@ class PointGroup:
             n = _group_order_n() if use_complex else None
 
             for irrep, char_row in zip(self._irreps, self._characters):
-                label = _safe(irrep.get_name())
-                is_e_type = (irrep.get_mulliken() == IrrepLabel.Mulliken.E)
+                label = _safe(irrep.name)
+                is_e_type = (irrep.mulliken == IrrepLabel.Mulliken.E)
 
                 if use_complex and is_e_type and n is not None:
                     # Recover j (the E-type index) from the irrep subscript.
                     # E1 → j=1, E2 → j=2, …  A single E with no subscript → j=1.
-                    sub = irrep.get_subscript()
+                    sub = irrep.subscript
                     j = sub if sub else 1
                     row_top: list[str] = ["1"]   # χ(E) = 1 for both conjugate rows
                     row_bot: list[str] = ["1"]
                     for rc in self._unique_operations:
                         from ..operations.operation_label import OperationLabel as _OL
-                        elem = rc.get_label().get_element()
+                        elem = rc.label.element
                         if elem in (_OL.Element.ProperRotation, _OL.Element.ImproperRotation):
-                            k = rc.get_label().get_multiple() or 1
-                            d = rc.get_label().get_degree()
+                            k = rc.label.multiple or 1
+                            d = rc.label.degree
                             # Convert (degree d, multiple k) to the S_n power index p.
                             # Each step of degree d corresponds to n/d steps of the
                             # fundamental S_n rotation, so p = k * (n // d).
@@ -301,8 +306,8 @@ class PointGroup:
                     rows.append((label, cells))
             return rows
 
-        col_headers = ["E"] + [_safe(olc.get_short_name()) for olc in self._unique_operations]
-        name = _safe(self._label.get_name())
+        col_headers = ["E"] + [_safe(olc.short_name) for olc in self._unique_operations]
+        name = _safe(self._label.name)
         data_rows = _build_rows()
 
         # ------------------------------------------------------------------

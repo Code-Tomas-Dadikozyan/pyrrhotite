@@ -95,7 +95,7 @@ def test_c3_valid_on_ammonia():
     axis = centroid - s.coordinates[n_idx]
     op = Operation.rotation(E.ProperRotation, 3, axis)
     op.do_operation(s)
-    assert op.get_error() < 0.1, f"C3 error too high: {op.get_error()}"
+    assert op.error < 0.1, f"C3 error too high: {op.error}"
 
 
 def test_inversion_invalid_on_ammonia():
@@ -103,7 +103,7 @@ def test_inversion_invalid_on_ammonia():
     s = Structure(str(XYZ_DIR / "ammonia.xyz"))
     op = Operation.inversion()
     op.do_operation(s)
-    assert op.get_error() >= 0.1, "Inversion should fail for ammonia"
+    assert op.error >= 0.1, "Inversion should fail for ammonia"
 
 
 def test_inversion_valid_on_sf6():
@@ -111,13 +111,13 @@ def test_inversion_valid_on_sf6():
     s = Structure(str(XYZ_DIR / "sulfur-hexafluoride.xyz"))
     op = Operation.inversion()
     op.do_operation(s)
-    assert op.get_error() < 0.1, f"Inversion error too high for SF6: {op.get_error()}"
+    assert op.error < 0.1, f"Inversion error too high for SF6: {op.error}"
 
 
 def test_error_raises_before_do_operation():
     op = Operation.inversion()
     with pytest.raises(RuntimeError, match="before it was computed"):
-        op.get_error()
+        op.error
 
 
 def test_result_indices_set_after_do_operation():

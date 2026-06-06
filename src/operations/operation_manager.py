@@ -33,42 +33,49 @@ class OperationManager:
     # Accessors
     # ------------------------------------------------------------------
 
-    def get_operations(self) -> list[Operation]:
+    @property
+    def operations(self) -> list[Operation]:
         """Return the mutable list of all found operations."""
         return self._operations
 
-    def get_inversions(self) -> list[Operation]:
+    @property
+    def inversions(self) -> list[Operation]:
         """Return all found inversion operations."""
         return [op for op in self._operations
-                if op.label.get_element() == OperationLabel.Element.Inversion]
+                if op.label.element == OperationLabel.Element.Inversion]
 
-    def get_proper_rotations(self) -> list[Operation]:
+    @property
+    def proper_rotations(self) -> list[Operation]:
         """Return all found proper rotation operations."""
         return [op for op in self._operations
-                if op.label.get_element() == OperationLabel.Element.ProperRotation]
+                if op.label.element == OperationLabel.Element.ProperRotation]
 
-    def get_improper_rotations(self) -> list[Operation]:
+    @property
+    def improper_rotations(self) -> list[Operation]:
         """Return all found improper rotation operations."""
         return [op for op in self._operations
-                if op.label.get_element() == OperationLabel.Element.ImproperRotation]
+                if op.label.element == OperationLabel.Element.ImproperRotation]
 
-    def get_reflections(self) -> list[Operation]:
+    @property
+    def reflections(self) -> list[Operation]:
         """Return all found reflection operations."""
         return [op for op in self._operations
-                if op.label.get_element() == OperationLabel.Element.Reflection]
+                if op.label.element == OperationLabel.Element.Reflection]
 
-    def get_point_group_operations(self) -> dict[int, Operation]:
+    @property
+    def point_group_operations(self) -> dict[int, Operation]:
         """Return the id→operation map for the final labelled point-group set."""
         return self._point_group_operations
 
-    def get_point_group_operation(self, id: int) -> Operation:
+    def point_group_operation(self, id: int) -> Operation:
         """Return a single point-group operation by ID."""
         try:
             return self._point_group_operations[id]
         except KeyError:
             raise RuntimeError(f"Invalid operation ID encountered: {id}")
 
-    def get_point_group_operations_order(self) -> list[OperationGroup]:
+    @property
+    def point_group_operations_order(self) -> list[OperationGroup]:
         """Return the ordered list of operation groups for the point group."""
         return self._point_group_operations_order
 
@@ -92,7 +99,7 @@ class OperationManager:
 
         for i, existing in enumerate(self._operations):
             if operation == existing:
-                if operation.get_error() < existing.get_error():
+                if operation.error < existing.error:
                     self._operations[i] = operation
                 return True
 
@@ -110,7 +117,7 @@ class OperationManager:
         atoms (errors typically >> 0.1 Å for wrong axes).
         """
         operation.do_operation(self._structure)
-        return operation.get_error() < 0.1
+        return operation.error < 0.1
 
     # ------------------------------------------------------------------
     # Point-group operation generation
@@ -122,8 +129,8 @@ class OperationManager:
         Iterates the unique operations defined in the point group and generates
         all concrete operations (including rotation multiples) for display.
         """
-        for label_count in point_group.get_unique_operations():
-            self._generate_operations_by_label(point_group, label_count.get_label())
+        for label_count in point_group.unique_operations:
+            self._generate_operations_by_label(point_group, label_count.label)
 
     def _generate_operations_by_label(
         self, point_group: PointGroup, operation_label: OperationLabel
@@ -137,9 +144,9 @@ class OperationManager:
         """
         from ..point_groups.point_group_label import PGClass
 
-        pg_class = point_group.get_label().get_class()
-        elem = operation_label.get_element()
-        deg = operation_label.get_degree()
+        pg_class = point_group.label.group_class
+        elem = operation_label.element
+        deg = operation_label.degree
 
         is_infinite_group = pg_class in (PGClass.Cinfv, PGClass.Dinfh)
         # In C∞v and D∞h, there are infinitely many C2′ axes (perpendicular to
@@ -162,8 +169,8 @@ class OperationManager:
 
         if elem in (OperationLabel.Element.Inversion, OperationLabel.Element.Reflection):
             for match in matches:
-                self._point_group_operations[match.get_id()] = match
-                operation_group.add_operation_id(match.get_id())
+                self._point_group_operations[match.id] = match
+                operation_group.add_operation_id(match.id)
         else:
             # Determine which multiples to generate.
             # For a Cn axis with n > 2, the character table has one column for
@@ -173,7 +180,7 @@ class OperationManager:
             # both (+multiple and -multiple) to populate the display list.
             # For C2 the inverse of C2^1 is C2^1 itself (a half-turn is its own
             # inverse), so only one multiple is needed.
-            base_multiple = operation_label.get_multiple()
+            base_multiple = operation_label.multiple
             if deg > 2:
                 multiples = [base_multiple, -base_multiple]
             else:
@@ -181,14 +188,14 @@ class OperationManager:
 
             for multiple in multiples:
                 for match in matches:
-                    if multiple == match.label.get_multiple():
-                        self._point_group_operations[match.get_id()] = match
-                        operation_group.add_operation_id(match.get_id())
+                    if multiple == match.label.multiple:
+                        self._point_group_operations[match.id] = match
+                        operation_group.add_operation_id(match.id)
                     else:
                         op_copy = self._copy_operation(match)
                         op_copy.label.set_multiple(multiple)
-                        self._point_group_operations[op_copy.get_id()] = op_copy
-                        operation_group.add_operation_id(op_copy.get_id())
+                        self._point_group_operations[op_copy.id] = op_copy
+                        operation_group.add_operation_id(op_copy.id)
 
         self._point_group_operations_order.append(operation_group)
 
@@ -212,7 +219,7 @@ class OperationManager:
         E = OperationLabel.Element
         buckets: dict[str, list[Operation]] = {"Cn": [], "Sn": [], "i": [], "σ": []}
         for op in self._point_group_operations.values():
-            elem = op.get_label().get_element()
+            elem = op.label.element
             if elem == E.ProperRotation:
                 buckets["Cn"].append(op)
             elif elem == E.ImproperRotation:
@@ -259,29 +266,29 @@ class OperationManager:
         print("─" * 70)
 
         for group in self._point_group_operations_order:
-            if group.get_infinite_multiplicity():
+            if group.infinite_multiplicity:
                 label = group._operation_label
-                print(_safe(f"{label.get_short_name() + ' (∞)':<{name_w}}  {'':26}"))
+                print(_safe(f"{label.short_name + ' (∞)':<{name_w}}  {'':26}"))
                 continue
 
-            for op_id in group.get_operation_ids():
+            for op_id in group.operation_ids:
                 if op_id not in self._point_group_operations:
                     continue
                 op = self._point_group_operations[op_id]
-                elem = op.get_label().get_element()
-                short = _safe(op.get_label().get_short_name())
+                elem = op.label.element
+                short = _safe(op.label.short_name)
                 notes_parts: list[str] = []
 
                 if elem == E.Inversion:
                     axis_str = "—"
                 elif elem in (E.ProperRotation, E.ImproperRotation):
-                    axis_str = _fmt_vec(op.get_axis())
-                    on_axis = op.get_atoms_on_axis(self._structure)
+                    axis_str = _fmt_vec(op.axis)
+                    on_axis = op.atoms_on_axis(self._structure)
                     if on_axis:
                         notes_parts.append(f"{len(on_axis)}/{n} atoms on axis")
                 elif elem == E.Reflection:
-                    axis_str = f"n={_fmt_vec(op.get_axis())}"
-                    in_plane = op.get_atoms_in_plane(self._structure)
+                    axis_str = f"n={_fmt_vec(op.axis)}"
+                    in_plane = op.atoms_in_plane(self._structure)
                     notes_parts.append(f"{len(in_plane)}/{n} atoms in plane")
                     if op.is_molecular_plane(self._structure):
                         notes_parts.append("[molecular plane]")
@@ -294,6 +301,6 @@ class OperationManager:
     def _copy_operation(self, operation: Operation) -> Operation:
         """Return a deep copy of operation with a fresh ID."""
         op_copy = copy.deepcopy(operation)
-        op_copy.set_id(self._next_id)
+        op_copy.id = self._next_id
         self._next_id += 1
         return op_copy

@@ -87,16 +87,16 @@ def _fmt_char(val: float) -> str:
 
 def _table_html(pg: PointGroup) -> str:
     """Return an HTML ``<table>`` element for one character table."""
-    ops = pg.get_unique_operations()  # list[OperationLabelCount]
-    irreps = pg.get_irreps()           # list[IrrepLabel]
-    chars = pg.get_characters()        # list[list[float]]
+    ops = pg.unique_operations  # list[OperationLabelCount]
+    irreps = pg.irreps           # list[IrrepLabel]
+    chars = pg.characters        # list[list[float]]
 
-    group_html = pg.get_label().get_name_html()
+    group_html = pg.label.name_html
     caption = f"Character table of {group_html}"
 
     # Header cells — unique_operations excludes E; prepend it explicitly
     op_headers = "      <th><i>E</i></th>\n" + "".join(
-        f"      <th>{o.get_short_name_html()}</th>\n" for o in ops
+        f"      <th>{o.short_name_html}</th>\n" for o in ops
     )
     header_row = (
         f"    <tr>\n"
@@ -113,7 +113,7 @@ def _table_html(pg: PointGroup) -> str:
         )
         rows.append(
             f"    <tr>\n"
-            f"      <td>{ir.get_name_html()}</td>\n"
+            f"      <td>{ir.name_html}</td>\n"
             f"{cells}"
             f"    </tr>"
         )
@@ -181,7 +181,7 @@ def save_html(names: list[str], path: str | None = None) -> Path:
         if pg is None:
             raise ValueError(f"Unknown or unsupported point group: '{name}'")
         tables.append(_table_html(pg))
-        titles.append(pg.get_label().get_name())
+        titles.append(pg.label.name)
 
     page_title = "Character Tables — " + ", ".join(titles)
     tables_html = "\n\n".join(tables)

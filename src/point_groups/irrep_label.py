@@ -159,22 +159,26 @@ class IrrepLabel:
         return cls(mulliken, subscript=subscript, prime=prime)
 
     # ------------------------------------------------------------------
-    # Getters
+    # Properties
     # ------------------------------------------------------------------
 
-    def get_mulliken(self) -> IrrepLabel.Mulliken:
+    @property
+    def mulliken(self) -> IrrepLabel.Mulliken:
         """Return the Mulliken symbol."""
         return self._mulliken
 
-    def get_subscript(self) -> int:
+    @property
+    def subscript(self) -> int:
         """Return the integer subscript (0 means no subscript)."""
         return self._subscript
 
-    def get_parity(self) -> IrrepLabel.Parity:
+    @property
+    def parity(self) -> IrrepLabel.Parity:
         """Return the inversion parity."""
         return self._parity
 
-    def get_prime(self) -> IrrepLabel.Prime:
+    @property
+    def prime(self) -> IrrepLabel.Prime:
         """Return the prime modifier."""
         return self._prime
 
@@ -182,7 +186,8 @@ class IrrepLabel:
     # Name helpers
     # ------------------------------------------------------------------
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         """Return the plaintext Mulliken label (e.g. 'A1g', 'T2u', 'E′')."""
         match self._mulliken:
             case IrrepLabel.Mulliken.SingleSymmetric:
@@ -223,7 +228,8 @@ class IrrepLabel:
 
         return name
 
-    def get_name_html(self) -> str:
+    @property
+    def name_html(self) -> str:
         """Return the HTML-formatted Mulliken label."""
         match self._mulliken:
             case IrrepLabel.Mulliken.SingleSymmetric:
