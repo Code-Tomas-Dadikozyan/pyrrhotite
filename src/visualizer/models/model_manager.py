@@ -87,7 +87,9 @@ class ModelManager:
         if name not in self._models:
             return
         m = self._models[name]
-        mvp = proj_matrix @ view_matrix @ model_matrix
+        # pyrr uses row-vector convention; with GL_FALSE GLSL receives M.T.
+        # To get proj_cv @ view_cv @ model_cv in GLSL we need (model@view@proj).T
+        mvp = model_matrix @ view_matrix @ proj_matrix
 
         shader.use()
         shader.set_mat4("model", model_matrix)
@@ -113,11 +115,9 @@ class ModelManager:
         if name not in self._models:
             return
         m = self._models[name]
-        mvp = proj_matrix @ view_matrix @ model_matrix
+        mvp = model_matrix @ view_matrix @ proj_matrix
 
         shader.use()
-        shader.set_mat4("model", model_matrix)
-        shader.set_mat4("view", view_matrix)
         shader.set_mat4("mvp", mvp)
         shader.set_vec3("color", color)
 

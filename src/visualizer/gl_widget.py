@@ -37,8 +37,8 @@ _ASSETS = Path(__file__).parent / "assets"
 _SHADERS = _ASSETS / "shaders"
 _MODELS = _ASSETS / "models"
 
-_LIGHT_POS = (0.0, -100.0, 0.0)
-_BG_COLOR = (0.15, 0.15, 0.20, 1.0)
+_LIGHT_POS = (3.0, 5.0, 10.0)   # eye-space: slightly above-right of camera
+_BG_COLOR = (0.82, 0.84, 0.88, 1.0)
 _GIZMO_SCALE = 0.08   # fraction of widget width used by gizmo viewport
 
 
@@ -98,8 +98,10 @@ class GLWidget(QOpenGLWidget):
         self._h = h
 
     def paintGL(self) -> None:
+        dpr = self.devicePixelRatioF()
         w, h = max(self.width(), 1), max(self.height(), 1)
-        GL.glViewport(0, 0, w, h)
+        pw, ph = int(w * dpr), int(h * dpr)  # physical pixels for GL
+        GL.glViewport(0, 0, pw, ph)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         if self._phong_shader is None or self._model_manager is None:
@@ -137,7 +139,6 @@ class GLWidget(QOpenGLWidget):
 
     def mouseReleaseEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton and self._arcball_active:
-            self._renderer.apply_arcball_rotation()
             self._arcball_active = False
             self.update()
 
@@ -150,7 +151,9 @@ class GLWidget(QOpenGLWidget):
         angle = math.acos(dot) * 2.0
         axis = np.cross(p0, p1)
         if np.linalg.norm(axis) > 1e-6:
-            self._renderer.set_arcball_rotation(angle, axis)
+            # Accumulate delta rotation into camera so large drags never
+            # cause axis flips (the antipodal singularity in total-rotation mode).
+            self._renderer.accumulate_arcball_delta(angle, axis)
         self._mouse_pos = event.pos()
         self.update()
 
@@ -194,20 +197,23 @@ class GLWidget(QOpenGLWidget):
 
     def _paint_gizmos(self, view: np.ndarray, proj: np.ndarray) -> None:
         """Draw XYZ axis arrows in a small viewport in the bottom-left corner."""
+        dpr = self.devicePixelRatioF()
         w = self.width()
         h = self.height()
-        size = int(min(w, h) * _GIZMO_SCALE * 2.5)
+        pw, ph = int(w * dpr), int(h * dpr)
+        size = int(min(w, h) * _GIZMO_SCALE * 2.5 * dpr)
         GL.glViewport(0, 0, size, size)
 
         # Gizmo uses an orthographic-like small projection
         gizmo_proj = pyrr.matrix44.create_perspective_projection_matrix(
             45.0, 1.0, 0.01, 1000.0, dtype=np.float32
         )
-        # Gizmo view: same rotation as scene but fixed distance, no translation
+        # Gizmo view: same rotation as scene but fixed distance, no translation.
+        # pyrr stores translation in last ROW (row-vector convention): view[3, 0:3].
         rotation_only = view.copy()
-        rotation_only[0, 3] = 0.0
-        rotation_only[1, 3] = 0.0
-        rotation_only[2, 3] = -3.0   # fixed small distance
+        rotation_only[3, 0] = 0.0
+        rotation_only[3, 1] = 0.0
+        rotation_only[3, 2] = -3.0   # fixed small distance
 
         axes = [
             (np.array([1, 0, 0], dtype=np.float32), (1.0, 0.2, 0.2)),
@@ -230,46 +236,73 @@ class GLWidget(QOpenGLWidget):
                 rot = pyrr.matrix44.create_from_axis_rotation(
                     cross / np.linalg.norm(cross), angle, dtype=np.float32
                 )
+            # arrow.obj is ~7 units long with radius ~1; scale to match gizmo viewport
             scale = pyrr.matrix44.create_from_scale(
-                np.array([0.06, 0.06, 0.5], dtype=np.float32)
+                np.array([0.07, 0.07, 0.07], dtype=np.float32)
             )
-            model = rot @ scale
+            model = scale @ rot
             if self._axes_shader and self._model_manager:
                 self._model_manager.draw_axes(
-                    "cylinder", self._axes_shader, model, rotation_only, gizmo_proj, color
+                    "arrow", self._axes_shader, model, rotation_only, gizmo_proj, color
                 )
 
-        # Restore full viewport
-        GL.glViewport(0, 0, w, h)
+        # Restore full viewport (physical pixels)
+        GL.glViewport(0, 0, pw, ph)
 
     def _paint_labels(self, proj: np.ndarray, view: np.ndarray) -> None:
         """Overlay atom element labels using QPainter (no FreeType needed)."""
         if self._renderer._structure is None:
             return
 
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        font = QFont("Arial", 9, QFont.Weight.Bold)
-        painter.setFont(font)
-
+        # QPainter works in logical pixels; projection aspect uses logical pixels too.
         w = self.width()
         h = self.height()
-        mvp = proj @ view
+        mvp = view @ proj  # pyrr row-vector: clip = pos4 @ mvp
         coords = self._renderer._structure.coordinates
         atomic_numbers = self._renderer._structure.atomic_numbers
 
         from ..periodic_table import element as get_element
 
+        # Project all atoms and collect (ndc_z, screen_x, screen_y, symbol)
+        items: list[tuple[float, int, int, str]] = []
         for i, z in enumerate(atomic_numbers):
-            sym = get_element(int(z)).symbol
             pos4 = np.array([coords[i, 0], coords[i, 1], coords[i, 2], 1.0], dtype=np.float32)
-            clip = mvp @ pos4
+            clip = pos4 @ mvp
             if clip[3] < 0.01:
                 continue
             ndc = clip[:3] / clip[3]
+            if ndc[2] < -1.0 or ndc[2] > 1.0:
+                continue
+            if abs(ndc[0]) > 1.1 or abs(ndc[1]) > 1.1:
+                continue
             sx = int((ndc[0] * 0.5 + 0.5) * w)
             sy = int((0.5 - ndc[1] * 0.5) * h)
-            painter.setPen(QColor(255, 255, 255, 200))
-            painter.drawText(sx + 5, sy - 3, sym)
+            items.append((float(ndc[2]), sx, sy, get_element(int(z)).symbol))
+
+        if not items:
+            return
+
+        # Depth range for fading back-side labels
+        depths = [d for d, *_ in items]
+        d_min, d_max = min(depths), max(depths)
+        d_range = max(d_max - d_min, 1e-4)
+
+        # Draw back-to-front so front labels render on top
+        items.sort(key=lambda t: -t[0])
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setFont(QFont("Arial", 9, QFont.Weight.Bold))
+
+        for depth, sx, sy, sym in items:
+            # Front atoms fully opaque, back atoms more transparent
+            t = (depth - d_min) / d_range  # 0 = front, 1 = back
+            alpha = int(230 * (1.0 - 0.6 * t))
+            # Dark shadow for readability against light background and light atoms
+            painter.setPen(QColor(0, 0, 0, alpha // 2))
+            painter.drawText(sx + 7, sy - 3, sym)
+            # Neon green — distinct from all CPK colors (gray/white/blue/red/yellow)
+            painter.setPen(QColor(30, 255, 80, alpha))
+            painter.drawText(sx + 6, sy - 4, sym)
 
         painter.end()

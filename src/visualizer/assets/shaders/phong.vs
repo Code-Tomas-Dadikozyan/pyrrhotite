@@ -23,10 +23,8 @@ void main() {
     vec3 position_eyespace = (view * model * vec4(position, 1.0)).xyz;
     vertex_direction_eyespace = vec3(0,0,0) - position_eyespace;
 
-    // calculate light-to-vertex direction in eye space
-    vec3 position_worldspace = (model * vec4(position, 1.0)).xyz;
-    vec3 light_direction_worldspace = lightpos - position_worldspace.xyz;
-    lightdirection_eyespace = (view * vec4(light_direction_worldspace, 0.0)).xyz;
+    // lightpos is in eye space — light follows the camera regardless of rotation
+    lightdirection_eyespace = lightpos - position_eyespace;
 
     // vertex normals in world and eye space
     normal_worldspace = (transpose(inverse(model)) * vec4(normal, 0.0)).xyz;

@@ -8,8 +8,8 @@ in vec3 normal_worldspace;
 uniform vec4 color;
 out vec4 fragColor;
 
-float ambient_strength = 0.1f;
-float specular_strength = 0.5f;
+float ambient_strength = 0.5f;
+float specular_strength = 0.8f;
 
 void main() {
     // load color from texture
