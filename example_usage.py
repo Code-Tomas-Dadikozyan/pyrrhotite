@@ -308,3 +308,38 @@ print("Cleaning up generated files:")
 for p in [tex_path, html_path, multi_tex, multi_html]:
     p.unlink(missing_ok=True)
     print(f"  Removed {p}")
+
+# ---------------------------------------------------------------------------
+# 13. 3-D visualizer
+# ---------------------------------------------------------------------------
+
+section(13, "3-D VISUALIZER")
+
+print("The visualizer requires optional dependencies:")
+print("  pip install 'pyrrhotite[vis]'   (PyQt6, PyOpenGL, pyrr)")
+print()
+print("Python API:")
+print("  from pyrrhotite import Structure, visualize")
+print("  visualize(Structure('molecule.xyz'))")
+print()
+print("CLI:")
+print("  pyrrhotite molecule.xyz --visualize")
+print()
+
+try:
+    import PyQt6       # pip install PyQt6
+    import OpenGL      # pip install PyOpenGL  (note: package name differs from import name)
+    import pyrr        # pip install pyrr
+    deps_ok = True
+except ImportError as e:
+    deps_ok = False
+    print(f"Optional vis dependencies not installed ({e}); skipping live demo.")
+    print("Install with:  pip install PyQt6 PyOpenGL pyrr")
+    print("           or: pip install 'pyrrhotite[vis]'")
+
+if deps_ok:
+    print("Visualizer dependencies found — opening window for ammonia (NH₃).")
+    print("Controls: left-drag to rotate | scroll to zoom | close window to continue.")
+    print()
+    from pyrrhotite import visualize
+    visualize(s)   # s = ammonia, loaded in section 1

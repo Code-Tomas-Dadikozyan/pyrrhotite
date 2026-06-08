@@ -174,6 +174,11 @@ def main() -> None:
         metavar="NAME",
         help="Print the character table for a named group without an XYZ file (e.g. C3v, D6h, Oh)",
     )
+    parser.add_argument(
+        "--visualize", "-vis",
+        action="store_true",
+        help="Open an interactive 3-D viewer after analysis (requires pip install 'pyrrhotite[vis]')",
+    )
 
     args = parser.parse_args()
 
@@ -188,6 +193,7 @@ def main() -> None:
         sys.exit(_print_group(args.group, use_complex=args.complex, plain=args.plain))
 
     exit_code = 0
+    structures = []
     for filename in args.files:
         code = _analyse(
             Path(filename),
@@ -200,6 +206,24 @@ def main() -> None:
         )
         if code != 0:
             exit_code = code
+        elif args.visualize:
+            try:
+                structures.append(Structure(str(Path(filename))))
+            except Exception:
+                pass
+
+    if args.visualize and structures:
+        try:
+            from .visualizer import visualize
+            for structure in structures:
+                visualize(structure)
+        except ImportError:
+            print(
+                "ERROR: visualizer dependencies not installed. "
+                "Run:  pip install 'pyrrhotite[vis]'",
+                file=sys.stderr,
+            )
+            exit_code = 1
 
     sys.exit(exit_code)
 

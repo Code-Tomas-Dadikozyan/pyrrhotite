@@ -7,4 +7,11 @@ from .symmetry import Symmetry
 
 from . import display
 
-__all__ = ["__version__", "Structure", "RotorClass", "Symmetry", "display"]
+
+def visualize(structure: "Structure") -> None:
+    """Open an interactive 3-D viewer for *structure* (requires ``pip install 'pyrrhotite[vis]'``)."""
+    from .visualizer import visualize as _vis
+    _vis(structure)
+
+
+__all__ = ["__version__", "Structure", "RotorClass", "Symmetry", "display", "visualize"]

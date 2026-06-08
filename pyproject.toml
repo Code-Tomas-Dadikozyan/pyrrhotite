@@ -16,13 +16,28 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
-vis = ["matplotlib"]
+vis = [
+    "matplotlib",
+    "PyOpenGL>=3.1",
+    "PyQt6>=6.4",
+    "pyrr>=0.10",
+]
 
 [project.scripts]
 pyrrhotite = "pyrrhotite.__main__:main"
 
 [tool.setuptools]
-packages = ["pyrrhotite", "pyrrhotite.operations", "pyrrhotite.point_groups"]
+packages = [
+    "pyrrhotite",
+    "pyrrhotite.operations",
+    "pyrrhotite.point_groups",
+    "pyrrhotite.visualizer",
+    "pyrrhotite.visualizer.shaders",
+    "pyrrhotite.visualizer.models",
+]
+
+[tool.setuptools.package-data]
+"pyrrhotite.visualizer" = ["assets/shaders/*.vs", "assets/shaders/*.fs", "assets/models/*.obj"]
 
 [tool.setuptools.package-dir]
 pyrrhotite = "src"
