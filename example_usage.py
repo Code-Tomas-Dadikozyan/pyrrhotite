@@ -33,8 +33,12 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-16"
 
 from pyrrhotite import Structure, Symmetry
 from pyrrhotite.periodic_table import element, atomic_number
-from pyrrhotite.operations.operation_label import OperationLabel
-from pyrrhotite.point_groups.basis_functions import compute_basis_functions
+from pyrrhotite.display import (
+    print_bond_pairs,
+    print_ops_with_atoms,
+    print_basis_functions,
+    print_char_table_programmatic,
+)
 from pyrrhotite.character_tables import (
     generate_point_group,
     find_point_group,
@@ -50,8 +54,7 @@ from pyrrhotite.character_tables import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-SEP  = "=" * 60
-SEP2 = "-" * 60
+SEP = "=" * 60
 
 def section(n: int, title: str) -> None:
     print()
@@ -59,55 +62,6 @@ def section(n: int, title: str) -> None:
     print(f"{n}. {title}")
     print(SEP)
 
-
-def print_bond_pairs(s: Structure) -> None:
-    for a, b in s.calculate_bond_pairs():
-        ea = element(int(s.atomic_numbers[a])).symbol
-        eb = element(int(s.atomic_numbers[b])).symbol
-        print(f"  {ea}{a} — {eb}{b}")
-
-
-def print_ops_with_atoms(ops, s: Structure) -> None:
-    for op in ops:
-        lbl = op.label
-        if lbl.element == OperationLabel.Element.Reflection:
-            atom_indices = op.atoms_in_plane(s)
-            loc = "in plane" + (" [molecular plane]" if op.is_molecular_plane(s) else "")
-        else:
-            atom_indices = op.atoms_on_axis(s)
-            loc = "on axis"
-        atoms = ", ".join(
-            f"{element(int(s.atomic_numbers[i])).symbol}{i}" for i in atom_indices
-        ) or "none"
-        print(f"  {lbl.short_name:<10}  {loc}: {atoms}")
-
-
-def print_basis_functions(pg) -> None:
-    bf = compute_basis_functions(pg)
-    print(f"  {'Irrep':<8}  {'Linear / Rotational':<26}  Quadratic")
-    print("  " + SEP2)
-    for irrep_name, funcs in bf.items():
-        lin  = ", ".join(funcs["linear"])    or "—"
-        quad = ", ".join(funcs["quadratic"]) or "—"
-        print(f"  {irrep_name:<8}  {lin:<26}  {quad}")
-
-
-def print_char_table_programmatic(pg) -> None:
-    irreps = pg.irreps
-    ops    = pg.unique_operations
-    chars  = pg.characters
-    print("Irreducible representations:")
-    for ir in irreps:
-        print(f"  {ir.name}")
-    print("\nConjugacy classes (from unique_operations, excluding E):")
-    for olc in ops:
-        print(f"  {olc.short_name:<12}  count={olc.count}")
-    print("\nFull character table (rows = irreps, columns = E then unique ops):")
-    header = f"  {'':>6}" + f"  {'E':>6}" + "".join(f"  {o.label.short_name:>6}" for o in ops)
-    print(header)
-    for i, ir in enumerate(irreps):
-        row = "  ".join(f"{v:6.3f}" for v in chars[i])
-        print(f"  {ir.name:<6}  {row}")
 
 
 # ---------------------------------------------------------------------------
