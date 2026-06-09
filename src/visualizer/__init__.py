@@ -14,8 +14,13 @@ if TYPE_CHECKING:
     from ..structure import Structure
 
 
-def visualize(structure: "Structure") -> None:
+def visualize(structure: "Structure", show_labels: bool = False) -> None:
     """Open an interactive 3-D viewer for *structure*.
+
+    Parameters
+    ----------
+    show_labels:
+        Overlay element symbols on each atom. Default is ``False``.
 
     Requires the optional ``vis`` dependencies (PyQt6, PyOpenGL, pyrr).
     """
@@ -46,6 +51,6 @@ def visualize(structure: "Structure") -> None:
     from .window import VisualizerWindow
 
     app = QApplication.instance() or QApplication(sys.argv)
-    win = VisualizerWindow(structure)
+    win = VisualizerWindow(structure, show_labels=show_labels)
     win.show()
     app.exec()

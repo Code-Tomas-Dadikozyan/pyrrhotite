@@ -42,6 +42,7 @@ class StructureRenderer:
         self._bond_pairs: list[tuple[int, int]] = []
         self._span: float = 1.0
         self._camera_rotation: np.ndarray = np.eye(4, dtype=np.float32)
+        self._arcball_rotation: np.ndarray = np.eye(4, dtype=np.float32)
         self._reset_camera()
 
     # ------------------------------------------------------------------
@@ -61,16 +62,21 @@ class StructureRenderer:
     # Camera / arcball
     # ------------------------------------------------------------------
 
-    def accumulate_arcball_delta(self, angle: float, axis: np.ndarray) -> None:
-        """Apply one incremental drag step directly into the camera rotation."""
+    def set_arcball_rotation(self, angle: float, axis: np.ndarray) -> None:
+        """Set temporary arcball rotation (world-space axis, not yet committed)."""
         if np.linalg.norm(axis) < 1e-6:
             return
-        delta = pyrr.matrix44.create_from_axis_rotation(
+        self._arcball_rotation = pyrr.matrix44.create_from_axis_rotation(
             axis / np.linalg.norm(axis), angle, dtype=np.float32
         )
-        # Post-multiply keeps delta in eye/screen space so dragging always
-        # rotates around screen axes, not world axes.
-        self._camera_rotation = self._camera_rotation @ delta
+
+    def apply_arcball_rotation(self) -> None:
+        """Commit temporary arcball drag into the persistent camera rotation."""
+        self._camera_rotation = self._arcball_rotation @ self._camera_rotation
+        self._arcball_rotation = np.eye(4, dtype=np.float32)
+        # Re-orthogonalize via SVD to prevent float32 drift accumulating across drags
+        U, _, Vt = np.linalg.svd(self._camera_rotation[:3, :3])
+        self._camera_rotation[:3, :3] = U @ Vt
 
     def get_view_matrix(self) -> np.ndarray:
         """Camera view matrix: translate back by 4 × span, then rotate."""
@@ -78,8 +84,21 @@ class StructureRenderer:
         translate = pyrr.matrix44.create_from_translation(
             np.array([0.0, 0.0, -dist], dtype=np.float32)
         )
-        # pyrr row-vector: GLSL sees (rotation @ translate).T = translate_cv @ rotation_cv
-        return self._camera_rotation @ translate
+        # arcball @ camera keeps arcball in world space (pre-multiplied)
+        return (self._arcball_rotation @ self._camera_rotation) @ translate
+
+    def get_base_camera_matrix(self) -> np.ndarray:
+        """Return arcball @ camera as a 4×4 matrix — the rotation used for gizmo models."""
+        return self._arcball_rotation @ self._camera_rotation
+
+    def get_camera_rotation(self) -> np.ndarray:
+        """Return the committed camera rotation without the arcball overlay.
+
+        Used for axis-space conversion in mouse-move: the axis must always be
+        expressed relative to the camera orientation at drag-start (when
+        arcball_rotation was identity), not relative to the mid-drag view.
+        """
+        return self._camera_rotation
 
     def get_span(self) -> float:
         return self._span
@@ -96,7 +115,14 @@ class StructureRenderer:
         instances: list[ModelInstance] = []
         coords = self._structure.coordinates  # (N, 3) COM-centred
 
-        # Atom spheres
+        # Bond cylinders first — atoms rendered last so their front faces
+        # overwrite bond fragments that lie inside the sphere volume.
+        for a, b in self._bond_pairs:
+            el_a = get_element(int(self._structure.atomic_numbers[a]))
+            el_b = get_element(int(self._structure.atomic_numbers[b]))
+            instances.extend(self._bond_instances(coords[a], coords[b], el_a, el_b))
+
+        # Atom spheres (rendered after bonds)
         for i, z in enumerate(self._structure.atomic_numbers):
             el = get_element(int(z))
             r = el.radius
@@ -112,12 +138,6 @@ class StructureRenderer:
             c = el.colour
             instances.append(ModelInstance("sphere", transform, (c[0], c[1], c[2], 1.0)))
 
-        # Bond cylinders
-        for a, b in self._bond_pairs:
-            el_a = get_element(int(self._structure.atomic_numbers[a]))
-            el_b = get_element(int(self._structure.atomic_numbers[b]))
-            instances.extend(self._bond_instances(coords[a], coords[b], el_a, el_b))
-
         return instances
 
     # ------------------------------------------------------------------
@@ -129,6 +149,7 @@ class StructureRenderer:
         rx = pyrr.matrix44.create_from_x_rotation(math.radians(60.0), dtype=np.float32)
         rz = pyrr.matrix44.create_from_z_rotation(math.radians(20.0), dtype=np.float32)
         self._camera_rotation = rx @ rz
+        self._arcball_rotation = np.eye(4, dtype=np.float32)
 
     def _calculate_span(self) -> None:
         if self._structure is None or len(self._structure.coordinates) == 0:

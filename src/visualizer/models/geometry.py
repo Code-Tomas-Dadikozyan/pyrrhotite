@@ -33,7 +33,7 @@ def sphere(stacks: int = 16, slices: int = 16) -> tuple[np.ndarray, np.ndarray]:
         for j in range(slices):
             a = i * (slices + 1) + j
             b = a + slices + 1
-            idxs.extend([a, b, a + 1, b, b + 1, a + 1])
+            idxs.extend([a, a + 1, b, b, a + 1, b + 1])
 
     return np.array(verts, dtype=np.float32), np.array(idxs, dtype=np.uint32)
 

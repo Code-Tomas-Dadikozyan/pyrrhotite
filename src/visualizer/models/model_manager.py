@@ -119,6 +119,8 @@ class ModelManager:
 
         shader.use()
         shader.set_mat4("mvp", mvp)
+        shader.set_mat4("model", model_matrix)
+        shader.set_mat4("view", view_matrix)
         shader.set_vec3("color", color)
 
         GL.glBindVertexArray(m.vao)

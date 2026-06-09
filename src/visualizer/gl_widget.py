@@ -25,7 +25,7 @@ import numpy as np
 import pyrr
 from OpenGL import GL
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QColor, QPainter, QFont
+from PyQt6.QtGui import QColor, QPainter, QFont, QFontMetrics
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtWidgets import QWidget
 
@@ -45,9 +45,10 @@ _GIZMO_SCALE = 0.08   # fraction of widget width used by gizmo viewport
 class GLWidget(QOpenGLWidget):
     """PyQt6 OpenGL widget — mirrors GLWidget in the C++ reference."""
 
-    def __init__(self, renderer: StructureRenderer, parent: QWidget | None = None) -> None:
+    def __init__(self, renderer: StructureRenderer, show_labels: bool = False, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._renderer = renderer
+        self._show_labels = show_labels
         self._model_manager: ModelManager | None = None
         self._phong_shader: ShaderProgram | None = None
         self._axes_shader: ShaderProgram | None = None
@@ -139,22 +140,30 @@ class GLWidget(QOpenGLWidget):
 
     def mouseReleaseEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton and self._arcball_active:
+            self._renderer.apply_arcball_rotation()
             self._arcball_active = False
             self.update()
 
     def mouseMoveEvent(self, event) -> None:
         if not self._arcball_active:
             return
-        p0 = self._arcball_vector(self._mouse_pos)
+        p0 = self._arcball_vector(self._mouse_pos)   # click-start, never updated
         p1 = self._arcball_vector(event.pos())
         dot = float(np.clip(np.dot(p0, p1), -1.0, 1.0))
-        angle = math.acos(dot) * 2.0
-        axis = np.cross(p0, p1)
-        if np.linalg.norm(axis) > 1e-6:
-            # Accumulate delta rotation into camera so large drags never
-            # cause axis flips (the antipodal singularity in total-rotation mode).
-            self._renderer.accumulate_arcball_delta(angle, axis)
-        self._mouse_pos = event.pos()
+        if abs(dot) > 0.9999:
+            return
+        angle = math.acos(dot) * 1.6   # 60% sensitivity boost
+        # Axis in screen/camera space
+        axis_cam = np.cross(p0, p1)
+        axis_cam = axis_cam / np.linalg.norm(axis_cam)
+        # Convert to world space using the COMMITTED camera rotation only (no arcball).
+        # arcball_rotation may already be set from earlier this drag; including it
+        # would rotate the basis each frame and produce a wrong, drifting axis.
+        # Matches the reference, where view is a fixed lookAt that never changes
+        # during a drag — so the cam→world basis is constant across the whole drag.
+        camera_rot = self._renderer.get_camera_rotation()
+        axis_world = axis_cam @ camera_rot[:3, :3].T
+        self._renderer.set_arcball_rotation(angle, axis_world)
         self.update()
 
     def wheelEvent(self, event) -> None:
@@ -196,62 +205,67 @@ class GLWidget(QOpenGLWidget):
         return v / np.linalg.norm(v)
 
     def _paint_gizmos(self, view: np.ndarray, proj: np.ndarray) -> None:
-        """Draw XYZ axis arrows in a small viewport in the bottom-left corner."""
+        """Draw XYZ axis arrows — top-right corner, orthographic, Phong-lit.
+
+        Mirrors reference paint_gizmos(): the molecule rotation lives in the
+        MODEL matrix (base_camera_matrix @ per-axis rotation), the gizmo view
+        is a fixed lookAt from -Y, and projection is orthographic.
+        """
+        if not self._axes_shader or not self._model_manager:
+            return
+
         dpr = self.devicePixelRatioF()
         w = self.width()
         h = self.height()
         pw, ph = int(w * dpr), int(h * dpr)
-        size = int(min(w, h) * _GIZMO_SCALE * 2.5 * dpr)
-        GL.glViewport(0, 0, size, size)
+        gizmo_px = int(min(pw, ph) * 0.25)
+        # Top-right corner (matches reference: glViewport(0.75w, 0, 0.25w, 0.25h))
+        GL.glViewport(pw - gizmo_px, ph - gizmo_px, gizmo_px, gizmo_px)
 
-        # Gizmo uses an orthographic-like small projection
-        gizmo_proj = pyrr.matrix44.create_perspective_projection_matrix(
-            45.0, 1.0, 0.01, 1000.0, dtype=np.float32
+        # Orthographic projection matching reference: ortho(±15, ±15·ratio, 0.1, 1000)
+        size = 15.0
+        gizmo_proj = pyrr.matrix44.create_orthogonal_projection_matrix(
+            -size, size, -size, size, 0.1, 1000.0, dtype=np.float32
         )
-        # Gizmo view: same rotation as scene but fixed distance, no translation.
-        # pyrr stores translation in last ROW (row-vector convention): view[3, 0:3].
-        rotation_only = view.copy()
-        rotation_only[3, 0] = 0.0
-        rotation_only[3, 1] = 0.0
-        rotation_only[3, 2] = -3.0   # fixed small distance
 
+        # Fixed gizmo view: camera at (0, -10, 0) looking at origin, up = +Z.
+        # In pyrr (row-vector) lookAt: eye, target, up.
+        gizmo_view = pyrr.matrix44.create_look_at(
+            np.array([0.0, -10.0, 0.0], dtype=np.float32),
+            np.array([0.0,   0.0, 0.0], dtype=np.float32),
+            np.array([0.0,   0.0, 1.0], dtype=np.float32),
+            dtype=np.float32,
+        )
+
+        # Base rotation: arcball @ camera (same rotation applied to the molecule).
+        # Rotation lives in the MODEL here, not the view — matches reference exactly.
+        base = self._renderer.get_base_camera_matrix()
+
+        # Per-axis rotations that align the arrow (which points along +Z in model
+        # space) to each world axis, then the base camera rotation orients the
+        # whole gizmo with the molecule.  Reference order: model = base * axis_rot
+        # → pyrr equivalent (row-vector): model = axis_rot_rv @ base_rv.
         axes = [
-            (np.array([1, 0, 0], dtype=np.float32), (1.0, 0.2, 0.2)),
-            (np.array([0, 1, 0], dtype=np.float32), (0.2, 1.0, 0.2)),
-            (np.array([0, 0, 1], dtype=np.float32), (0.2, 0.4, 1.0)),
+            # (per-axis rotation in pyrr,  RGB color matching reference)
+            (pyrr.matrix44.create_from_y_rotation( math.pi / 2, dtype=np.float32),
+             (1.0, 0.2117, 0.3255)),   # X — red
+            (pyrr.matrix44.create_from_x_rotation(-math.pi / 2, dtype=np.float32),
+             (0.5412, 0.8549, 0.0235)),  # Y — green
+            (np.eye(4, dtype=np.float32),
+             (0.1725, 0.5608, 1.0)),    # Z — blue
         ]
 
-        for axis, color in axes:
-            angle = 0.0
-            z = np.array([0, 0, 1], dtype=np.float32)
-            cross = np.cross(z, axis)
-            dot = float(np.dot(z, axis))
-            if np.linalg.norm(cross) < 1e-6:
-                if dot < 0:
-                    rot = pyrr.matrix44.create_from_x_rotation(math.pi, dtype=np.float32)
-                else:
-                    rot = np.eye(4, dtype=np.float32)
-            else:
-                angle = math.acos(np.clip(dot, -1, 1))
-                rot = pyrr.matrix44.create_from_axis_rotation(
-                    cross / np.linalg.norm(cross), angle, dtype=np.float32
-                )
-            # arrow.obj is ~7 units long with radius ~1; scale to match gizmo viewport
-            scale = pyrr.matrix44.create_from_scale(
-                np.array([0.07, 0.07, 0.07], dtype=np.float32)
+        for axis_rot, color in axes:
+            model = axis_rot @ base
+            self._model_manager.draw_axes(
+                "arrow", self._axes_shader, model, gizmo_view, gizmo_proj, color
             )
-            model = scale @ rot
-            if self._axes_shader and self._model_manager:
-                self._model_manager.draw_axes(
-                    "arrow", self._axes_shader, model, rotation_only, gizmo_proj, color
-                )
 
-        # Restore full viewport (physical pixels)
         GL.glViewport(0, 0, pw, ph)
 
     def _paint_labels(self, proj: np.ndarray, view: np.ndarray) -> None:
         """Overlay atom element labels using QPainter (no FreeType needed)."""
-        if self._renderer._structure is None:
+        if not self._show_labels or self._renderer._structure is None:
             return
 
         # QPainter works in logical pixels; projection aspect uses logical pixels too.
@@ -290,19 +304,29 @@ class GLWidget(QOpenGLWidget):
         # Draw back-to-front so front labels render on top
         items.sort(key=lambda t: -t[0])
 
+        # Camera distance = 4*span, so atom screen size ∝ 1/span → font shrinks for large molecules.
+        raw_size = int(35 / (self._renderer.get_span() * self._zoom_multiplier))
+        font_size = max(7, min(20, raw_size))
+        font = QFont("Arial", font_size, QFont.Weight.Bold)
+        fm = QFontMetrics(font)
+
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setFont(QFont("Arial", 9, QFont.Weight.Bold))
+        painter.setFont(font)
 
         for depth, sx, sy, sym in items:
             # Front atoms fully opaque, back atoms more transparent
             t = (depth - d_min) / d_range  # 0 = front, 1 = back
             alpha = int(230 * (1.0 - 0.6 * t))
-            # Dark shadow for readability against light background and light atoms
-            painter.setPen(QColor(0, 0, 0, alpha // 2))
-            painter.drawText(sx + 7, sy - 3, sym)
-            # Neon green — distinct from all CPK colors (gray/white/blue/red/yellow)
-            painter.setPen(QColor(30, 255, 80, alpha))
-            painter.drawText(sx + 6, sy - 4, sym)
+            tw = fm.horizontalAdvance(sym)
+            th = fm.ascent()
+            cx = sx - tw // 2
+            cy = sy + th // 2
+            # Dark shadow for readability against all CPK atom colors
+            painter.setPen(QColor(0, 0, 0, min(255, alpha)))
+            painter.drawText(cx + 1, cy + 1, sym)
+            # White — contrasts with every CPK color when shadow is present
+            painter.setPen(QColor(255, 255, 255, alpha))
+            painter.drawText(cx, cy, sym)
 
         painter.end()

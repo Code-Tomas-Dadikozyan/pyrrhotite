@@ -179,6 +179,11 @@ def main() -> None:
         action="store_true",
         help="Open an interactive 3-D viewer after analysis (requires pip install 'pyrrhotite[vis]')",
     )
+    parser.add_argument(
+        "--labels", "-l",
+        action="store_true",
+        help="Show element labels on atoms in the 3-D viewer (implies --visualize)",
+    )
 
     args = parser.parse_args()
 
@@ -206,17 +211,17 @@ def main() -> None:
         )
         if code != 0:
             exit_code = code
-        elif args.visualize:
+        elif args.visualize or args.labels:
             try:
                 structures.append(Structure(str(Path(filename))))
             except Exception:
                 pass
 
-    if args.visualize and structures:
+    if (args.visualize or args.labels) and structures:
         try:
             from .visualizer import visualize
             for structure in structures:
-                visualize(structure)
+                visualize(structure, show_labels=args.labels)
         except ImportError:
             print(
                 "ERROR: visualizer dependencies not installed. "

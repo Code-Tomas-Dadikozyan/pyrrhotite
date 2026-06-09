@@ -20,13 +20,13 @@ from .gl_widget import GLWidget
 class VisualizerWindow(QMainWindow):
     """Top-level window for the molecule visualizer."""
 
-    def __init__(self, structure: Structure, parent: QWidget | None = None) -> None:
+    def __init__(self, structure: Structure, show_labels: bool = False, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self._renderer = StructureRenderer()
         self._renderer.set_structure(structure)
 
-        self._gl_widget = GLWidget(self._renderer, self)
+        self._gl_widget = GLWidget(self._renderer, show_labels=show_labels, parent=self)
         self.setCentralWidget(self._gl_widget)
 
         title = Path(structure.filename).name if structure.filename else "pyrrhotite visualizer"
