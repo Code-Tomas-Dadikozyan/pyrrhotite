@@ -3,24 +3,6 @@
 All notable changes to this project will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.2.0] - 2026-06-10
-
-### Added
-- `src/visualizer/` — interactive 3-D molecule viewer built on PyQt6 and OpenGL. Atoms are drawn as spheres (coloured per element from `periodic_table.py`), bonds as cylinders, with an orientation gizmo (red/green/blue arrows for x/y/z) and an optional element-symbol overlay. Controls: left-drag to rotate (arcball), scroll to zoom. Exposed as `pyrrhotite.visualize(structure, show_labels=False)`.
-- New optional install extra `pip install 'pyrrhotite[vis]'` (PyQt6, PyOpenGL, pyrr, matplotlib) for the visualizer.
-- New CLI flags `--visualize`/`-vis` (open the 3-D viewer after analysis) and `--labels`/`-l` (show element labels in the viewer; implies `--visualize`).
-- `src/display.py` — pretty-printing helpers (`print_bond_pairs`, `print_ops_with_atoms`, `print_basis_functions`, `print_char_table_programmatic`) and sample-molecule convenience functions (`list_sample_molecules`, `load_sample`, `analyse_sample`, `visualize_sample`, `show_character_table_sample`) built on the bundled `tests/files/` molecules. All re-exported from the top-level `pyrrhotite` package.
-- `src/character_tables/` — character table generation split out into its own subpackage:
-  - `generator.py` (moved from `src/point_groups/character_table_generator.py`)
-  - `html_formatter.py` — `format_html()` / `save_html()`, render character tables as standalone HTML
-  - `latex_formatter.py` — `format_latex()` / `save_latex()`, render character tables as LaTeX (requires the `booktabs` and `amsmath` packages)
-
-### Changed
-- Character table generation now lives under `src/character_tables/` instead of `src/point_groups/character_table_generator.py`; `parse_point_group_name`, `generate_point_group`, `get_or_generate_point_group`, and `print_character_table_for` are imported from `src.character_tables`.
-
-### Removed
-- The vendored C++ reference implementation (`reference/`) has been removed from the repository. The original project remains available at https://gitlab.com/lkkmpn/schoenflies.
-
 ## [0.1.0] - 2026-05-11
 
 ### Added
@@ -59,3 +41,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - PyPI long description: `README.md` rewritten for the project page — `pip install pyrrhotite` install instructions, quick-start example, full CLI flag reference, and example output
+
+## [0.2.0] - 2026-06-10
+
+### Added
+- `src/visualizer/` — interactive 3-D molecule viewer built on PyQt6 and OpenGL. Atoms are drawn as spheres (coloured per element from `periodic_table.py`), bonds as cylinders, with an orientation gizmo (red/green/blue arrows for x/y/z) and an optional element-symbol overlay. Controls: left-drag to rotate (arcball), scroll to zoom. Exposed as `pyrrhotite.visualize(structure, show_labels=False)`.
+- New optional install extra `pip install 'pyrrhotite[vis]'` (PyQt6, PyOpenGL, pyrr, matplotlib) for the visualizer.
+- New CLI flags `--visualize`/`-vis` (open the 3-D viewer after analysis) and `--labels`/`-l` (show element labels in the viewer; implies `--visualize`).
+- `src/display.py` — pretty-printing helpers (`print_bond_pairs`, `print_ops_with_atoms`, `print_basis_functions`, `print_char_table_programmatic`) and sample-molecule convenience functions (`list_sample_molecules`, `load_sample`, `analyse_sample`, `visualize_sample`, `show_character_table_sample`) built on the bundled `tests/files/` molecules. All re-exported from the top-level `pyrrhotite` package.
+- `src/character_tables/` — character table generation split out into its own subpackage:
+  - `generator.py` (moved from `src/point_groups/character_table_generator.py`)
+  - `html_formatter.py` — `format_html()` / `save_html()`, render character tables as standalone HTML
+  - `latex_formatter.py` — `format_latex()` / `save_latex()`, render character tables as LaTeX (requires the `booktabs` and `amsmath` packages)
+
+### Changed
+- Character table generation now lives under `src/character_tables/` instead of `src/point_groups/character_table_generator.py`; `parse_point_group_name`, `generate_point_group`, `get_or_generate_point_group`, and `print_character_table_for` are imported from `src.character_tables`.
+
+### Removed
+- The vendored C++ reference implementation (`reference/`) has been removed from the repository. The original project remains available at https://gitlab.com/lkkmpn/schoenflies.
