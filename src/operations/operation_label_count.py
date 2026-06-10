@@ -1,3 +1,14 @@
+"""
+Pairs an OperationLabel with how many operations of that kind were found.
+
+A symmetry operation rarely occurs alone — a molecule with a C3 axis usually has
+two C3 rotations (by 120 degrees and by 240 degrees), and a molecule with three
+mirror planes has three σv reflections that all share the same label. Rather than
+storing each one separately, OperationLabelCount stores one OperationLabel plus a
+count, e.g. "3 σv" or "2 C3". This is what lets the final point group be printed
+compactly, such as "C3v: E, 2 C3, 3 σv".
+"""
+
 from __future__ import annotations
 
 from .operation_label import OperationLabel

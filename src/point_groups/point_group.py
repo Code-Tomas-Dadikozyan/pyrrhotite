@@ -1,3 +1,20 @@
+"""
+PointGroup: the final, fully-described symmetry group of a molecule.
+
+A PointGroup brings together everything pyrrhotite knows about a symmetry group:
+its name (a PointGroupLabel such as C3v or D6h), how many operations of each kind
+it contains (rotations, reflections, inversions, improper rotations), and its
+character table (irreps + characters, used for spectroscopy and orbital symmetry).
+
+PointGroup objects come from one of two places:
+- A library of hardcoded definitions for the common point groups
+  (`point_groups.py`), matched against the operations detected on a molecule via
+  `compare_to_symmetry_operations`.
+- The analytical generator in `character_tables/generator.py`, used when no
+  hardcoded definition matches (e.g. an axial group of higher order than is
+  hardcoded).
+"""
+
 from __future__ import annotations
 
 import math

@@ -1,5 +1,18 @@
-"""display.py — Pretty-print helpers for structures, operations, and character tables,
-plus convenience functions for exploring the built-in sample molecules."""
+"""
+display.py — pretty-printing helpers and sample-molecule shortcuts.
+
+This module has two halves:
+
+1. Pretty-print helpers (`print_bond_pairs`, `print_ops_with_atoms`,
+   `print_basis_functions`, `print_char_table_programmatic`) that take objects
+   already produced by `Structure`, `Symmetry`, or `PointGroup` and print them in a
+   readable form — useful for exploring results in a Python shell or notebook.
+
+2. Sample-molecule convenience functions (`list_sample_molecules`, `load_sample`,
+   `analyse_sample`, `visualize_sample`, `show_character_table_sample`) that work
+   with the 32 `.xyz` files bundled in `tests/files/`, so new users can try out
+   pyrrhotite without supplying their own molecule.
+"""
 
 from __future__ import annotations
 

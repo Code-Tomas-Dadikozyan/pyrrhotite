@@ -1,3 +1,13 @@
+"""
+Groups together symmetry operations that share the same OperationLabel.
+
+While searching for symmetry, pyrrhotite finds individual operations one at a
+time (e.g. each of the three σv mirror planes of ammonia is found separately).
+An OperationGroup collects the IDs of all operations that turned out to have the
+same label, so that later steps can treat "the three σv planes" as a single named
+group with a count, rather than three unrelated entries.
+"""
+
 from __future__ import annotations
 
 from .operation_label import OperationLabel
