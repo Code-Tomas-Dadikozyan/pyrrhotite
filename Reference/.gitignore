@@ -1,5 +1,0 @@
-build/*
-!build/.gitkeep
-lib/*
-!lib/*.sh
-.vscode
