@@ -222,21 +222,10 @@ class GLWidget(QOpenGLWidget):
         # Bottom-right corner
         GL.glViewport(pw - gizmo_px, 0, gizmo_px, gizmo_px)
 
-        # Clear depth only in the gizmo region so main-scene geometry
-        # can't occlude gizmo arrows.
-        GL.glEnable(GL.GL_SCISSOR_TEST)
-        GL.glScissor(pw - gizmo_px, 0, gizmo_px, gizmo_px)
-        GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
-        GL.glDisable(GL.GL_SCISSOR_TEST)
-
-        # Orthographic projection matching reference: ortho(±15, ±15·ratio, 0.1, 1000)
         size = 15.0
         gizmo_proj = pyrr.matrix44.create_orthogonal_projection_matrix(
             -size, size, -size, size, 0.1, 1000.0, dtype=np.float32
         )
-
-        # Fixed gizmo view: camera at (0, -10, 0) looking at origin, up = +Z.
-        # In pyrr (row-vector) lookAt: eye, target, up.
         gizmo_view = pyrr.matrix44.create_look_at(
             np.array([0.0, -10.0, 0.0], dtype=np.float32),
             np.array([0.0,   0.0, 0.0], dtype=np.float32),
@@ -244,29 +233,40 @@ class GLWidget(QOpenGLWidget):
             dtype=np.float32,
         )
 
-        # Base rotation: arcball @ camera (same rotation applied to the molecule).
-        # Rotation lives in the MODEL here, not the view — matches reference exactly.
         base = self._renderer.get_base_camera_matrix()
 
-        # Per-axis rotations that align the arrow (which points along +Z in model
-        # space) to each world axis, then the base camera rotation orients the
-        # whole gizmo with the molecule.  Reference order: model = base * axis_rot
-        # → pyrr equivalent (row-vector): model = axis_rot_rv @ base_rv.
-        axes = [
-            # (per-axis rotation in pyrr,  RGB color matching reference)
+        # set_mat4 sends GL_FALSE + row-major flatten → GLSL receives M.T.
+        # For rotation M: M.T = M_cv(θ), so pyrr.create_from_y_rotation(+π/2) → GLSL Ry_cv(+π/2).
+        # Matches reference: X=Ry_cv(+90°), Y=Rx_cv(-90°), Z=identity.
+        axes_specs = [
             (pyrr.matrix44.create_from_y_rotation( math.pi / 2, dtype=np.float32),
-             (1.0, 0.2117, 0.3255)),   # X — red
+             (1.0, 0.2117, 0.3255)),
             (pyrr.matrix44.create_from_x_rotation(-math.pi / 2, dtype=np.float32),
-             (0.5412, 0.8549, 0.0235)),  # Y — green
+             (0.5412, 0.8549, 0.0235)),
             (np.eye(4, dtype=np.float32),
-             (0.1725, 0.5608, 1.0)),    # Z — blue
+             (0.1725, 0.5608, 1.0)),
         ]
 
-        for axis_rot, color in axes:
+        # Painter's algorithm: sort arrows back-to-front relative to the gizmo camera.
+        # Gizmo camera is at (0,-10,0) looking along +Y.  GLSL sees model_cv = (axis_rot@base).T,
+        # so the tip (model-space (0,0,10)) lands at world-Y = 10 * (axis_rot@base)[2,1].
+        # Largest world-Y → furthest from camera → draw first (behind others).
+        # We also disable the depth test entirely so the gizmo always renders on top
+        # of the main scene (matching the reference, whose screen framebuffer depth
+        # is clean when paint_gizmos runs).
+        arrow_list = []
+        for axis_rot, color in axes_specs:
             model = axis_rot @ base
+            world_y = float(model[2, 1])   # proxy for tip depth along gizmo camera axis
+            arrow_list.append((world_y, model, color))
+        arrow_list.sort(key=lambda x: -x[0])   # furthest first
+
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        for _, model, color in arrow_list:
             self._model_manager.draw_axes(
                 "arrow", self._axes_shader, model, gizmo_view, gizmo_proj, color
             )
+        GL.glEnable(GL.GL_DEPTH_TEST)
 
         GL.glViewport(0, 0, pw, ph)
 
