@@ -105,6 +105,13 @@ class GLWidget(QOpenGLWidget):
         GL.glViewport(0, 0, pw, ph)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
+        # Re-assert state that QPainter may have corrupted in the previous frame
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glDepthMask(GL.GL_TRUE)
+        GL.glEnable(GL.GL_CULL_FACE)
+        GL.glCullFace(GL.GL_BACK)
+        GL.glDisable(GL.GL_BLEND)
+
         if self._phong_shader is None or self._model_manager is None:
             return
 
@@ -261,12 +268,18 @@ class GLWidget(QOpenGLWidget):
             arrow_list.append((world_y, model, color))
         arrow_list.sort(key=lambda x: -x[0])   # furthest first
 
-        GL.glDisable(GL.GL_DEPTH_TEST)
+        # Clear only the gizmo region's depth so the arrows get correct per-triangle
+        # depth ordering without disturbing the main scene's depth buffer.
+        GL.glEnable(GL.GL_SCISSOR_TEST)
+        GL.glScissor(pw - gizmo_px, 0, gizmo_px, gizmo_px)
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
+        GL.glDisable(GL.GL_SCISSOR_TEST)
+
+        GL.glEnable(GL.GL_DEPTH_TEST)
         for _, model, color in arrow_list:
             self._model_manager.draw_axes(
                 "arrow", self._axes_shader, model, gizmo_view, gizmo_proj, color
             )
-        GL.glEnable(GL.GL_DEPTH_TEST)
 
         GL.glViewport(0, 0, pw, ph)
 

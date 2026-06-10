@@ -57,7 +57,7 @@ def cylinder(segments: int = 16, height: float = 1.0, radius: float = 1.0) -> tu
     for j in range(segments):
         a = j
         b = j + segments + 1
-        idxs.extend([a, b, a + 1, b, b + 1, a + 1])
+        idxs.extend([a, a + 1, b, b, a + 1, b + 1])
 
     # Cap centres
     bot_c = len(verts)
