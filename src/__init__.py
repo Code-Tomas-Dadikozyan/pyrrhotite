@@ -6,6 +6,13 @@ from .rotor_class import RotorClass
 from .symmetry import Symmetry
 
 from . import display
+from .display import (
+    list_sample_molecules,
+    load_sample,
+    analyse_sample,
+    visualize_sample,
+    show_character_table_sample,
+)
 
 
 def visualize(structure: "Structure", show_labels: bool = False) -> None:
@@ -20,4 +27,16 @@ def visualize(structure: "Structure", show_labels: bool = False) -> None:
     _vis(structure, show_labels=show_labels)
 
 
-__all__ = ["__version__", "Structure", "RotorClass", "Symmetry", "display", "visualize"]
+__all__ = [
+    "__version__",
+    "Structure",
+    "RotorClass",
+    "Symmetry",
+    "display",
+    "visualize",
+    "list_sample_molecules",
+    "load_sample",
+    "analyse_sample",
+    "visualize_sample",
+    "show_character_table_sample",
+]

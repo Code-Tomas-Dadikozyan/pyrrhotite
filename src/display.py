@@ -1,6 +1,10 @@
-"""display.py — Pretty-print helpers for structures, operations, and character tables."""
+"""display.py — Pretty-print helpers for structures, operations, and character tables,
+plus convenience functions for exploring the built-in sample molecules."""
 
 from __future__ import annotations
+
+import random
+from pathlib import Path
 
 from .structure import Structure
 from .operations.operation import Operation
@@ -11,6 +15,9 @@ from .point_groups.basis_functions import compute_basis_functions
 
 _SEP = "-" * 60
 
+# ---------------------------------------------------------------------------
+# Pretty-print helpers
+# ---------------------------------------------------------------------------
 
 def print_bond_pairs(s: Structure) -> None:
     """Print every bonded atom pair with element symbols and atom indices."""
@@ -64,3 +71,111 @@ def print_char_table_programmatic(pg: PointGroup) -> None:
     for i, ir in enumerate(irreps):
         row = "  ".join(f"{v:6.3f}" for v in chars[i])
         print(f"  {ir.name:<6}  {row}")
+
+
+# ---------------------------------------------------------------------------
+# Sample-molecule exploration
+# ---------------------------------------------------------------------------
+
+_SAMPLES_DIR = Path(__file__).parent.parent / "tests" / "files"
+
+
+def _samples_dir() -> Path:
+    if not _SAMPLES_DIR.is_dir():
+        raise FileNotFoundError(
+            f"Sample molecules directory not found at {_SAMPLES_DIR}. "
+            "Make sure you are running from the repository root and that "
+            "the tests/files/ directory is present."
+        )
+    return _SAMPLES_DIR
+
+
+def list_sample_molecules() -> list[str]:
+    """Return a sorted list of names of the built-in sample molecules.
+
+    Each name corresponds to the stem of an XYZ file in tests/files/ and can
+    be passed directly to :func:`load_sample`, :func:`analyse_sample`,
+    :func:`visualize_sample`, or :func:`show_character_table_sample`.
+    """
+    return sorted(p.stem for p in _samples_dir().glob("*.xyz"))
+
+
+def load_sample(name: str | None = None) -> Structure:
+    """Load a sample molecule as a :class:`~src.Structure`.
+
+    Parameters
+    ----------
+    name:
+        Stem of the XYZ file (e.g. ``"benzene"``, ``"water"``).
+        If *None* a molecule is chosen at random.
+    """
+    samples = _samples_dir()
+    if name is None:
+        path = random.choice(list(samples.glob("*.xyz")))
+    else:
+        path = samples / f"{name}.xyz"
+        if not path.is_file():
+            available = ", ".join(list_sample_molecules())
+            raise FileNotFoundError(
+                f"No sample molecule named '{name}'. Available: {available}"
+            )
+    return Structure(str(path))
+
+
+def analyse_sample(name: str | None = None) -> "Symmetry":  # noqa: F821
+    """Run the full symmetry-determination pipeline on a sample molecule and print the result.
+
+    Parameters
+    ----------
+    name:
+        Stem of the XYZ file (e.g. ``"ammonia"``).
+        If *None* a molecule is chosen at random.
+
+    Returns
+    -------
+    Symmetry
+        The completed :class:`~src.Symmetry` object for further inspection.
+    """
+    from .symmetry import Symmetry
+    structure = load_sample(name)
+    print(f"Molecule : {structure.description}")
+    sym = Symmetry(structure)
+    print(f"Point group : {sym.point_group.label.name}")
+    print(f"Rotor class : {sym.rotor_class.name}")
+    return sym
+
+
+def visualize_sample(name: str | None = None) -> None:
+    """Open the interactive 3-D viewer for a sample molecule.
+
+    Parameters
+    ----------
+    name:
+        Stem of the XYZ file (e.g. ``"buckminsterfullerene"``).
+        If *None* a molecule is chosen at random.
+
+    Requires the visualizer optional dependency (``pip install 'pyrrhotite[vis]'``).
+    """
+    from .visualizer import visualize as _vis
+    structure = load_sample(name)
+    print(f"Visualising: {structure.description}")
+    _vis(structure)
+
+
+def show_character_table_sample(name: str | None = None) -> None:
+    """Print the character table for the point group of a sample molecule.
+
+    Parameters
+    ----------
+    name:
+        Stem of the XYZ file (e.g. ``"benzene"``).
+        If *None* a molecule is chosen at random.
+    """
+    from .character_tables import print_character_table_for
+    from .symmetry import Symmetry
+    structure = load_sample(name)
+    print(f"Molecule : {structure.description}")
+    sym = Symmetry(structure)
+    group_name = sym.point_group.label.name
+    print(f"Point group : {group_name}\n")
+    print_character_table_for(group_name)
