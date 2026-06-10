@@ -219,8 +219,15 @@ class GLWidget(QOpenGLWidget):
         h = self.height()
         pw, ph = int(w * dpr), int(h * dpr)
         gizmo_px = int(min(pw, ph) * 0.25)
-        # Top-right corner (matches reference: glViewport(0.75w, 0, 0.25w, 0.25h))
-        GL.glViewport(pw - gizmo_px, ph - gizmo_px, gizmo_px, gizmo_px)
+        # Bottom-right corner
+        GL.glViewport(pw - gizmo_px, 0, gizmo_px, gizmo_px)
+
+        # Clear depth only in the gizmo region so main-scene geometry
+        # can't occlude gizmo arrows.
+        GL.glEnable(GL.GL_SCISSOR_TEST)
+        GL.glScissor(pw - gizmo_px, 0, gizmo_px, gizmo_px)
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
+        GL.glDisable(GL.GL_SCISSOR_TEST)
 
         # Orthographic projection matching reference: ortho(±15, ±15·ratio, 0.1, 1000)
         size = 15.0

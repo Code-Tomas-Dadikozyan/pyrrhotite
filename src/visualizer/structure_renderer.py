@@ -145,10 +145,17 @@ class StructureRenderer:
     # ------------------------------------------------------------------
 
     def _reset_camera(self) -> None:
-        """Set the initial viewing angle: 60° around X, 20° around Z."""
-        rx = pyrr.matrix44.create_from_x_rotation(math.radians(60.0), dtype=np.float32)
-        rz = pyrr.matrix44.create_from_z_rotation(math.radians(20.0), dtype=np.float32)
-        self._camera_rotation = rx @ rz
+        """Set the initial viewing angle to match the reference: rx_cv(60°)@rz_cv(20°).
+
+        PyRR matrices are stored as the standard column-vector GL matrix (not transposed),
+        so when sent to GLSL with GL_FALSE the shader sees them transposed — i.e. the
+        OPPOSITE rotation direction.  To get GLSL to apply +60°/+20° we must pass −60°/−20°,
+        and the composition order is also reversed: rz first so that GLSL sees rx first.
+        Resulting GLSL model = (rz_neg @ rx_neg).T = rx_cv(+60°) @ rz_cv(+20°).
+        """
+        rx = pyrr.matrix44.create_from_x_rotation(math.radians(-60.0), dtype=np.float32)
+        rz = pyrr.matrix44.create_from_z_rotation(math.radians(-20.0), dtype=np.float32)
+        self._camera_rotation = rz @ rx   # GLSL sees rx_cv(+60) @ rz_cv(+20) = reference
         self._arcball_rotation = np.eye(4, dtype=np.float32)
 
     def _calculate_span(self) -> None:
