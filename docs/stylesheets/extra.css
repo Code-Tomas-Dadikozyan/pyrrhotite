@@ -25,13 +25,38 @@
   --pyrrhotite-navy: #1b2733;
 }
 
+/* Gold announcement bar (see docs/overrides/main.html) */
+.md-announce {
+  background-color: var(--pyrrhotite-amber);
+  color: var(--pyrrhotite-navy);
+}
+
+.md-announce a {
+  color: var(--pyrrhotite-navy);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 /* Hero banner on the home page */
 .pyrrhotite-hero {
   margin: 1.5rem 0 2rem;
   padding: 2rem 2rem 1.75rem;
   border-radius: 0.4rem;
   background: linear-gradient(135deg, #1b2733 0%, #2c3e50 55%, #a47a30 100%);
+  background-size: 200% 200%;
+  animation: pyrrhotite-hero-shift 18s ease infinite;
   color: #fff;
+}
+
+@keyframes pyrrhotite-hero-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pyrrhotite-hero {
+    animation: none;
+  }
 }
 
 .pyrrhotite-hero h1 {

@@ -110,3 +110,19 @@ generated analytically for *any* order n ≥ 2 — not just the ranges above. So
     you have a genuinely high-symmetry molecule, or need crystal/space-group
     support — see [About → Contact](about.md#contact); these are exactly the
     kind of real-world cases that help prioritise future work.
+
+??? example "Roadmap: turning these limitations into goals"
+    None of these are committed or scheduled — just the most natural next
+    steps for directly addressing the limitations above.
+
+    - [ ] Draw detected symmetry elements (rotation axes, mirror planes, the
+          inversion centre) as an overlay in the 3-D visualizer
+    - [ ] Configurable detection tolerance, for slightly distorted or
+          experimentally-derived geometries
+    - [ ] A configurable (rather than fixed) detection cap, for genuinely
+          high-symmetry molecules with large rings
+    - [ ] Crystal structure / space group support
+
+    Have a use case that needs one of these sooner rather than later? See
+    [About → Contact](about.md#contact) — real examples are exactly what helps
+    prioritise this list.

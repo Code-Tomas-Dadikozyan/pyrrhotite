@@ -3,6 +3,39 @@
 This page walks through the Python API in depth. For the command-line tool, see
 [Getting Started](getting-started.md#command-line-reference).
 
+## How the pieces fit together
+
+Before diving into each piece individually, here's how the main objects relate
+to one another:
+
+```mermaid
+flowchart LR
+    XYZ[".xyz file"] --> S["Structure"]
+    S --> SYM["Symmetry"]
+    SYM --> PG["PointGroup"]
+    SYM --> OM["OperationManager"]
+    PG --> CT["Character table"]
+    CT --> EXP["HTML / LaTeX export"]
+    PG --> BF["Basis functions"]
+    S --> VIS["3-D visualizer"]
+```
+
+- **`Structure`** loads and re-centres the atoms from an `.xyz` file — or is
+  built synthetically by
+  [`generate_idealized_structure`](#generating-idealized-structures).
+- **`Symmetry`** runs the detection pipeline described in
+  [Algorithm & Supported Groups](algorithm.md) and exposes the result as a
+  **`PointGroup`**, plus an **`OperationManager`** holding every individual
+  symmetry operation that was found.
+- A **`PointGroup`** knows its character table and basis functions, and can be
+  exported to HTML/LaTeX — or obtained directly by name, with no `Structure`
+  at all (see
+  [Character tables for any group](#character-tables-for-any-group-no-xyz-needed)).
+- A **`Structure`** can also be handed straight to the 3-D **visualizer**,
+  independently of `Symmetry`.
+
+---
+
 ## Point group determination
 
 ```python
