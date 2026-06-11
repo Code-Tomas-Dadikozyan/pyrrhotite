@@ -1,12 +1,19 @@
 """
 Idealized structure generator for axial point groups.
 
-Builds synthetic `Structure` instances -- rings (and combinations of rings) of
-a placeholder element -- whose geometry has, by construction, a requested
-axial Schoenflies point group (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd). These are
-useful as test fixtures for the symmetry-detection pipeline, especially for
-orders n > 8 where the adaptive axis-order search and tightened operation
-tolerance (see Symmetry._MAX_AXIS_ORDER) come into play.
+Builds synthetic `Structure` instances whose geometry has, by construction, a
+requested axial Schoenflies point group (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd).
+These are useful as test fixtures for the symmetry-detection pipeline,
+especially for orders n > 8 where the adaptive axis-order search and
+tightened operation tolerance (see Symmetry._MAX_AXIS_ORDER) come into play.
+
+Beyond the bare geometry, each generated structure is built so that
+`Structure.calculate_bond_pairs` (dist^2 < 20 * r_i * r_j, in covalent radii
+from `periodic_table.py`) produces a *plausible* bonding pattern -- modelled
+after real molecules of the same family (e.g. ammonia's apex+ring for Cnv,
+benzene's ring+terminal-substituent for Cnh, ferrocene's metal-hub sandwich
+for Dn/Dnh/Dnd/Sn) -- rather than an over-connected uniform ring where every
+atom bonds to four neighbours.
 """
 
 from __future__ import annotations
@@ -22,6 +29,10 @@ from .structure import Structure
 
 _Class = PointGroupLabel.Class
 
+# F-F bonding cutoff distance (Angstroms): sqrt(20 * r_F * r_F) = sqrt(20 * 0.4 * 0.4).
+# Used as the reference scale for ring spacing -- see `_radius_for`.
+_FF_BOND_CUTOFF = np.sqrt(20.0 * 0.4 * 0.4)
+
 
 def _ring(n: int, radius: float, z: float, phase: float = 0.0) -> np.ndarray:
     """Return an (n, 3) array of coordinates for a regular n-gon ring.
@@ -35,6 +46,55 @@ def _ring(n: int, radius: float, z: float, phase: float = 0.0) -> np.ndarray:
     y = radius * np.sin(angles)
     z_col = np.full(n, z, dtype=float)
     return np.column_stack((x, y, z_col))
+
+
+def _radius_for(n: int) -> float:
+    """Return a ring radius (Angstroms) for which adjacent atoms bond but next-nearest
+    atoms do not.
+
+    For a regular n-gon, the nearest-neighbour distance is `2*r*sin(pi/n)` and the
+    next-nearest-neighbour distance is `2*r*sin(2*pi/n)`. This picks `r` roughly
+    midway between the largest radius for which the nearest-neighbour distance
+    stays under `_FF_BOND_CUTOFF` and the smallest radius for which the
+    next-nearest-neighbour distance exceeds it -- i.e. each ring atom ends up
+    bonded to exactly its two ring neighbours (degree 2 from the ring itself).
+    """
+    if n == 3:
+        # n=3: "nearest" and "next-nearest" are the same pair (every atom is
+        # adjacent to both others), so the two bounds coincide; r=1.0 keeps the
+        # single distance (2*sin(pi/3) ~= 1.73 A) just under the cutoff.
+        return 1.0
+    lo = _FF_BOND_CUTOFF / (2.0 * np.sin(2.0 * np.pi / n))
+    hi = _FF_BOND_CUTOFF / (2.0 * np.sin(np.pi / n))
+    return (lo + hi) / 2.0
+
+
+def _decoration_element(element: str) -> str:
+    """Pick a small, light placeholder element for terminal substituent atoms
+    (e.g. the "H" in a benzene-like ring+H pattern), distinct from `element`.
+    """
+    return "H" if element != "H" else "C"
+
+
+def _apex_element(element: str) -> str:
+    """Pick an apex/cap element (similar covalent radius to common ring elements),
+    distinct from `element` -- mirrors ammonia's N apex over an H ring.
+    """
+    return "N" if element != "N" else "O"
+
+
+def _apex_element_heavy(element: str) -> str:
+    """Pick a slightly larger-radius apex element (for high-order Cnv rings,
+    where a larger apex-ring bonding cutoff is needed), distinct from `element`.
+    """
+    return "S" if element != "S" else "Cl"
+
+
+def _hub_element(element: str) -> str:
+    """Pick a large-radius (metal-like) placeholder element for a central hub
+    atom, distinct from `element` -- mirrors ferrocene's central Fe.
+    """
+    return "Fe" if element != "Fe" else "Co"
 
 
 def generate_idealized_structure(
@@ -52,17 +112,20 @@ def generate_idealized_structure(
         `parse_point_group_name` (e.g. "C12v", "D9h", "S8"). Only the seven
         axial families -- Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd -- are supported.
     radius:
-        Radius (in Angstroms) of the primary ring of atoms. The default
-        (1.0 A) keeps neighbouring ring atoms within `Structure.calculate_bond_pairs`'s
-        bonding cutoff so the generated structure renders as a connected
-        molecule rather than a scattered point cloud.
+        Scale factor (default 1.0) applied to the ring radii used for the
+        primary ring(s) of atoms. The default geometry is tuned so that, at
+        `radius=1.0`, ring atoms bond to exactly their ring neighbours (per
+        `Structure.calculate_bond_pairs`'s `dist^2 < 20 * r_i * r_j`
+        criterion); scaling `radius` away from 1.0 may change which atoms end
+        up bonded.
     height:
-        z-offset (in Angstroms) used for apex atoms / second rings, where
-        applicable. The default (0.6 A) keeps the two rings of a Dn/Dnd
-        structure (separated by 2*height) within bonding distance of each
-        other.
+        Scale factor (default 0.6, matching the historical default) applied
+        to the z-offsets used for apex atoms / second rings / hub-to-ring
+        separation, where applicable.
     element:
-        Placeholder element symbol used for the primary ring of atoms.
+        Placeholder element symbol used for the primary ring(s) of atoms.
+        Apex, hub, and decoration atoms automatically use a different element
+        (see `_apex_element`, `_hub_element`, `_decoration_element`).
 
     Returns
     -------
@@ -95,84 +158,129 @@ def generate_idealized_structure(
         raise ValueError(f"{label.name!r} requires order n >= 3; got n={n}")
 
     main_z = get_atomic_number(element)
+    height_scale = height / 0.6
 
-    if group_class == _Class.Dh:
-        # Dnh: a single regular n-gon ring in the xy-plane.
-        coords = _ring(n, radius, z=0.0)
-        atomic_numbers = np.full(n, main_z, dtype=int)
-        description = f"Idealized {label.name}: regular {n}-ring"
-
-    elif group_class == _Class.Cv:
-        # Cnv: ring + apex atom of a different element on the z-axis.
-        ring_coords = _ring(n, radius, z=0.0)
-        apex_z = get_atomic_number("N" if element != "N" else "O")
-        coords = np.vstack((np.array([[0.0, 0.0, height]]), ring_coords))
+    if group_class == _Class.Cv:
+        # Cnv: ring + apex atom of a different element on the z-axis, mirroring
+        # ammonia's N-apex-over-H-ring pattern. Each ring atom bonds to its 2
+        # ring neighbours + the apex (degree 3); the apex bonds to all n ring
+        # atoms.
+        ring_radius = _radius_for(n) * radius
+        if n >= 8:
+            # For larger rings, cap the radius and use a larger-covalent-radius
+            # apex element so the apex-ring distance stays within bonding range.
+            ring_radius = min(ring_radius, 2.1 * radius)
+            apex_element_name = _apex_element_heavy(element)
+            apex_height = 0.5 * height_scale
+        else:
+            apex_element_name = _apex_element(element)
+            apex_height = 0.6 * height_scale
+        ring_coords = _ring(n, ring_radius, z=0.0)
+        apex_z = get_atomic_number(apex_element_name)
+        coords = np.vstack((np.array([[0.0, 0.0, apex_height]]), ring_coords))
         atomic_numbers = np.concatenate(([apex_z], np.full(n, main_z, dtype=int)))
         description = f"Idealized {label.name}: {n}-ring + apex"
 
     elif group_class == _Class.C:
-        # Cn: ring1 (z=0) + ring2 (z=height*0.3, smaller radius), with a
-        # generic angular offset that breaks sigma_v / sigma_h while
-        # preserving the Cn rotation.
-        ring1 = _ring(n, radius, z=0.0)
-        ring2 = _ring(n, radius * 0.6, z=height * 0.3, phase=(2.0 * np.pi / n) * 0.25)
-        decoration_z = get_atomic_number("H" if element != "H" else "C")
+        # Cn: ring1 (main, z=0) + ring2 (terminal substituent ring, slightly
+        # larger radius, small z-offset and angular offset). Each ring1 atom
+        # bonds to its 2 ring1 neighbours + 1 ring2 (terminal) atom (degree 3);
+        # ring2 atoms are terminal (degree 1). The small offsets break sigma_h,
+        # sigma_v, and S2n while preserving Cn.
+        ring1_radius = _radius_for(n) * radius
+        eps = (2.0 * np.pi / n) * 0.05
+        ring1 = _ring(n, ring1_radius, z=0.0)
+        ring2 = _ring(n, ring1_radius * 1.1, z=0.45 * height_scale, phase=eps)
+        decoration_z = get_atomic_number(_decoration_element(element))
         coords = np.vstack((ring1, ring2))
         atomic_numbers = np.concatenate((np.full(n, main_z, dtype=int), np.full(n, decoration_z, dtype=int)))
-        description = f"Idealized {label.name}: {n}-ring + offset {n}-ring"
+        description = f"Idealized {label.name}: {n}-ring + terminal {n}-ring"
 
     elif group_class == _Class.Ch:
-        # Cnh: ring1 (z=0) + ring2 (z=+height) + ring3 = mirror image of
-        # ring2 (z=-height, same phase). Generic phase offset for ring2/3
-        # avoids accidentally introducing C2 axes or sigma_v planes.
-        ring1 = _ring(n, radius, z=0.0)
-        phase = (2.0 * np.pi / n) * 0.37
-        ring2 = _ring(n, radius * 0.6, z=height, phase=phase)
-        ring3 = _ring(n, radius * 0.6, z=-height, phase=phase)
-        decoration_z = get_atomic_number("N" if element != "N" else "O")
-        coords = np.vstack((ring1, ring2, ring3))
-        atomic_numbers = np.concatenate(
-            (np.full(n, main_z, dtype=int), np.full(2 * n, decoration_z, dtype=int))
-        )
-        description = f"Idealized {label.name}: {n}-ring + mirrored {n}-ring pair"
+        # Cnh: ring1 (main) + ring2 (terminal substituent ring), both planar at
+        # z=0 with a small angular offset. A planar arrangement is automatically
+        # invariant under sigma_h (the molecular plane itself); the generic
+        # offset avoids accidentally introducing sigma_v / extra C2 axes, which
+        # would promote this to Dnh/Cnv. Each ring1 atom bonds to its 2 ring1
+        # neighbours + 1 ring2 (terminal) atom (degree 3); ring2 atoms are
+        # terminal (degree 1).
+        upper = 1.75 / (2.0 * np.sin(np.pi / n))
+        r1 = min(max(1.1, 0.5 / np.sin(np.pi / n)), upper) * radius
+        eps = (2.0 * np.pi / n) * 0.05
+        r2_factor = 1.8 if n <= 8 else 1.8 - 0.05 * (n - 8)
+        ring1 = _ring(n, r1, z=0.0)
+        ring2 = _ring(n, r1 * r2_factor, z=0.0, phase=eps)
+        decoration_z = get_atomic_number(_decoration_element(element))
+        coords = np.vstack((ring1, ring2))
+        atomic_numbers = np.concatenate((np.full(n, main_z, dtype=int), np.full(n, decoration_z, dtype=int)))
+        description = f"Idealized {label.name}: planar {n}-ring + terminal {n}-ring"
 
-    elif group_class in (_Class.D, _Class.Dd):
-        # Dn / Dnd: a "twisted double ring" -- two parallel n-gon rings of
-        # the same radius and element, offset by a twist angle theta.
-        # theta = pi/(2n) (strictly between eclipsed and staggered) gives Dn
-        # (chiral); theta = pi/n (staggered antiprism) gives Dnd.
-        theta = (np.pi / n) if group_class == _Class.Dd else (np.pi / (2 * n))
-        ring_top = _ring(n, radius, z=height)
-        ring_bottom = _ring(n, radius, z=-height, phase=theta)
-        coords = np.vstack((ring_top, ring_bottom))
-        atomic_numbers = np.full(2 * n, main_z, dtype=int)
-        description = f"Idealized {label.name}: twisted double {n}-ring (theta={theta:.4f} rad)"
+    elif group_class in (_Class.D, _Class.Dh, _Class.Dd):
+        # Dn / Dnh / Dnd: a central hub atom (different, larger-radius element,
+        # mirroring ferrocene's Fe) plus two parallel n-gon rings, related by a
+        # twist angle theta: theta=0 (eclipsed prism, Dnh, like ferrocene-eclipsed),
+        # theta=pi/(2n) (generic twist, Dn, chiral), or theta=pi/n (staggered
+        # antiprism, Dnd, like ferrocene-staggered). The ring separation is
+        # large enough that the two rings are not directly bonded to each
+        # other -- they are connected only through the hub. Each ring atom
+        # bonds to its 2 ring neighbours + the hub (degree 3); the hub bonds to
+        # all 2n ring atoms.
+        if group_class == _Class.Dh:
+            theta = 0.0
+        elif group_class == _Class.Dd:
+            theta = np.pi / n
+        else:
+            theta = np.pi / (2 * n)
+
+        ring_radius = _radius_for(n) * radius
+        base_height = 0.8 if (group_class == _Class.Dd and n in (3, 4)) else 1.0
+        ring_height = base_height * height_scale
+
+        ring_top = _ring(n, ring_radius, z=ring_height)
+        ring_bottom = _ring(n, ring_radius, z=-ring_height, phase=theta)
+        hub_z = get_atomic_number(_hub_element(element))
+        coords = np.vstack((np.array([[0.0, 0.0, 0.0]]), ring_top, ring_bottom))
+        atomic_numbers = np.concatenate(([hub_z], np.full(2 * n, main_z, dtype=int)))
+        description = f"Idealized {label.name}: hub + twisted double {n}-ring (theta={theta:.4f} rad)"
 
     elif group_class == _Class.S:
-        # Sn (n even): an (n/2)-gon antiprism (top ring at z=+height, bottom
-        # ring at z=-height, staggered by the Sn rotation angle 2*pi/n)
-        # plus small "marker" atoms on each ring atom, angularly offset by a
-        # generic delta consistent with the Sn operation. The antiprism
-        # alone has D_{(n/2)d} symmetry (a strict superset of Sn); the
-        # markers break its extra C2 axes / sigma_d planes while preserving
-        # Sn.
+        # Sn (n even): a central hub atom + an (n/2)-gon antiprism (two rings
+        # of m=n/2 atoms, staggered by the Sn rotation angle 2*pi/n, separated
+        # widely enough to avoid direct cross-ring bonds) + small "marker"
+        # atoms on each ring atom, angularly offset by a generic delta
+        # consistent with the Sn operation (top markers offset by delta,
+        # bottom markers offset by theta+delta, matching how Sn maps top atoms
+        # to bottom atoms). The antiprism + hub alone has D_{(n/2)d} symmetry
+        # (a strict superset of Sn); the markers break its extra C2 axes /
+        # sigma_d planes while preserving Sn. Each main ring atom bonds to its
+        # 2 ring neighbours + the hub + its own marker (degree 4, like a
+        # substituted ferrocene ring carbon); markers are terminal (or, for
+        # n=4, also reach the hub).
         m = n // 2
-        sn_angle = 2.0 * np.pi / n
-        delta = sn_angle * 0.15
-        marker_radius = radius * 1.15
-        marker_z_offset = height * 0.1
+        theta = np.pi / m
+        delta = (2.0 * np.pi / n) * 0.25
+        mr_factor = 1.05
 
-        top_main = _ring(m, radius, z=height)
-        bottom_main = _ring(m, radius, z=-height, phase=sn_angle)
-        top_marker = _ring(m, marker_radius, z=height + marker_z_offset, phase=delta)
-        bottom_marker = _ring(m, marker_radius, z=-(height + marker_z_offset), phase=sn_angle + delta)
+        if n == 4:
+            ring_radius = 0.7 * radius
+            mz_off = 1.2 * height_scale
+        else:
+            ring_radius = _radius_for(m) * radius
+            mz_off = {6: 1.25, 8: 1.2, 10: 1.1}.get(n, 1.2) * height_scale
+        ring_height = 1.0 * height_scale
 
-        decoration_z = get_atomic_number("H" if element != "H" else "C")
-        coords = np.vstack((top_main, bottom_main, top_marker, bottom_marker))
+        ring_top = _ring(m, ring_radius, z=ring_height)
+        ring_bottom = _ring(m, ring_radius, z=-ring_height, phase=theta)
+        marker_top = _ring(m, ring_radius * mr_factor, z=ring_height + mz_off, phase=delta)
+        marker_bottom = _ring(m, ring_radius * mr_factor, z=-(ring_height + mz_off), phase=theta + delta)
+
+        marker_z = get_atomic_number(_decoration_element(element))
+        hub_z = get_atomic_number(_hub_element(element))
+        coords = np.vstack((np.array([[0.0, 0.0, 0.0]]), ring_top, ring_bottom, marker_top, marker_bottom))
         atomic_numbers = np.concatenate(
-            (np.full(2 * m, main_z, dtype=int), np.full(2 * m, decoration_z, dtype=int))
+            ([hub_z], np.full(2 * m, main_z, dtype=int), np.full(2 * m, marker_z, dtype=int))
         )
-        description = f"Idealized {label.name}: {m}-gon antiprism + Sn-consistent markers"
+        description = f"Idealized {label.name}: hub + {m}-gon antiprism + Sn-consistent markers"
 
     structure = Structure(None)
     structure.num_atoms = coords.shape[0]

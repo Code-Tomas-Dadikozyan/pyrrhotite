@@ -60,6 +60,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - `generate_idealized_structure`'s default `radius`/`height` (now 1.0 A / 0.6 A, previously 1.5 A / 1.0 A) were too large relative to `Structure.calculate_bond_pairs`'s bonding cutoff for the placeholder element, leaving e.g. the two rings of a generated D9d structure as disconnected components with no bonds between them. The new defaults keep both within-ring and (for Dn/Dnd) cross-ring atoms within bonding distance, so generated structures render as connected molecules in the 3-D viewer, while still round-tripping correctly through `Symmetry`.
+- `generate_idealized_structure`'s geometry has been redesigned per family so that `calculate_bond_pairs` produces realistic bonding patterns modelled on real molecules of the same point group, rather than over-connected uniform rings (previously every ring atom could end up bonded to ~4 neighbours, including spurious cross-ring bonds between otherwise unrelated rings):
+  - **Cnv**: unchanged in spirit (apex + ring, like ammonia), but the ring radius is now derived from `n` so ring atoms bond only to their two ring neighbours plus the apex (degree 3).
+  - **Cn / Cnh**: the previous offset second ring (which could bond to multiple ring1 atoms, or to both an above and below decoration ring) is replaced by a single planar terminal-substituent ring (like benzene's ring + H), giving each main-ring atom degree 3 (2 ring neighbours + 1 terminal atom) and each terminal atom degree 1.
+  - **Dn / Dnh / Dnd**: now built around a central "hub" atom (a larger-radius placeholder element, e.g. Fe), mirroring ferrocene's metal-sandwich structure (`ferrocene-eclipsed.xyz` / `ferrocene-staggered.xyz`). The two rings are separated far enough that they no longer bond directly to each other; each is connected to the structure only via the hub. Each ring atom now has degree 3 (2 ring neighbours + hub) instead of 4.
+  - **Sn**: also gains a central hub atom connecting the two halves of the antiprism (no more direct cross-ring bonds), with the existing Sn-symmetry-breaking "marker" atoms repositioned to bond as terminal substituents.
+  - All seven families, n=3..10 (Sn even n=4..10), were verified to produce a single connected component, no near-zero-length bonds, and correct round-trip detection through `Symmetry`.
 
 
 ### Changed

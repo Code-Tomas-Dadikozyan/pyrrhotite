@@ -417,8 +417,9 @@ for bad_name in ["Td", "S5", "C2"]:
 print()
 print("-- visualize_idealized_structure: preview without saving an XYZ file --")
 if deps_ok:
-    print("Opening viewer for a generated D9d structure (note the two rings are")
-    print("now bonded to each other -- close the window to continue).")
+    print("Opening viewer for a generated D9d structure (note the ferrocene-style")
+    print("layout: a central hub atom connects the two 9-rings, and each ring atom")
+    print("has a realistic bond count -- close the window to continue).")
     visualize_idealized_structure("D9d")
     visualize_idealized_structure("D9d", show_labels=True)
 else:
