@@ -200,7 +200,11 @@ def main() -> None:
     parser.add_argument(
         "--visualize", "-vis",
         action="store_true",
-        help="Open an interactive 3-D viewer after analysis (requires pip install 'pyrrhotite[vis]')",
+        help=(
+            "Open an interactive 3-D viewer after analysis, or (with -g/--group "
+            "and without --xyz) for an idealized structure of the named axial "
+            "point group (requires pip install 'pyrrhotite[vis]')"
+        ),
     )
     parser.add_argument(
         "--labels", "-l",
@@ -222,7 +226,27 @@ def main() -> None:
     if args.group:
         if args.xyz is not None:
             sys.exit(_generate_xyz(args.group, args.xyz))
-        sys.exit(_print_group(args.group, use_complex=args.complex, plain=args.plain))
+
+        exit_code = _print_group(args.group, use_complex=args.complex, plain=args.plain)
+
+        if exit_code == 0 and (args.visualize or args.labels):
+            try:
+                structure = generate_idealized_structure(args.group)
+            except ValueError as exc:
+                print(f"ERROR: {exc}", file=sys.stderr)
+                sys.exit(1)
+            try:
+                from .visualizer import visualize
+                visualize(structure, show_labels=args.labels)
+            except ImportError:
+                print(
+                    "ERROR: visualizer dependencies not installed. "
+                    "Run:  pip install 'pyrrhotite[vis]'",
+                    file=sys.stderr,
+                )
+                exit_code = 1
+
+        sys.exit(exit_code)
 
     exit_code = 0
     structures = []

@@ -54,7 +54,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `html_formatter.py` — `format_html()` / `save_html()`, render character tables as standalone HTML
   - `latex_formatter.py` — `format_latex()` / `save_latex()`, render character tables as LaTeX (requires the `booktabs` and `amsmath` packages)
 - `src/structure_generator.py` — `generate_idealized_structure(point_group, ...)` builds an idealized `Structure` (rings of placeholder atoms) for any of the seven axial point groups (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) and order n, round-tripping through `Symmetry` to recover the same label. Also adds `format_xyz()` / `write_xyz()` for serialising the result to XYZ. Exposed via `pyrrhotite.generate_idealized_structure` / `pyrrhotite.write_xyz`, and via the CLI as `pyrrhotite -g <NAME> --xyz [PATH]`.
+- `pyrrhotite.visualize_idealized_structure(point_group, ...)` — generates an idealized structure and opens the 3-D viewer directly, without writing it to an `.xyz` file first (requires `pip install 'pyrrhotite[vis]'`). Also available from the CLI as `pyrrhotite -g <NAME> --visualize` (or `--labels`/`-l`), when not combined with `--xyz`.
 - `tests/test_structure_generator.py` — round-trip tests for `generate_idealized_structure` across all seven axial families and orders n=3..10 (including n>8 to exercise the adaptive axis-order search), plus error-path tests for unsupported families/orders.
+- `example_usage.py` — new section 14 demonstrating `generate_idealized_structure`, `format_xyz`, and `write_xyz`: basic generation and round-trip detection, saving/reloading from disk, round-tripping all seven axial families at n=6, customising radius/height/element, and the error cases for unsupported groups/orders.
+
+### Fixed
+- `generate_idealized_structure`'s default `radius`/`height` (now 1.0 A / 0.6 A, previously 1.5 A / 1.0 A) were too large relative to `Structure.calculate_bond_pairs`'s bonding cutoff for the placeholder element, leaving e.g. the two rings of a generated D9d structure as disconnected components with no bonds between them. The new defaults keep both within-ring and (for Dn/Dnd) cross-ring atoms within bonding distance, so generated structures render as connected molecules in the 3-D viewer, while still round-tripping correctly through `Symmetry`.
 
 
 ### Changed

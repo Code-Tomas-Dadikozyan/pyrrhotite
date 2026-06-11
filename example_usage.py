@@ -34,7 +34,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-16"
 # Imports
 # ---------------------------------------------------------------------------
 
-from pyrrhotite import Structure, Symmetry, generate_idealized_structure, write_xyz
+from pyrrhotite import Structure, Symmetry, generate_idealized_structure, write_xyz, visualize_idealized_structure
 from pyrrhotite.structure_generator import format_xyz
 from pyrrhotite.periodic_table import element, atomic_number
 from pyrrhotite.display import (
@@ -357,6 +357,9 @@ print("geometry has, by construction, the requested axial point group symmetry")
 print("(Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd). Useful as test fixtures and for exploring")
 print("how the symmetry-detection pipeline behaves at a chosen order n.")
 
+# Step 1: generate_idealized_structure(name) takes a Schoenflies name (e.g.
+# "D6h", "C5v", "S8") and returns an in-memory Structure with that point
+# group symmetry, by construction. No XYZ file is read or written here.
 print()
 print("-- Basic generation + round-trip through Symmetry --")
 s_d6h = generate_idealized_structure("D6h")
@@ -364,11 +367,17 @@ print(f"Description : {s_d6h.description}")
 print(f"Num atoms   : {s_d6h.num_atoms}")
 print(f"Detected    : {Symmetry(s_d6h).point_group.label.name}")
 
+# Step 2: to get XYZ-formatted text without writing a file (e.g. to stream,
+# pipe, or inspect), pass the Structure to format_xyz().
 print()
 print("-- format_xyz: get the structure as XYZ text without touching disk --")
 xyz_text = format_xyz(generate_idealized_structure("C5v"))
 print(xyz_text)
 
+# Step 3: to produce an actual .xyz file on disk, pass the Structure and a
+# path to write_xyz(structure, path). The resulting file can be reloaded
+# with Structure(path) just like any other XYZ file (e.g. for Symmetry()
+# analysis, the CLI, or the visualizer).
 print()
 print("-- write_xyz: save to disk, then reload and re-analyse --")
 gen_path = Path("c10v_generated.xyz")
@@ -401,8 +410,34 @@ for bad_name in ["Td", "S5", "C2"]:
     except ValueError as exc:
         print(f"  {bad_name}: ValueError: {exc}")
 
+# Step 4: visualize_idealized_structure(name) generates the structure and
+# opens it directly in the 3-D viewer -- no call to write_xyz/Structure()
+# needed. It requires the optional [vis] dependencies (PyQt6, PyOpenGL, pyrr),
+# checked above in section 13 via `deps_ok`.
+print()
+print("-- visualize_idealized_structure: preview without saving an XYZ file --")
+if deps_ok:
+    print("Opening viewer for a generated D9d structure (note the two rings are")
+    print("now bonded to each other -- close the window to continue).")
+    visualize_idealized_structure("D9d")
+    visualize_idealized_structure("D9d", show_labels=True)
+else:
+    print("Optional vis dependencies not installed; skipping live demo.")
+    print('Install with:  pip install \'pyrrhotite[vis]\'')
+
+# The CLI exposes the same generator via -g/--group + --xyz / --visualize,
+# without needing any Python code:
+#   pyrrhotite -g <NAME> --xyz            print the generated structure as XYZ
+#                                          to stdout (e.g. to pipe elsewhere)
+#   pyrrhotite -g <NAME> --xyz PATH       write the generated structure as XYZ
+#                                          to PATH instead of stdout
+#   pyrrhotite -g <NAME> --visualize      open the 3-D viewer for the
+#                                          generated structure directly
+#   pyrrhotite PATH -v                    analyse a generated (or any other)
+#                                          XYZ file as usual
 print()
 print("CLI equivalents:")
 print("  pyrrhotite -g C12v --xyz                  # print generated XYZ to stdout")
 print("  pyrrhotite -g D9d --xyz d9d.xyz           # save generated XYZ to a file")
+print("  pyrrhotite -g D9d --visualize             # preview the generated structure")
 print("  pyrrhotite d9d.xyz -v                     # then analyse it as usual")

@@ -39,8 +39,8 @@ def _ring(n: int, radius: float, z: float, phase: float = 0.0) -> np.ndarray:
 
 def generate_idealized_structure(
     point_group: str | PointGroupLabel,
-    radius: float = 1.5,
-    height: float = 1.0,
+    radius: float = 1.0,
+    height: float = 0.6,
     element: str = "F",
 ) -> Structure:
     """Build an idealized `Structure` with the requested axial point group symmetry.
@@ -52,10 +52,15 @@ def generate_idealized_structure(
         `parse_point_group_name` (e.g. "C12v", "D9h", "S8"). Only the seven
         axial families -- Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd -- are supported.
     radius:
-        Radius (in Angstroms) of the primary ring of atoms.
+        Radius (in Angstroms) of the primary ring of atoms. The default
+        (1.0 A) keeps neighbouring ring atoms within `Structure.calculate_bond_pairs`'s
+        bonding cutoff so the generated structure renders as a connected
+        molecule rather than a scattered point cloud.
     height:
         z-offset (in Angstroms) used for apex atoms / second rings, where
-        applicable.
+        applicable. The default (0.6 A) keeps the two rings of a Dn/Dnd
+        structure (separated by 2*height) within bonding distance of each
+        other.
     element:
         Placeholder element symbol used for the primary ring of atoms.
 

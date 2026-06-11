@@ -28,6 +28,33 @@ def visualize(structure: "Structure", show_labels: bool = False) -> None:
     _vis(structure, show_labels=show_labels)
 
 
+def visualize_idealized_structure(
+    point_group,
+    radius: float = 1.0,
+    height: float = 0.6,
+    element: str = "F",
+    show_labels: bool = False,
+) -> None:
+    """Generate an idealized structure for *point_group* and open the 3-D viewer.
+
+    Equivalent to ``visualize(generate_idealized_structure(point_group, ...))``,
+    without writing the structure to an `.xyz` file first. Requires
+    ``pip install 'pyrrhotite[vis]'``.
+
+    Parameters
+    ----------
+    point_group:
+        Either a `PointGroupLabel` or a name string (e.g. "C12v", "D9d") --
+        see `generate_idealized_structure`.
+    radius, height, element:
+        Forwarded to `generate_idealized_structure`.
+    show_labels:
+        Overlay element symbols on each atom. Default is ``False``.
+    """
+    structure = generate_idealized_structure(point_group, radius=radius, height=height, element=element)
+    visualize(structure, show_labels=show_labels)
+
+
 __all__ = [
     "__version__",
     "Structure",
@@ -37,6 +64,7 @@ __all__ = [
     "write_xyz",
     "display",
     "visualize",
+    "visualize_idealized_structure",
     "list_sample_molecules",
     "load_sample",
     "analyse_sample",

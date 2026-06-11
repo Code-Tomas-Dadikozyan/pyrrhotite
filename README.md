@@ -207,20 +207,38 @@ Dnh, or Dnd structure for any supported order n:
 
 ```python
 from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry
+from pyrrhotite.structure_generator import format_xyz
 
-s = generate_idealized_structure("D12h")
+s = generate_idealized_structure("D12h")    # build an idealized D12h structure
 print(Symmetry(s).point_group.label.name)   # "D12h"
 
-write_xyz(s, "d12h.xyz")
+print(format_xyz(s))                        # get it as XYZ text, no file needed
+write_xyz(s, "d12h.xyz")                    # or write it straight to an .xyz file
+```
+
+To preview a generated structure without writing it to disk first, use
+`visualize_idealized_structure` (requires `pip install 'pyrrhotite[vis]'`):
+
+```python
+from pyrrhotite import visualize_idealized_structure
+
+visualize_idealized_structure("D9d")                  # opens the 3-D viewer
+visualize_idealized_structure("D9d", show_labels=True)
 ```
 
 Or from the command line, combined with `-g`:
 
 ```bash
-pyrrhotite -g C12v --xyz                  # print the generated structure as XYZ
-pyrrhotite -g D9d --xyz d9d.xyz           # save it to a file
-pyrrhotite d9d.xyz -v                     # then analyse it as usual
+pyrrhotite -g C12v --xyz                  # print the generated structure as XYZ to stdout
+pyrrhotite -g D9d --xyz d9d.xyz           # save the generated structure as XYZ to a file
+pyrrhotite d9d.xyz -v                     # then analyse the generated file as usual
+pyrrhotite -g D9d --visualize             # preview the generated structure directly
 ```
+
+See section 14 of `example_usage.py` for a runnable demo covering
+`format_xyz`, `write_xyz`, round-trip detection across all seven axial
+families, custom radius/height/element, and the error cases for
+unsupported groups/orders.
 
 #### Rotor classification and principal axes
 
