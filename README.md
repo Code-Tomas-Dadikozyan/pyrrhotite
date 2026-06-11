@@ -204,10 +204,13 @@ For testing or demonstration, `pyrrhotite` can build an idealized `Structure`
 that has, by construction, a requested axial point group symmetry — a ring (or
 combination of rings) of placeholder atoms arranged as a Cn, Cnh, Cnv, Sn, Dn,
 Dnh, or Dnd structure for any supported order n. The geometry of each family is
-modelled on a real molecule with that symmetry (e.g. ammonia's apex+ring for
-Cnv, benzene's ring+substituent for Cnh, ferrocene's metal-hub sandwich for
-Dn/Dnh/Dnd/Sn), so the generated structure also has a plausible bonding pattern
-in the 3-D viewer rather than an over-connected uniform ring:
+modelled on a real molecule with that symmetry (e.g. ammonia-like apex+ring
+substituents for Cnv, benzene's ring+substituent for Cnh, ferrocene's metal-hub
+sandwich for Dn/Dnh/Dnd/Sn), so the generated structure also has a plausible
+bonding pattern in the 3-D viewer — including element choices that roughly
+match each atom's bonding degree (H for degree 1, O for degree 2, N for degree
+3, C for degree 4, S for degree 5-6, and a metal-like hub for higher degrees)
+— rather than an over-connected uniform ring:
 
 ```python
 from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry

@@ -76,25 +76,47 @@ def _decoration_element(element: str) -> str:
     return "H" if element != "H" else "C"
 
 
-def _apex_element(element: str) -> str:
-    """Pick an apex/cap element (similar covalent radius to common ring elements),
-    distinct from `element` -- mirrors ammonia's N apex over an H ring.
-    """
-    return "N" if element != "N" else "O"
-
-
-def _apex_element_heavy(element: str) -> str:
-    """Pick a slightly larger-radius apex element (for high-order Cnv rings,
-    where a larger apex-ring bonding cutoff is needed), distinct from `element`.
-    """
-    return "S" if element != "S" else "Cl"
-
-
 def _hub_element(element: str) -> str:
     """Pick a large-radius (metal-like) placeholder element for a central hub
     atom, distinct from `element` -- mirrors ferrocene's central Fe.
     """
     return "Fe" if element != "Fe" else "Co"
+
+
+def _element_for_degree(degree: int) -> str:
+    """Pick a placeholder element whose typical valence roughly matches `degree`,
+    so generated structures look like plausible molecules: H for degree 1
+    (e.g. terminal substituents), O for degree 2, N for degree 3, C for
+    degree 4, S for degree 5-6 (e.g. SF5/SF6-like hypervalency), and a
+    metal-like "Fe" hub for degree >= 7 (no simple element is plausibly
+    bonded to that many neighbours, so this mirrors the ferrocene-hub motif
+    used elsewhere in this module).
+    """
+    if degree <= 1:
+        return "H"
+    if degree == 2:
+        return "O"
+    if degree == 3:
+        return "N"
+    if degree == 4:
+        return "C"
+    if degree <= 6:
+        return "S"
+    return "Fe"
+
+
+def _ring_element(element: str, degree: int) -> str:
+    """Pick the element symbol for a "main ring" atom expected to end up with
+    bonding degree `degree`.
+
+    If the caller left `element` at its default ("F"), substitute a more
+    chemically plausible element for the given degree via
+    `_element_for_degree` -- since F, N, C, and O all share the same covalent
+    radius (0.4 A), this is purely cosmetic and does not change any bonding
+    distances. If the caller passed a non-default `element`, that explicit
+    choice is respected as-is.
+    """
+    return _element_for_degree(degree) if element == "F" else element
 
 
 def generate_idealized_structure(
@@ -123,9 +145,12 @@ def generate_idealized_structure(
         to the z-offsets used for apex atoms / second rings / hub-to-ring
         separation, where applicable.
     element:
-        Placeholder element symbol used for the primary ring(s) of atoms.
-        Apex, hub, and decoration atoms automatically use a different element
-        (see `_apex_element`, `_hub_element`, `_decoration_element`).
+        Placeholder element symbol used for the primary ring(s) of atoms. At
+        the default value ("F"), the primary ring element is instead chosen
+        per family to look like a plausible molecule for that atom's bonding
+        degree (see `_ring_element`/`_element_for_degree`); apex, hub, and
+        decoration atoms always use a different element from the primary ring
+        (see `_hub_element`, `_decoration_element`).
 
     Returns
     -------
@@ -157,44 +182,75 @@ def generate_idealized_structure(
     elif n < 3:
         raise ValueError(f"{label.name!r} requires order n >= 3; got n={n}")
 
-    main_z = get_atomic_number(element)
     height_scale = height / 0.6
 
     if group_class == _Class.Cv:
-        # Cnv: ring + apex atom of a different element on the z-axis, mirroring
-        # ammonia's N-apex-over-H-ring pattern. Each ring atom bonds to its 2
-        # ring neighbours + the apex (degree 3); the apex bonds to all n ring
-        # atoms.
-        ring_radius = _radius_for(n) * radius
-        if n >= 8:
-            # For larger rings, cap the radius and use a larger-covalent-radius
-            # apex element so the apex-ring distance stays within bonding range.
-            ring_radius = min(ring_radius, 2.1 * radius)
-            apex_element_name = _apex_element_heavy(element)
-            apex_height = 0.5 * height_scale
-        else:
-            apex_element_name = _apex_element(element)
-            apex_height = 0.6 * height_scale
-        ring_coords = _ring(n, ring_radius, z=0.0)
+        # Cnv: ring of terminal ("H"-like) atoms + a single apex atom on the
+        # z-axis, mirroring ammonia's N-apex-over-H-ring pattern -- but unlike
+        # ammonia's H...H distance, the ring radius here is deliberately sized
+        # so ring atoms stay *outside* bonding distance of each other, while
+        # the apex stays within bonding distance of every ring atom. Each ring
+        # atom therefore bonds only to the apex (degree 1); the apex bonds to
+        # all n ring atoms (degree n).
+        ring_element_name = _ring_element(element, 1)
+        ring_z = get_atomic_number(ring_element_name)
+        ring_radius_elem = get_element(ring_z).radius
+
+        apex_element_name = _element_for_degree(n)
         apex_z = get_atomic_number(apex_element_name)
+        apex_radius_elem = get_element(apex_z).radius
+
+        ring_to_ring_cutoff = np.sqrt(20.0 * ring_radius_elem * ring_radius_elem)
+        apex_to_ring_cutoff = np.sqrt(20.0 * apex_radius_elem * ring_radius_elem)
+
+        # Ring radius: 15% beyond the distance at which neighbouring ring atoms
+        # would bond, so the ring stays an unbonded set of substituents.
+        ring_radius_base = 1.15 * ring_to_ring_cutoff / (2.0 * np.sin(np.pi / n))
+        ring_radius = ring_radius_base * radius
+
+        # Apex height: place the apex 85% of the way to the apex-ring bonding
+        # cutoff (in 3-D distance from each ring atom), so the apex bonds to
+        # every ring atom with some margin to spare.
+        target_apex_dist = 0.85 * apex_to_ring_cutoff
+        if target_apex_dist <= ring_radius_base:
+            apex_height = 0.0
+        else:
+            apex_height = np.sqrt(target_apex_dist**2 - ring_radius_base**2) * height_scale
+
+        ring_coords = _ring(n, ring_radius, z=0.0)
         coords = np.vstack((np.array([[0.0, 0.0, apex_height]]), ring_coords))
-        atomic_numbers = np.concatenate(([apex_z], np.full(n, main_z, dtype=int)))
-        description = f"Idealized {label.name}: {n}-ring + apex"
+        atomic_numbers = np.concatenate(([apex_z], np.full(n, ring_z, dtype=int)))
+        description = f"Idealized {label.name}: {n}-ring + apex (ring atoms unbonded to each other)"
 
     elif group_class == _Class.C:
-        # Cn: ring1 (main, z=0) + ring2 (terminal substituent ring, slightly
-        # larger radius, small z-offset and angular offset). Each ring1 atom
-        # bonds to its 2 ring1 neighbours + 1 ring2 (terminal) atom (degree 3);
-        # ring2 atoms are terminal (degree 1). The small offsets break sigma_h,
-        # sigma_v, and S2n while preserving Cn.
+        # Cn: ring1 (main, z=0) + one terminal substituent atom per ring1 atom,
+        # placed at a fixed offset (in the local radial/tangential/z frame of
+        # each ring1 atom) so the substituent bond length -- and hence its
+        # visibility as a separate sphere+cylinder in the viewer -- does not
+        # shrink as the ring grows with n. The tangential and z components of
+        # the offset break sigma_h, sigma_v, and S2n while preserving Cn. Each
+        # ring1 atom bonds to its 2 ring1 neighbours + its substituent (degree
+        # 3); substituent atoms are terminal (degree 1).
+        ring1_element_name = _ring_element(element, 3)
+        ring1_z = get_atomic_number(ring1_element_name)
         ring1_radius = _radius_for(n) * radius
-        eps = (2.0 * np.pi / n) * 0.05
         ring1 = _ring(n, ring1_radius, z=0.0)
-        ring2 = _ring(n, ring1_radius * 1.1, z=0.45 * height_scale, phase=eps)
+
+        # Local frame at each ring1 atom: radial (outward), tangential (along
+        # the ring), and z. The offset magnitude (~1 A) is chosen so the
+        # substituent bonds to its own ring1 atom (within the substituent-ring1
+        # bonding cutoff) but stays clear of both ring1's neighbouring atoms
+        # and other substituents.
+        thetas = 2.0 * np.pi * np.arange(n) / n
+        radial = np.column_stack((np.cos(thetas), np.sin(thetas), np.zeros(n)))
+        tangential = np.column_stack((-np.sin(thetas), np.cos(thetas), np.zeros(n)))
+        offset = 0.3 * radial + 0.4 * tangential + np.array([0.0, 0.0, 0.85 * height_scale])
+        ring2 = ring1 + offset
+
         decoration_z = get_atomic_number(_decoration_element(element))
         coords = np.vstack((ring1, ring2))
-        atomic_numbers = np.concatenate((np.full(n, main_z, dtype=int), np.full(n, decoration_z, dtype=int)))
-        description = f"Idealized {label.name}: {n}-ring + terminal {n}-ring"
+        atomic_numbers = np.concatenate((np.full(n, ring1_z, dtype=int), np.full(n, decoration_z, dtype=int)))
+        description = f"Idealized {label.name}: {n}-ring + terminal substituents"
 
     elif group_class == _Class.Ch:
         # Cnh: ring1 (main) + ring2 (terminal substituent ring), both planar at
@@ -204,6 +260,7 @@ def generate_idealized_structure(
         # would promote this to Dnh/Cnv. Each ring1 atom bonds to its 2 ring1
         # neighbours + 1 ring2 (terminal) atom (degree 3); ring2 atoms are
         # terminal (degree 1).
+        ring1_z = get_atomic_number(_ring_element(element, 3))
         upper = 1.75 / (2.0 * np.sin(np.pi / n))
         r1 = min(max(1.1, 0.5 / np.sin(np.pi / n)), upper) * radius
         eps = (2.0 * np.pi / n) * 0.05
@@ -212,7 +269,7 @@ def generate_idealized_structure(
         ring2 = _ring(n, r1 * r2_factor, z=0.0, phase=eps)
         decoration_z = get_atomic_number(_decoration_element(element))
         coords = np.vstack((ring1, ring2))
-        atomic_numbers = np.concatenate((np.full(n, main_z, dtype=int), np.full(n, decoration_z, dtype=int)))
+        atomic_numbers = np.concatenate((np.full(n, ring1_z, dtype=int), np.full(n, decoration_z, dtype=int)))
         description = f"Idealized {label.name}: planar {n}-ring + terminal {n}-ring"
 
     elif group_class in (_Class.D, _Class.Dh, _Class.Dd):
@@ -232,6 +289,7 @@ def generate_idealized_structure(
         else:
             theta = np.pi / (2 * n)
 
+        ring_z = get_atomic_number(_ring_element(element, 3))
         ring_radius = _radius_for(n) * radius
         base_height = 0.8 if (group_class == _Class.Dd and n in (3, 4)) else 1.0
         ring_height = base_height * height_scale
@@ -240,7 +298,7 @@ def generate_idealized_structure(
         ring_bottom = _ring(n, ring_radius, z=-ring_height, phase=theta)
         hub_z = get_atomic_number(_hub_element(element))
         coords = np.vstack((np.array([[0.0, 0.0, 0.0]]), ring_top, ring_bottom))
-        atomic_numbers = np.concatenate(([hub_z], np.full(2 * n, main_z, dtype=int)))
+        atomic_numbers = np.concatenate(([hub_z], np.full(2 * n, ring_z, dtype=int)))
         description = f"Idealized {label.name}: hub + twisted double {n}-ring (theta={theta:.4f} rad)"
 
     elif group_class == _Class.S:
@@ -261,6 +319,8 @@ def generate_idealized_structure(
         delta = (2.0 * np.pi / n) * 0.25
         mr_factor = 1.05
 
+        ring_z = get_atomic_number(_ring_element(element, 4))
+
         if n == 4:
             ring_radius = 0.7 * radius
             mz_off = 1.2 * height_scale
@@ -278,7 +338,7 @@ def generate_idealized_structure(
         hub_z = get_atomic_number(_hub_element(element))
         coords = np.vstack((np.array([[0.0, 0.0, 0.0]]), ring_top, ring_bottom, marker_top, marker_bottom))
         atomic_numbers = np.concatenate(
-            ([hub_z], np.full(2 * m, main_z, dtype=int), np.full(2 * m, marker_z, dtype=int))
+            ([hub_z], np.full(2 * m, ring_z, dtype=int), np.full(2 * m, marker_z, dtype=int))
         )
         description = f"Idealized {label.name}: hub + {m}-gon antiprism + Sn-consistent markers"
 
