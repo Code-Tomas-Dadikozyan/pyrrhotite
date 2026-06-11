@@ -186,12 +186,18 @@ def generate_idealized_structure(
 
     if group_class == _Class.Cv:
         # Cnv: ring of terminal ("H"-like) atoms + a single apex atom on the
-        # z-axis, mirroring ammonia's N-apex-over-H-ring pattern -- but unlike
-        # ammonia's H...H distance, the ring radius here is deliberately sized
-        # so ring atoms stay *outside* bonding distance of each other, while
-        # the apex stays within bonding distance of every ring atom. Each ring
-        # atom therefore bonds only to the apex (degree 1); the apex bonds to
-        # all n ring atoms (degree n).
+        # z-axis, mirroring ammonia's N-apex-over-H-ring pattern. The ring
+        # radius is sized as a fixed fraction of the apex-ring bonding
+        # cutoff -- so the apex always bonds to every ring atom regardless of
+        # n -- and the apex sits slightly above the ring plane, which breaks
+        # sigma_h and the in-plane C2 axes that would otherwise make this
+        # Dnh instead of Cnv. For small/moderate n this also keeps
+        # neighbouring ring atoms outside bonding distance of each other
+        # (ammonia-like, ring atoms degree 1, apex degree n); for larger n
+        # (where ring atoms necessarily crowd closer together as n grows for
+        # a fixed radius) neighbouring ring atoms end up bonded too (ring
+        # atoms degree 3: 2 ring neighbours + apex). Both patterns are
+        # connected and round-trip to Cnv.
         ring_element_name = _ring_element(element, 1)
         ring_z = get_atomic_number(ring_element_name)
         ring_radius_elem = get_element(ring_z).radius
@@ -200,27 +206,22 @@ def generate_idealized_structure(
         apex_z = get_atomic_number(apex_element_name)
         apex_radius_elem = get_element(apex_z).radius
 
-        ring_to_ring_cutoff = np.sqrt(20.0 * ring_radius_elem * ring_radius_elem)
         apex_to_ring_cutoff = np.sqrt(20.0 * apex_radius_elem * ring_radius_elem)
 
-        # Ring radius: 15% beyond the distance at which neighbouring ring atoms
-        # would bond, so the ring stays an unbonded set of substituents.
-        ring_radius_base = 1.15 * ring_to_ring_cutoff / (2.0 * np.sin(np.pi / n))
+        ring_radius_base = 0.9 * apex_to_ring_cutoff
         ring_radius = ring_radius_base * radius
 
-        # Apex height: place the apex 85% of the way to the apex-ring bonding
+        # Apex height: place the apex 95% of the way to the apex-ring bonding
         # cutoff (in 3-D distance from each ring atom), so the apex bonds to
-        # every ring atom with some margin to spare.
-        target_apex_dist = 0.85 * apex_to_ring_cutoff
-        if target_apex_dist <= ring_radius_base:
-            apex_height = 0.0
-        else:
-            apex_height = np.sqrt(target_apex_dist**2 - ring_radius_base**2) * height_scale
+        # every ring atom with some margin to spare while staying above the
+        # ring plane.
+        target_apex_dist = 0.95 * apex_to_ring_cutoff
+        apex_height = np.sqrt(target_apex_dist**2 - ring_radius_base**2) * height_scale
 
         ring_coords = _ring(n, ring_radius, z=0.0)
         coords = np.vstack((np.array([[0.0, 0.0, apex_height]]), ring_coords))
         atomic_numbers = np.concatenate(([apex_z], np.full(n, ring_z, dtype=int)))
-        description = f"Idealized {label.name}: {n}-ring + apex (ring atoms unbonded to each other)"
+        description = f"Idealized {label.name}: {n}-ring + apex"
 
     elif group_class == _Class.C:
         # Cn: ring1 (main, z=0) + one terminal substituent atom per ring1 atom,
@@ -237,14 +238,16 @@ def generate_idealized_structure(
         ring1 = _ring(n, ring1_radius, z=0.0)
 
         # Local frame at each ring1 atom: radial (outward), tangential (along
-        # the ring), and z. The offset magnitude (~1 A) is chosen so the
+        # the ring), and z. The offset magnitude (~0.9 A) is chosen so the
         # substituent bonds to its own ring1 atom (within the substituent-ring1
         # bonding cutoff) but stays clear of both ring1's neighbouring atoms
-        # and other substituents.
+        # and other substituents -- including at large n, where ring1's
+        # nearest-neighbour spacing shrinks towards ~1.35 A (the tangential
+        # component must stay well below that).
         thetas = 2.0 * np.pi * np.arange(n) / n
         radial = np.column_stack((np.cos(thetas), np.sin(thetas), np.zeros(n)))
         tangential = np.column_stack((-np.sin(thetas), np.cos(thetas), np.zeros(n)))
-        offset = 0.3 * radial + 0.4 * tangential + np.array([0.0, 0.0, 0.85 * height_scale])
+        offset = 0.3 * radial + 0.2 * tangential + np.array([0.0, 0.0, 0.85 * height_scale])
         ring2 = ring1 + offset
 
         decoration_z = get_atomic_number(_decoration_element(element))
