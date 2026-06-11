@@ -50,25 +50,27 @@ families (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) are generated analytically for any
 order, and the rest (cubic, icosahedral, linear, and the low-symmetry groups)
 come from a built-in table.
 
-```python
-from pyrrhotite.character_tables import (
-    get_or_generate_point_group,
-    print_character_table_for,
-)
+=== "Python"
 
-print_character_table_for("D4h")
+    ```python
+    from pyrrhotite.character_tables import (
+        get_or_generate_point_group,
+        print_character_table_for,
+    )
 
-pg = get_or_generate_point_group("C12v")
-pg.print_character_table()
-```
+    print_character_table_for("D4h")
 
-Or from the command line:
+    pg = get_or_generate_point_group("C12v")
+    pg.print_character_table()
+    ```
 
-```bash
-pyrrhotite -g C3v
-pyrrhotite -g D6h --plain
-pyrrhotite -g C12v   # arbitrary order — generated on the fly
-```
+=== "Command line"
+
+    ```bash
+    pyrrhotite -g C3v
+    pyrrhotite -g D6h --plain
+    pyrrhotite -g C12v   # arbitrary order — generated on the fly
+    ```
 
 ### Exporting character tables (HTML / LaTeX)
 

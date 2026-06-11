@@ -1,0 +1,18 @@
+/* Custom "pyrrhotite" brand palette: navy primary + bronze/gold accent,
+   matching docs/assets/logo.svg. Activated via palette.primary/accent: custom
+   in mkdocs.yml. */
+
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: #1b2733;
+  --md-primary-fg-color--light: #3a4a5c;
+  --md-primary-fg-color--dark: #11181f;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: hsla(0, 0%, 100%, 0.7);
+}
+
+[data-md-color-accent="custom"] {
+  --md-accent-fg-color: #c9952c;
+  --md-accent-fg-color--transparent: rgba(201, 149, 44, 0.1);
+  --md-accent-bg-color: #ffffff;
+  --md-accent-bg-color--light: hsla(0, 0%, 100%, 0.7);
+}

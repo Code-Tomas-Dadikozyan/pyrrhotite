@@ -42,23 +42,23 @@ pip install 'pyrrhotite[dev]'   # installs pytest
 
 ## Quick start
 
-### Python
+=== "Python"
 
-```python
-from pyrrhotite import Structure, Symmetry
+    ```python
+    from pyrrhotite import Structure, Symmetry
 
-s = Structure("molecule.xyz")
-sym = Symmetry(s)
+    s = Structure("molecule.xyz")
+    sym = Symmetry(s)
 
-print(sym.point_group.label.name)   # e.g. "C3v"
-```
+    print(sym.point_group.label.name)   # e.g. "C3v"
+    ```
 
-### Command line
+=== "Command line"
 
-```bash
-pyrrhotite molecule.xyz
-pyrrhotite -v -ct ammonia.xyz   # verbose + character table
-```
+    ```bash
+    pyrrhotite molecule.xyz
+    pyrrhotite -v -ct ammonia.xyz   # verbose + character table
+    ```
 
 ---
 

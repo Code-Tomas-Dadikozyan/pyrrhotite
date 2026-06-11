@@ -2,6 +2,14 @@
 
 ## How the algorithm works
 
+```mermaid
+flowchart LR
+    A["Inertia tensor &<br/>principal axes"] --> B["Rotor<br/>classification"]
+    B --> C["Symmetry element<br/>detection"]
+    C --> D["Point group<br/>matching"]
+    D --> E["Axis assignment<br/>& labelling"]
+```
+
 1. **Inertia tensor → principal axes.** The 3×3 inertia tensor is diagonalised
    via `numpy.linalg.eigh`, yielding three principal moments and axes.
 2. **Rotor classification.** Degeneracy of the moments classifies the molecule

@@ -8,14 +8,23 @@ Schoenflies point group symbol by numerically detecting all present symmetry
 elements (rotations, reflections, inversions, and improper rotations), then builds
 the full character table for that group — even for groups it has never seen before.
 
-```python
-from pyrrhotite import Structure, Symmetry
+=== "Python"
 
-s = Structure("molecule.xyz")
-sym = Symmetry(s)
+    ```python
+    from pyrrhotite import Structure, Symmetry
 
-print(sym.point_group.label.name)   # e.g. "C3v"
-```
+    s = Structure("molecule.xyz")
+    sym = Symmetry(s)
+
+    print(sym.point_group.label.name)   # e.g. "C3v"
+    ```
+
+=== "Command line"
+
+    ```bash
+    pyrrhotite molecule.xyz
+    pyrrhotite -v -ct ammonia.xyz   # verbose + character table
+    ```
 
 [Get started :material-arrow-right:](getting-started.md){ .md-button .md-button--primary }
 [Read the user guide](user-guide.md){ .md-button }
