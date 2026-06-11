@@ -4,21 +4,33 @@ repo_url: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite
 
 theme:
   name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
   palette:
     - scheme: default
-      primary: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
   features:
     - navigation.tabs
     - navigation.top
+    - navigation.sections
+    - navigation.footer
+    - search.suggest
+    - search.highlight
     - content.code.copy
+    - content.tabs.link
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - Home: index.md
@@ -33,4 +45,10 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.highlight
-  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
