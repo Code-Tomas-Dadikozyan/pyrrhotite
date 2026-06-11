@@ -24,6 +24,16 @@ tables — generated on demand for any point group, with or without a structure 
 
 ---
 
+## Citing this work
+
+!!! example "If pyrrhotite is useful in your research or coursework"
+    There isn't a dedicated paper for `pyrrhotite` itself yet — please cite
+    the original `schoenflies` project and the symmetry-adapted wavefunction
+    reference below, and link back to the
+    [GitHub repository](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite).
+
+---
+
 ## License
 
 `pyrrhotite` is released under the GNU General Public License v3.0 — see
@@ -47,9 +57,44 @@ for details.
 Running the test suite:
 
 ```bash
+pip install 'pyrrhotite[dev]'
 python -m pytest tests/ -v
 ```
 
-See the project's
-[CHANGELOG](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/blob/main/CHANGELOG.md)
-for a history of recent changes.
+!!! tip "Keep an eye on the changelog"
+    `pyrrhotite` is under active development. See the project's
+    [CHANGELOG](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/blob/main/CHANGELOG.md)
+    for a history of recent changes — useful context if something here
+    doesn't quite match the installed version.
+
+---
+
+## Contact
+
+Questions, bug reports, and feature requests are all welcome:
+
+<div class="grid cards" markdown>
+
+-   :fontawesome-brands-github: **GitHub Issues**
+
+    ---
+
+    Found a bug, or detection giving an unexpected point group? Open an issue
+    with the `.xyz` file (or a minimal reproduction) on the
+    [issue tracker](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/issues).
+
+-   :material-source-repository: **Source code**
+
+    ---
+
+    Browse the code, open a pull request, or fork the project on
+    [GitHub](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite).
+
+-   :material-email-outline: **Email**
+
+    ---
+
+    For anything that doesn't fit a public issue, reach the maintainer at
+    [tdadikozyan04@gmail.com](mailto:tdadikozyan04@gmail.com).
+
+</div>

@@ -8,6 +8,16 @@ pip install pyrrhotite
 
 **Requirements:** Python 3.10+
 
+!!! tip "Use a virtual environment"
+    As with any Python package, it's good practice to install `pyrrhotite`
+    into a virtual environment rather than your system Python:
+
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate    # on Windows: .venv\Scripts\activate
+    pip install pyrrhotite
+    ```
+
 `pip install pyrrhotite` automatically installs the core dependencies:
 
 | Package | Used for |
@@ -31,6 +41,13 @@ pip install 'pyrrhotite[vis]'
 | `PyOpenGL` | OpenGL bindings for rendering atoms, bonds, and the axis gizmo |
 | `pyrr` | matrix/vector math for the camera and arcball rotation |
 | `matplotlib` | colour utilities for atom/bond rendering |
+
+!!! warning "PyQt6 and OpenGL need system libraries on Linux"
+    On Linux, `PyQt6` and `PyOpenGL` may additionally require system packages
+    (e.g. Qt6 platform plugins and a working OpenGL/EGL/X11 stack) that `pip`
+    cannot install for you. If `visualize()` fails to open a window, check
+    your distribution's Qt6/OpenGL packages first — the Python packages
+    themselves installed correctly.
 
 For development (running the test suite):
 
@@ -76,6 +93,13 @@ H   0.000000  -0.756950  -0.478993
 
 The molecule does not need to be pre-centred; coordinates are translated to the
 centre of mass automatically.
+
+!!! note "Units and precision"
+    Coordinates are assumed to be in **Ångströms**. Symmetry detection uses a
+    tolerance of 10% of the distance to the candidate symmetry element, so
+    typical 3-4 decimal-place `.xyz` files are more than precise enough — see
+    [Algorithm & Supported Groups](algorithm.md) for details on how tolerances
+    affect detection of high-order axes.
 
 ---
 
@@ -131,6 +155,13 @@ A2  |      1 |      1 |     -1 |      Rz |
 E   |      2 |     -1 |      0 | x, y, Rx, Ry | x²-y², xy, xz, yz
 ```
 
+!!! tip "Scripting and CI"
+    Pass `--plain` whenever output is going somewhere other than an
+    interactive terminal (CI logs, files, piping into other tools) — it
+    disables `rich`'s colour/box-drawing output so the result is plain,
+    grep-friendly text. Several `-` flags can also be combined, e.g.
+    `pyrrhotite -v -ct -m -od ammonia.xyz` runs every analysis at once.
+
 ---
 
 ## Next steps
@@ -138,3 +169,8 @@ E   |      2 |     -1 |      0 | x, y, Rx, Ry | x²-y², xy, xz, yz
 - Walk through the full Python API in the [User Guide](user-guide.md).
 - Learn how detection works and what's supported in
   [Algorithm & Supported Groups](algorithm.md).
+
+??? question "Something not working as expected?"
+    Double-check the [Input format](#input-format) above (units, file
+    structure), and see [About → Contact](about.md#contact) if you'd like to
+    report a bug or ask a question.

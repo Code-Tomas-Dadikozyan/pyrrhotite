@@ -1,6 +1,7 @@
 site_name: pyrrhotite
 site_description: Automatic Schoenflies point group determination, character table generation, and 3-D molecule visualization
 repo_url: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite
+repo_name: Code-Tomas-Dadikozyan/pyrrhotite
 
 theme:
   name: material
@@ -23,7 +24,9 @@ theme:
     - navigation.tabs
     - navigation.top
     - navigation.sections
+    - navigation.expand
     - navigation.footer
+    - toc.integrate
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -31,6 +34,18 @@ theme:
 
 extra_css:
   - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite
+      name: Source code on GitHub
+    - icon: fontawesome/solid/bug
+      link: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/issues
+      name: Report an issue
+    - icon: fontawesome/solid/envelope
+      link: mailto:tdadikozyan04@gmail.com
+      name: Contact the maintainer
 
 nav:
   - Home: index.md
@@ -41,12 +56,20 @@ nav:
 
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
+  - def_list
+  - footnotes
   - tables
   - toc:
       permalink: true
   - pymdownx.highlight
+  - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

@@ -20,6 +20,11 @@ print(pg.order)              # 6  (total number of symmetry operations)
 re-centres the molecule on its centre of mass. `Symmetry` runs the full detection
 pipeline and exposes the result as a `PointGroup`.
 
+!!! tip "Want to see *why* a group was assigned?"
+    `sym.operation_manager` gives you every individual symmetry operation that
+    was detected, along with its axis and a numerical error estimate — see
+    [Symmetry operations](#symmetry-operations) below.
+
 ## Character tables
 
 A character table is a small grid that summarises everything the point group
@@ -41,6 +46,12 @@ print(pg.irreps)             # list of IrrepLabel objects
 print(pg.characters)         # list[list[float]] — [irrep][operation class]
 print(pg.unique_operations)  # conjugacy classes (excluding E)
 ```
+
+!!! note "ε-notation"
+    Cyclic groups (Cₙ, Sₙ, …) with n > 2 have complex-valued irreducible
+    representations. `print_character_table(complex=True)` displays these
+    using ε = e^(2πi/n) notation instead of expanding them numerically — the
+    conventional form used in most textbooks and reference tables.
 
 ### Character tables for any group — no XYZ needed
 
@@ -97,6 +108,68 @@ python -m pyrrhotite.character_tables.latex_formatter Oh D4h --save tables.tex
 
 ---
 
+## Generating idealized structures
+
+For testing or demonstration, `pyrrhotite` can build an idealized `Structure`
+that has, by construction, a requested axial point-group symmetry — a ring (or
+combination of rings) of placeholder atoms arranged as a Cn, Cnh, Cnv, Sn, Dn,
+Dnh, or Dnd structure for any supported order n.
+
+!!! info "Plausible geometry, not just placeholder points"
+    The geometry of each family is modelled on a real molecule with that
+    symmetry (e.g. ammonia-like apex+ring substituents for Cnv, benzene's
+    ring+substituent for Cnh, ferrocene's metal-hub sandwich for
+    Dn/Dnh/Dnd/Sn). Element choices roughly match each atom's bonding degree
+    (H for degree 1, O for degree 2, N for degree 3, C for degree 4, S for
+    degree 5-6, and a metal-like hub for higher degrees), so the generated
+    structure also looks reasonable in the 3-D viewer.
+
+```python
+from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry
+from pyrrhotite.structure_generator import format_xyz
+
+s = generate_idealized_structure("D12h")    # build an idealized D12h structure
+print(Symmetry(s).point_group.label.name)   # "D12h"
+
+print(format_xyz(s))                        # get it as XYZ text, no file needed
+write_xyz(s, "d12h.xyz")                    # or write it straight to an .xyz file
+```
+
+To preview a generated structure without writing it to disk first, use
+`visualize_idealized_structure` (requires `pip install 'pyrrhotite[vis]'`):
+
+```python
+from pyrrhotite import visualize_idealized_structure
+
+visualize_idealized_structure("D9d")                  # opens the 3-D viewer
+visualize_idealized_structure("D9d", show_labels=True)
+```
+
+=== "Python"
+
+    ```python
+    s = generate_idealized_structure("D9d")
+    write_xyz(s, "d9d.xyz")
+    ```
+
+=== "Command line"
+
+    ```bash
+    pyrrhotite -g C12v --xyz                  # print the generated structure as XYZ to stdout
+    pyrrhotite -g D9d --xyz d9d.xyz           # save the generated structure as XYZ to a file
+    pyrrhotite d9d.xyz -v                     # then analyse the generated file as usual
+    pyrrhotite -g D9d --visualize             # preview the generated structure directly
+    ```
+
+!!! tip "Round-trip testing"
+    Generating a structure for a group and then immediately running
+    `Symmetry(...)` on it (as in the snippet above) is a good way to sanity-check
+    that detection recovers the group you asked for — `example_usage.py` (section
+    14) has a runnable demo covering all seven axial families, custom
+    radius/height/element, and the error cases for unsupported groups/orders.
+
+---
+
 ## Rotor classification and principal axes
 
 Before searching for symmetry operations, `pyrrhotite` classifies the molecule's
@@ -133,6 +206,13 @@ manager.improper_rotations
 manager.reflections
 manager.inversions
 ```
+
+!!! note "Reading `op.error`"
+    `op.error` is the worst-case distance (in Å) by which any atom misses its
+    expected mapped position under that operation. A small, uniform error
+    across all operations of a detected group is normal numerical noise; a
+    much larger error on one operation than the others can indicate a slightly
+    distorted geometry that's still close enough to pass the 10% tolerance.
 
 ---
 
@@ -227,3 +307,9 @@ show_character_table_sample("benzene")   # prints the character table
 visualize_sample("buckminsterfullerene")  # opens the 3-D viewer (requires [vis])
 analyse_sample()               # no name -> picks a random sample molecule
 ```
+
+!!! tip "Good starting points for each rotor class"
+    `analyse_sample()` with no argument picks a random molecule — handy for
+    quickly seeing a variety of point groups and rotor classes without
+    sourcing your own `.xyz` files. Combine it with `visualize_sample(...)` to
+    see the geometry that produced a given result.

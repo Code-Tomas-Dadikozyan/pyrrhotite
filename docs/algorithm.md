@@ -32,6 +32,14 @@ flowchart LR
    along the highest-order proper rotation; x to maximise atoms in the
    xz-plane) and operations are labelled (σₕ, σᵥ, σd, C₂′, C₂″).
 
+!!! tip "Why classify the rotor first?"
+    Step 2 isn't just a label — it dramatically narrows the search in step 3.
+    A *Spherical Top* (all three moments equal) can only belong to a cubic or
+    icosahedral group, so candidate axes for those families are tried first;
+    an *Asymmetric Top* (all three moments different) can have at most a C₂
+    axis, ruling out most high-order candidates before any expensive
+    transformation checks run.
+
 ---
 
 ## Supported point groups
@@ -70,14 +78,15 @@ generated analytically for *any* order n ≥ 2 — not just the ranges above. So
 
 ## Known limitations
 
-- Symmetry **detection** from `.xyz` coordinates adapts the maximum tested
-  rotation order to the molecule's geometry (capped at n = 20, see
-  [Supported point groups](#supported-point-groups)) — a Cₙ axis can only be
-  detected if the molecule actually has an n-fold ring of equivalent atoms.
-  **Character table generation** for named groups has no such limit for the
-  axial families.
-    - The n = 20 cap isn't an arbitrary round number that could just be raised:
-      the per-degree validation tolerance shrinks roughly as 1/n², and beyond
+!!! warning "The n = 20 detection cap is fundamental, not arbitrary"
+    Symmetry **detection** from `.xyz` coordinates adapts the maximum tested
+    rotation order to the molecule's geometry (capped at n = 20, see
+    [Supported point groups](#supported-point-groups)) — a Cₙ axis can only be
+    detected if the molecule actually has an n-fold ring of equivalent atoms.
+    **Character table generation** for named groups has no such limit for the
+    axial families.
+
+    - The per-degree validation tolerance shrinks roughly as 1/n², and beyond
       n ≈ 20 it approaches the noise floor of typical `.xyz` coordinates
       (3-4 decimal places, propagated through inertia-tensor diagonalization
       and Rodrigues rotation), risking both missed high-order axes and renewed
@@ -88,9 +97,16 @@ generated analytically for *any* order n ≥ 2 — not just the ranges above. So
     - The ring search is O(atoms²) per candidate axis (on top of the existing
       O(atoms²) candidate generation), so a higher cap increases the constant
       factor for large molecules without changing the overall complexity.
+
 - Fixed 10% tolerance — slightly distorted geometries may be misclassified.
 - Single isolated molecules only; crystal structures and space groups are not
   supported.
 - The 3-D visualizer shows the molecule and an axis gizmo, but does not yet
   draw the detected symmetry elements (rotation axes, mirror planes) on top of
   it.
+
+!!! info "Working around a limitation?"
+    If one of these limits is blocking something you're trying to do — e.g.
+    you have a genuinely high-symmetry molecule, or need crystal/space-group
+    support — see [About → Contact](about.md#contact); these are exactly the
+    kind of real-world cases that help prioritise future work.

@@ -11,8 +11,67 @@
 }
 
 [data-md-color-accent="custom"] {
-  --md-accent-fg-color: #c9952c;
-  --md-accent-fg-color--transparent: rgba(201, 149, 44, 0.1);
+  --md-accent-fg-color: #d4a017;
+  --md-accent-fg-color--transparent: rgba(212, 160, 23, 0.1);
   --md-accent-bg-color: #ffffff;
   --md-accent-bg-color--light: hsla(0, 0%, 100%, 0.7);
+}
+
+/* Extra brand color used outside the primary/accent system, e.g. for the
+   home page hero banner gradient. */
+:root {
+  --pyrrhotite-gold: #f0cf8a;
+  --pyrrhotite-amber: #d4a017;
+  --pyrrhotite-navy: #1b2733;
+}
+
+/* Hero banner on the home page */
+.pyrrhotite-hero {
+  margin: 1.5rem 0 2rem;
+  padding: 2rem 2rem 1.75rem;
+  border-radius: 0.4rem;
+  background: linear-gradient(135deg, #1b2733 0%, #2c3e50 55%, #a47a30 100%);
+  color: #fff;
+}
+
+.pyrrhotite-hero h1 {
+  color: #fff;
+  margin-top: 0;
+}
+
+.pyrrhotite-hero p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pyrrhotite-hero .md-button {
+  border-color: var(--pyrrhotite-gold);
+}
+
+.pyrrhotite-hero .md-button--primary {
+  background-color: var(--pyrrhotite-amber);
+  border-color: var(--pyrrhotite-amber);
+  color: var(--pyrrhotite-navy);
+}
+
+.pyrrhotite-hero .md-button:hover {
+  background-color: var(--pyrrhotite-gold);
+  border-color: var(--pyrrhotite-gold);
+  color: var(--pyrrhotite-navy);
+}
+
+/* Badge row on the home page */
+.pyrrhotite-badges img {
+  margin: 0.1rem;
+}
+
+/* Give the feature/navigation grid cards a gold accent on hover */
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid.cards > ol > li:hover {
+  border-color: var(--pyrrhotite-amber);
+  box-shadow: 0 0.2rem 0.5rem rgba(212, 160, 23, 0.25);
+}
+
+.md-typeset .grid.cards > ul > li > p:first-child .twemoji,
+.md-typeset .grid.cards > ol > li > p:first-child .twemoji {
+  color: var(--pyrrhotite-amber);
 }
