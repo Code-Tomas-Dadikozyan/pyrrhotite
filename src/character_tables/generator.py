@@ -1145,13 +1145,16 @@ _BUILDERS = {
 }
 
 
-def generate_point_group(label: PointGroupLabel) -> PointGroup:
+def generate_point_group(label: PointGroupLabel | str) -> PointGroup:
     """Generate a PointGroup with full character table for any axial point group.
 
     This is the public entry point called by symmetry.py when no hardcoded
     character table matches the detected operations (e.g. a molecule with a
     C15 axis).  It dispatches to the appropriate _build_* function based on
     the group class (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd).
+
+    *label* may be a PointGroupLabel or a Schoenflies symbol string (e.g.
+    "C12v"), in which case it is parsed via parse_point_group_name.
 
     Polyhedral groups (T, O, I) and linear groups (C∞v, D∞h) are NOT supported
     here — they use hardcoded tables in point_groups.py because their structure
@@ -1160,6 +1163,7 @@ def generate_point_group(label: PointGroupLabel) -> PointGroup:
     Supported families: Cn, Cnh, Cnv, Sn (n even ≥ 4), Dn, Dnh, Dnd.
     Raises ValueError for unsupported families (polyhedral, linear, n < 2).
     """
+    label = _coerce_label(label)
     cls = label.group_class
     n = label.order
 
@@ -1178,12 +1182,16 @@ def generate_point_group(label: PointGroupLabel) -> PointGroup:
     return _BUILDERS[cls](n)
 
 
-def find_point_group(label: PointGroupLabel) -> PointGroup | None:
+def find_point_group(label: PointGroupLabel | str) -> PointGroup | None:
     """Return a PointGroup by label: hardcoded table first, generator fallback.
+
+    *label* may be a PointGroupLabel or a Schoenflies symbol string (e.g.
+    "D6h"), in which case it is parsed via parse_point_group_name.
 
     Returns None if the label is not in POINT_GROUPS and cannot be generated
     (e.g. polyhedral or linear groups not in the hardcoded list).
     """
+    label = _coerce_label(label)
     # Search hardcoded list first
     for pg in POINT_GROUPS:
         pg_lbl = pg.label
@@ -1313,6 +1321,11 @@ def parse_point_group_name(name: str) -> PointGroupLabel:
         raise ValueError(f"Unexpected leading letter '{letter}' in '{name}'.")
 
     return PointGroupLabel(pg_class, n)
+
+
+def _coerce_label(label: PointGroupLabel | str) -> PointGroupLabel:
+    """Return label as-is, or parse it if given as a Schoenflies name string."""
+    return label if isinstance(label, PointGroupLabel) else parse_point_group_name(label)
 
 
 def print_character_table_for(name: str) -> None:

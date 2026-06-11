@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 from ..point_groups.point_group import PointGroup
-from .generator import get_or_generate_point_group, parse_point_group_name
+from .generator import get_or_generate_point_group
 
 # ---------------------------------------------------------------------------
 # CSS
@@ -142,8 +142,7 @@ def format_html(names: list[str]) -> str:
     """
     tables: list[str] = []
     for name in names:
-        pg_label = parse_point_group_name(name)
-        pg = get_or_generate_point_group(pg_label)
+        pg = get_or_generate_point_group(name)
         if pg is None:
             raise ValueError(f"Unknown or unsupported point group: '{name}'")
         tables.append(_table_html(pg))
@@ -176,8 +175,7 @@ def save_html(names: list[str], path: str | None = None) -> Path:
     tables: list[str] = []
     titles: list[str] = []
     for name in names:
-        pg_label = parse_point_group_name(name)
-        pg = get_or_generate_point_group(pg_label)
+        pg = get_or_generate_point_group(name)
         if pg is None:
             raise ValueError(f"Unknown or unsupported point group: '{name}'")
         tables.append(_table_html(pg))

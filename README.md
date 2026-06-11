@@ -41,11 +41,32 @@ pip install pyrrhotite
 
 **Requirements:** Python 3.10+
 
+`pip install pyrrhotite` automatically installs the core dependencies:
+
+| Package | Used for |
+|---|---|
+| `numpy` | linear algebra (inertia tensor, symmetry-operation matrices) |
+| `scipy` | numerical helpers used during symmetry detection |
+| `rich` | coloured/formatted terminal output for character tables (optional at runtime — plain-text output is used as a fallback if `rich` isn't available) |
+
 The 3-D visualizer needs extra graphics libraries that aren't installed by default.
 To enable it:
 
 ```bash
 pip install 'pyrrhotite[vis]'
+```
+
+| Extra package | Used for |
+|---|---|
+| `PyQt6` | application window and event loop |
+| `PyOpenGL` | OpenGL bindings for rendering atoms, bonds, and the axis gizmo |
+| `pyrr` | matrix/vector math for the camera and arcball rotation |
+| `matplotlib` | colour utilities for atom/bond rendering |
+
+For development (running the test suite):
+
+```bash
+pip install 'pyrrhotite[dev]'   # installs pytest
 ```
 
 ---
@@ -58,7 +79,7 @@ from pyrrhotite import Structure, Symmetry
 s = Structure("molecule.xyz")
 sym = Symmetry(s)
 
-print(sym.get_point_group().get_label().get_name())   # e.g. "C3v"
+print(sym.point_group.label.name)   # e.g. "C3v"
 ```
 
 Or from the command line:
@@ -66,16 +87,6 @@ Or from the command line:
 ```bash
 pyrrhotite molecule.xyz
 pyrrhotite -v -ct ammonia.xyz   # verbose + character table
-```
-
-Don't have an `.xyz` file handy? `pyrrhotite` ships with 32 sample molecules you can
-explore directly:
-
-```python
-from pyrrhotite import analyse_sample, visualize_sample
-
-analyse_sample("ammonia")     # prints point group + rotor class
-visualize_sample("ammonia")   # opens the 3-D viewer (requires the [vis] extra)
 ```
 
 ---
@@ -105,9 +116,9 @@ from pyrrhotite import Structure, Symmetry
 s = Structure("ammonia.xyz")
 sym = Symmetry(s)
 
-pg = sym.get_point_group()
-print(pg.get_label().get_name())        # "C3v"
-print(pg.get_order())                   # 6  (total number of symmetry operations)
+pg = sym.point_group
+print(pg.label.name)        # "C3v"
+print(pg.order)              # 6  (total number of symmetry operations)
 ```
 
 `Structure` loads the atoms and coordinates from an `.xyz` file and automatically
@@ -131,9 +142,9 @@ pg.print_character_table(plain=True)
 pg.print_character_table(complex=True)
 
 # Access the data directly
-print(pg.get_irreps())             # list of IrrepLabel objects
-print(pg.get_characters())         # list[list[float]] — [irrep][operation class]
-print(pg.get_unique_operations())  # conjugacy classes (excluding E)
+print(pg.irreps)             # list of IrrepLabel objects
+print(pg.characters)         # list[list[float]] — [irrep][operation class]
+print(pg.unique_operations)  # conjugacy classes (excluding E)
 ```
 
 #### Character table for any group — no XYZ needed
@@ -146,15 +157,13 @@ table.
 
 ```python
 from pyrrhotite.character_tables import (
-    parse_point_group_name,
     get_or_generate_point_group,
     print_character_table_for,
 )
 
 print_character_table_for("D4h")
 
-label = parse_point_group_name("C12v")
-pg = get_or_generate_point_group(label)
+pg = get_or_generate_point_group("C12v")
 pg.print_character_table()
 ```
 
@@ -189,6 +198,30 @@ python -m pyrrhotite.character_tables.html_formatter Oh --save
 python -m pyrrhotite.character_tables.latex_formatter Oh D4h --save tables.tex
 ```
 
+#### Generating idealized structures
+
+For testing or demonstration, `pyrrhotite` can build an idealized `Structure`
+that has, by construction, a requested axial point group symmetry — a ring (or
+combination of rings) of placeholder atoms arranged as a Cn, Cnh, Cnv, Sn, Dn,
+Dnh, or Dnd structure for any supported order n:
+
+```python
+from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry
+
+s = generate_idealized_structure("D12h")
+print(Symmetry(s).point_group.label.name)   # "D12h"
+
+write_xyz(s, "d12h.xyz")
+```
+
+Or from the command line, combined with `-g`:
+
+```bash
+pyrrhotite -g C12v --xyz                  # print the generated structure as XYZ
+pyrrhotite -g D9d --xyz d9d.xyz           # save it to a file
+pyrrhotite d9d.xyz -v                     # then analyse it as usual
+```
+
 #### Rotor classification and principal axes
 
 Before searching for symmetry operations, `pyrrhotite` classifies the molecule's
@@ -196,11 +229,11 @@ overall shape from its moments of inertia — this narrows down which symmetry
 elements are even possible.
 
 ```python
-print(sym.get_rotor_class())            # RotorClass.ProlateSymmetricTop
+print(sym.rotor_class)            # RotorClass.ProlateSymmetricTop
 
-pm = sym.get_principal_moments()        # np.ndarray shape (3,) — Ia ≤ Ib ≤ Ic in u·Å²
-axes = sym.get_principal_axes()         # np.ndarray shape (3, 3) — eigenvectors as columns
-cart = sym.get_cartesian_axes()         # 3×3 matrix [x | y | z] in the conventional frame
+pm = sym.principal_moments        # np.ndarray shape (3,) — Ia ≤ Ib ≤ Ic in u·Å²
+axes = sym.principal_axes         # np.ndarray shape (3, 3) — eigenvectors as columns
+cart = sym.cartesian_axes         # 3×3 matrix [x | y | z] in the conventional frame
 ```
 
 #### Symmetry operations
@@ -211,17 +244,17 @@ and a numerical error estimate showing how well the molecule actually matches th
 symmetry.
 
 ```python
-manager = sym.get_operation_manager()
+manager = sym.operation_manager
 
-for op in manager.get_operations():
-    print(op.get_label().get_short_name())   # "C3", "C3^2", "σv", "i", …
-    print(op.get_axis())                     # unit-vector axis / plane normal
-    print(op.get_error())                    # worst-case atom mis-mapping distance (Å)
+for op in manager.operations:
+    print(op.label.short_name)   # "C3", "C3^2", "σv", "i", …
+    print(op.axis)                # unit-vector axis / plane normal
+    print(op.error)               # worst-case atom mis-mapping distance (Å)
 
-manager.get_proper_rotations()
-manager.get_improper_rotations()
-manager.get_reflections()
-manager.get_inversions()
+manager.proper_rotations
+manager.improper_rotations
+manager.reflections
+manager.inversions
 ```
 
 #### Basis functions
@@ -383,22 +416,30 @@ Symmetry **detection** (from an `.xyz` file) currently covers:
 | Family | Groups |
 |---|---|
 | Non-axial | C₁, Cᵢ, Cₛ |
-| Cyclic | C₂ – C₁₀ |
-| Cyclic with σₕ | C₂ₕ – C₁₀ₕ |
-| Cyclic with σᵥ | C₂ᵥ – C₆ᵥ |
-| Improper axes | S₄, S₆, S₈ |
-| Dihedral | D₂ – D₆ |
-| Dihedral with σₕ | D₂ₕ – D₁₀ₕ, D∞ₕ |
-| Dihedral with σd | D₃d – D₁₀d |
+| Cyclic | C₂ – C₂₀* |
+| Cyclic with σₕ | C₂ₕ – C₂₀ₕ* |
+| Cyclic with σᵥ | C₂ᵥ – C₂₀ᵥ* |
+| Improper axes | S₄ – S₂₀* (even orders) |
+| Dihedral | D₂ – D₂₀* |
+| Dihedral with σₕ | D₂ₕ – D₂₀ₕ*, D∞ₕ |
+| Dihedral with σd | D₃d – D₂₀d* |
 | Cubic | T, Td, Tₕ, O, Oₕ |
 | Icosahedral | I, Iₕ |
 | Linear | C∞ᵥ, D∞ₕ |
 
+\* The maximum detectable rotation order is **adaptive**: for each candidate
+axis, `pyrrhotite` looks for the largest "ring" of symmetry-equivalent atoms
+(same element, same distance from the axis, same position along the axis)
+and only tests Cₙ orders up to that ring size, capped at n = 20. So detecting
+a Cₙ axis still requires an actual n-fold ring of equivalent atoms in the
+structure — `pyrrhotite -g C20v` works for *any* molecule shape via the
+on-the-fly character table generator below, but *detecting* C20v from
+coordinates requires a molecule with a genuine 20-fold ring.
+
 **Character table generation** is more general: all 18 Schoenflies classes are
 supported, and the seven axial families (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) are
 generated analytically for *any* order n ≥ 2 — not just the ranges above. So
-`pyrrhotite -g C20v` works even though detecting a C20v molecule from coordinates
-is not (yet) supported.
+`pyrrhotite -g C30v` works even for orders beyond the detection cap.
 
 ---
 
@@ -410,9 +451,13 @@ is not (yet) supported.
    one of five types (*Linear*, *Spherical Top*, *Prolate Symmetric Top*, *Oblate
    Symmetric Top*, *Asymmetric Top*), pruning the candidate search space.
 3. **Symmetry element detection.** Candidate axes are generated from principal
-   axes, atom positions, and pair midpoints. Each candidate is tested by applying
-   the transformation matrix and checking that every atom maps onto a same-element
-   atom within a tolerance of 10% of the distance to the symmetry element.
+   axes, atom positions, and pair midpoints. For each candidate axis, the
+   rotation orders tested are bounded by the size of the largest ring of
+   symmetry-equivalent atoms found around it (capped at n = 20). Each candidate
+   is tested by applying the transformation matrix and checking that every atom
+   maps onto a same-element atom within a tolerance of 10% of the distance to
+   the symmetry element (tightened for high-order axes to avoid confusing
+   neighbouring orders, e.g. C9 vs C8).
 4. **Point group matching.** Detected operation counts are compared against a
    library of point groups. If the operations don't match any hardcoded group
    (e.g. an axis order greater than the hardcoded range), a character table is
@@ -426,10 +471,24 @@ is not (yet) supported.
 
 ## Known limitations
 
-- Symmetry **detection** from `.xyz` coordinates is limited to the order ranges
-  listed in [Supported point groups](#supported-point-groups) (e.g. Cₙ up to n=10,
-  Cₙᵥ up to n=6). **Character table generation** for named groups has no such limit
-  for the axial families.
+- Symmetry **detection** from `.xyz` coordinates adapts the maximum tested
+  rotation order to the molecule's geometry (capped at n = 20, see
+  [Supported point groups](#supported-point-groups)) — a Cₙ axis can only be
+  detected if the molecule actually has an n-fold ring of equivalent atoms.
+  **Character table generation** for named groups has no such limit for the
+  axial families.
+  - The n = 20 cap isn't an arbitrary round number that could just be raised:
+    the per-degree validation tolerance shrinks roughly as 1/n², and beyond
+    n ≈ 20 it approaches the noise floor of typical `.xyz` coordinates
+    (3-4 decimal places, propagated through inertia-tensor diagonalization
+    and Rodrigues rotation), risking both missed high-order axes and renewed
+    confusion between neighbouring orders.
+  - Even without that limit, a Cₙ axis can only be *detected* if the molecule
+    actually contains an n-fold ring of symmetry-equivalent atoms — raising
+    the cap only matters for molecules that physically have such rings.
+  - The ring search is O(atoms²) per candidate axis (on top of the existing
+    O(atoms²) candidate generation), so a higher cap increases the constant
+    factor for large molecules without changing the overall complexity.
 - Fixed 10% tolerance — slightly distorted geometries may be misclassified.
 - Single isolated molecules only; crystal structures and space groups are not
   supported.

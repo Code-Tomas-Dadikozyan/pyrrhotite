@@ -15,6 +15,8 @@ Sections
 10.  HTML formatter
 11.  Multi-group export (LaTeX + HTML)
 12.  Periodic table utilities
+13.  3-D visualizer
+14.  Idealized structure generator
 
 Run:
     python example_usage.py
@@ -22,6 +24,7 @@ Run:
 
 import sys
 import io
+from pathlib import Path
 
 # Unicode fix for Windows terminals (σ, ε, ′, ″, ∞, …)
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-16"):
@@ -31,7 +34,8 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-16"
 # Imports
 # ---------------------------------------------------------------------------
 
-from pyrrhotite import Structure, Symmetry
+from pyrrhotite import Structure, Symmetry, generate_idealized_structure, write_xyz
+from pyrrhotite.structure_generator import format_xyz
 from pyrrhotite.periodic_table import element, atomic_number
 from pyrrhotite.display import (
     print_bond_pairs,
@@ -42,7 +46,6 @@ from pyrrhotite.display import (
 from pyrrhotite.character_tables import (
     generate_point_group,
     find_point_group,
-    parse_point_group_name,
     print_character_table_for,
     format_latex,
     save_latex,
@@ -179,7 +182,7 @@ pg.print_character_table(plain=True)
 
 print()
 print("-- Complex (ε) notation for a cyclic group C6 --")
-pg_c6 = find_point_group(parse_point_group_name("C6"))
+pg_c6 = find_point_group("C6")
 pg_c6.print_character_table(complex=True)
 
 # ---------------------------------------------------------------------------
@@ -202,14 +205,13 @@ print_char_table_programmatic(pg)
 
 section(8, "STANDALONE CHARACTER TABLE GENERATOR  (no XYZ needed)")
 
-print("-- parse_point_group_name + find_point_group --")
-label_d6h = parse_point_group_name("D6h")
-pg_d6h    = find_point_group(label_d6h)
+print("-- find_point_group (accepts a Schoenflies name string) --")
+pg_d6h = find_point_group("D6h")
 print(f"D6h  order={pg_d6h.order}  irreps={len(pg_d6h.irreps)}")
 
 print()
 print("-- generate_point_group (always regenerates, bypasses cache) --")
-pg_d4d = generate_point_group(parse_point_group_name("D4d"))
+pg_d4d = generate_point_group("D4d")
 print(f"D4d  order={pg_d4d.order}  irreps={len(pg_d4d.irreps)}")
 
 print()
@@ -226,7 +228,7 @@ print_character_table_for("D4d")
 
 print()
 print("-- C24 (high-order generated group, plain to avoid truncation) --")
-pg_c24 = find_point_group(parse_point_group_name("C24"))
+pg_c24 = find_point_group("C24")
 pg_c24.print_character_table(plain=True)
 
 # ---------------------------------------------------------------------------
@@ -343,3 +345,64 @@ if deps_ok:
     print()
     from pyrrhotite import visualize
     visualize(s)   # s = ammonia, loaded in section 1
+
+# ---------------------------------------------------------------------------
+# 14. Idealized structure generator
+# ---------------------------------------------------------------------------
+
+section(14, "IDEALIZED STRUCTURE GENERATOR")
+
+print("generate_idealized_structure(name) builds a synthetic Structure whose")
+print("geometry has, by construction, the requested axial point group symmetry")
+print("(Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd). Useful as test fixtures and for exploring")
+print("how the symmetry-detection pipeline behaves at a chosen order n.")
+
+print()
+print("-- Basic generation + round-trip through Symmetry --")
+s_d6h = generate_idealized_structure("D6h")
+print(f"Description : {s_d6h.description}")
+print(f"Num atoms   : {s_d6h.num_atoms}")
+print(f"Detected    : {Symmetry(s_d6h).point_group.label.name}")
+
+print()
+print("-- format_xyz: get the structure as XYZ text without touching disk --")
+xyz_text = format_xyz(generate_idealized_structure("C5v"))
+print(xyz_text)
+
+print()
+print("-- write_xyz: save to disk, then reload and re-analyse --")
+gen_path = Path("c10v_generated.xyz")
+write_xyz(generate_idealized_structure("C10v"), gen_path)
+reloaded = Structure(str(gen_path))
+print(f"Saved {gen_path} ({reloaded.num_atoms} atoms)")
+print(f"Re-detected point group: {Symmetry(reloaded).point_group.label.name}")
+gen_path.unlink(missing_ok=True)
+print(f"Removed {gen_path}")
+
+print()
+print("-- Round trip across all seven axial families (n=6) --")
+for name in ["C6", "C6h", "C6v", "S6", "D6", "D6h", "D6d"]:
+    structure = generate_idealized_structure(name)
+    detected = Symmetry(structure).point_group.label.name
+    match = "OK" if detected == name else f"MISMATCH (got {detected})"
+    print(f"  {name:<5} -> {detected:<5} {match}")
+
+print()
+print("-- Customising radius / height / element --")
+s_custom = generate_idealized_structure("D5h", radius=2.0, height=1.5, element="Cl")
+print(f"Description : {s_custom.description}")
+print(f"Detected    : {Symmetry(s_custom).point_group.label.name}")
+
+print()
+print("-- Errors for unsupported inputs --")
+for bad_name in ["Td", "S5", "C2"]:
+    try:
+        generate_idealized_structure(bad_name)
+    except ValueError as exc:
+        print(f"  {bad_name}: ValueError: {exc}")
+
+print()
+print("CLI equivalents:")
+print("  pyrrhotite -g C12v --xyz                  # print generated XYZ to stdout")
+print("  pyrrhotite -g D9d --xyz d9d.xyz           # save generated XYZ to a file")
+print("  pyrrhotite d9d.xyz -v                     # then analyse it as usual")

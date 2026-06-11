@@ -65,6 +65,38 @@ from .character_tables import generate_point_group as _generate_pg
 class Symmetry:
     """Runs the full Schoenflies point-group determination pipeline for a Structure."""
 
+    # Absolute ceiling for the adaptive proper-rotation search (see
+    # _max_plausible_order). At n=20 the angular spacing between consecutive
+    # Cn^k operations is 18 degrees, comfortably above the ~8 degree
+    # (1 - |u.v| < 0.01) axis-equality tolerance used for deduplication, so
+    # raising this further would not need a tolerance change either.
+    #
+    # Why this cap can't simply be pushed arbitrarily higher:
+    #
+    # 1. Numerical tolerance vs. coordinate precision. The OperationManager's
+    #    validity tolerance for degree >= 8 is min(0.1, pi / (degree *
+    #    (degree + 1))), which shrinks roughly as 1/n^2 as n grows. Typical
+    #    .xyz files carry ~3-4 decimal places (~0.001 A precision), and that
+    #    precision is further eroded by inertia-tensor diagonalization and
+    #    Rodrigues-rotation error accumulation. Once the per-degree tolerance
+    #    approaches that noise floor, genuine high-order axes risk failing
+    #    validation outright -- or, if a neighbouring spurious order's error
+    #    happens to also fall under the now-tiny threshold, becoming
+    #    indistinguishable from it again.
+    #
+    # 2. Detecting Cn requires an actual n-fold ring of symmetry-equivalent
+    #    atoms (see _max_plausible_order below) -- this is a property of the
+    #    molecule's geometry, not something the algorithm can manufacture, so
+    #    raising the cap only helps for molecules that physically have such
+    #    rings.
+    #
+    # 3. _max_plausible_order's ring grouping is O(atoms^2) per candidate
+    #    axis, on top of candidate generation already being O(atoms^2)
+    #    (midpoint pairs in _find_proper_rotational_axes_*). Raising the cap
+    #    doesn't change the complexity class but increases the constant
+    #    factor for large molecules.
+    _MAX_AXIS_ORDER: int = 20
+
     def __init__(self, structure: Structure) -> None:
         """Store structure, build OperationManager, and run all pipeline steps."""
         self._structure: Structure = structure
@@ -356,22 +388,67 @@ class Symmetry:
             if self._rotor_class == RotorClass.SphericalTop:
                 self._find_proper_rotational_axes_polygonal_faces()
 
+    def _max_plausible_order(self, axis: np.ndarray) -> int:
+        """Return the largest plausible Cn order for `axis`, derived from geometry.
+
+        A Cn axis can only map atoms onto same-element atoms, so it requires
+        a "ring" of at least n symmetry-equivalent atoms arranged around the
+        axis: same atomic number, same perpendicular distance from the axis,
+        and same projection along the axis (each compared within the 0.1 A
+        tolerance also used by OperationManager to validate operations).
+        Atoms essentially on the axis (perpendicular distance < 0.1 A) map to
+        themselves under any Cn and are excluded from the ring count.
+
+        The largest ring found gives the upper bound for n, clamped to
+        [2, _MAX_AXIS_ORDER]. If no ring of size >= 2 exists, 2 is returned
+        so that C2 is always tried (preserving prior behaviour).
+        """
+        tol = 0.1
+        axis_norm = axis / np.linalg.norm(axis)
+        coords = self._structure.coordinates
+        z = coords @ axis_norm
+        perp = coords - np.outer(z, axis_norm)
+        r = np.linalg.norm(perp, axis=1)
+
+        best = 2
+        n = self._structure.num_atoms
+        used = [False] * n
+        for i in range(n):
+            if used[i] or r[i] < tol:
+                continue
+            group = 1
+            used[i] = True
+            for j in range(i + 1, n):
+                if used[j] or r[j] < tol:
+                    continue
+                if self._structure.atomic_numbers[i] != self._structure.atomic_numbers[j]:
+                    continue
+                if abs(r[i] - r[j]) < tol and abs(z[i] - z[j]) < tol:
+                    used[j] = True
+                    group += 1
+            best = max(best, group)
+        return min(best, self._MAX_AXIS_ORDER)
+
     def _find_proper_rotational_axes_along_principal_axes(self) -> None:
-        """Test Cn (n=2..8) along each of the three principal axes."""
+        """Test Cn along each of the three principal axes, n up to an adaptive bound.
+
+        See _max_plausible_order for how the per-axis upper bound is derived.
+        """
         for i in range(3):
             axis = self._principal_axes[:, i]
-            for degree in range(2, 9):
+            for degree in range(2, self._max_plausible_order(axis) + 1):
                 op = _Operation.rotation(_OL.Element.ProperRotation, degree, axis)
                 self._operation_manager.add_operation(op)
 
     def _find_proper_rotational_axes_through_atoms(self) -> None:
-        """Test Cn (n=2..8) along the vector from the origin to each atom.
+        """Test Cn along the vector from the origin to each atom, n up to an adaptive bound.
 
         If a Cn axis passes through an atom, that atom must map to itself
         (it is on the axis), so the origin-to-atom direction is a candidate.
         Atoms at the origin (the COM) are skipped since they give a zero vector.
         The inertial-allowed filter skips directions incompatible with the
         molecule's overall shape before the more expensive matrix test.
+        See _max_plausible_order for how the per-axis upper bound is derived.
         """
         for i in range(self._structure.num_atoms):
             axis = self._structure.coordinates[i]
@@ -379,20 +456,21 @@ class Symmetry:
                 continue  # atom is at the centre of mass — no direction to test
             if not self._axis_inertially_allowed(axis):
                 continue
-            for degree in range(2, 9):
+            for degree in range(2, self._max_plausible_order(axis) + 1):
                 op = _Operation.rotation(_OL.Element.ProperRotation, degree, axis)
                 self._operation_manager.add_operation(op)
 
     def _find_proper_rotational_axes_between_atoms(self) -> None:
-        """Test Cn (n=2,4,6,8) along midpoints between same-element atom pairs.
+        """Test even-order Cn along midpoints between same-element atom pairs, n up to an adaptive bound.
 
         Why midpoints?
         --------------
         A C2 axis exchanges two equivalent atoms: each maps to the other.
         The axis must then pass through the midpoint of the two atom positions
-        (the only point equidistant from both).  Similarly for C4, C6, C8.
-        Odd-order axes (C3, C5, C7) cannot exchange pairs — they cycle atoms
-        in groups of 3/5/7 — so only even degrees are tested here.
+        (the only point equidistant from both).  Similarly for C4, C6, C8, ...
+        Odd-order axes (C3, C5, C7, ...) cannot exchange pairs — they cycle
+        atoms in groups of 3/5/7 — so only even degrees are tested here.
+        See _max_plausible_order for how the per-axis upper bound is derived.
 
         Only same-element pairs are tested: a rotation can only map atom i to
         atom j if they are the same element (same atomic number).
@@ -419,7 +497,7 @@ class Symmetry:
                     continue  # midpoint is at the origin — degenerate case
                 if not self._axis_inertially_allowed(axis):
                     continue
-                for degree in range(2, 9, 2):
+                for degree in range(2, self._max_plausible_order(axis) + 1, 2):
                     op = _Operation.rotation(_OL.Element.ProperRotation, degree, axis)
                     exists = self._operation_manager.add_operation(op)
                     # if C2 is absent, no higher even-degree axis can exist along this direction

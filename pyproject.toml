@@ -22,6 +22,10 @@ vis = [
     "PyQt6>=6.4",
     "pyrr>=0.10",
 ]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+]
 
 [project.scripts]
 pyrrhotite = "pyrrhotite.__main__:main"

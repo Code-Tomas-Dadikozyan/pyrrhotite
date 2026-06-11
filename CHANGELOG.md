@@ -53,9 +53,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `generator.py` (moved from `src/point_groups/character_table_generator.py`)
   - `html_formatter.py` — `format_html()` / `save_html()`, render character tables as standalone HTML
   - `latex_formatter.py` — `format_latex()` / `save_latex()`, render character tables as LaTeX (requires the `booktabs` and `amsmath` packages)
+- `src/structure_generator.py` — `generate_idealized_structure(point_group, ...)` builds an idealized `Structure` (rings of placeholder atoms) for any of the seven axial point groups (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) and order n, round-tripping through `Symmetry` to recover the same label. Also adds `format_xyz()` / `write_xyz()` for serialising the result to XYZ. Exposed via `pyrrhotite.generate_idealized_structure` / `pyrrhotite.write_xyz`, and via the CLI as `pyrrhotite -g <NAME> --xyz [PATH]`.
+- `tests/test_structure_generator.py` — round-trip tests for `generate_idealized_structure` across all seven axial families and orders n=3..10 (including n>8 to exercise the adaptive axis-order search), plus error-path tests for unsupported families/orders.
+
 
 ### Changed
 - Character table generation now lives under `src/character_tables/` instead of `src/point_groups/character_table_generator.py`; `parse_point_group_name`, `generate_point_group`, `get_or_generate_point_group`, and `print_character_table_for` are imported from `src.character_tables`.
+- Symmetry **detection** (`src/symmetry.py`) no longer caps proper-rotation search at Cn, n<=8. The three candidate-axis search functions (`_find_proper_rotational_axes_along_principal_axes`, `_find_proper_rotational_axes_through_atoms`, `_find_proper_rotational_axes_between_atoms`) now use a new `_max_plausible_order` helper, which derives a per-axis upper bound (capped at n=20) from the size of the largest ring of symmetry-equivalent atoms (same element, distance from axis, and position along axis) found around that axis.
+- `src/operations/operation_manager.py`: the operation-validity tolerance is now tightened for high-order Cn/Sn candidates (degree >= 8), to `min(0.1, pi / (degree * (degree + 1)))`. This prevents a high-order axis (e.g. genuine C9) from also spuriously validating a neighbouring wrong-order candidate (e.g. C8), whose angular spacing would otherwise fall within the original fixed 0.1 tolerance.
+- `find_point_group`, `get_or_generate_point_group`, and `generate_point_group` now accept either a `PointGroupLabel` or a Schoenflies name string (e.g. `"D6h"`), parsing the string internally via `parse_point_group_name`. Callers no longer need to write `find_point_group(parse_point_group_name("D6h"))` — `find_point_group("D6h")` is now sufficient.
+
+### Documentation
+- `src/symmetry.py` (`Symmetry._MAX_AXIS_ORDER`) and the README "Known limitations" section now explain why the n=20 adaptive-search cap can't simply be raised further: the per-degree validation tolerance shrinks roughly as 1/n^2 and approaches typical `.xyz` coordinate precision beyond n~20, detecting Cn still requires an actual n-fold ring of equivalent atoms in the molecule, and the ring-grouping search is O(atoms^2) per candidate axis.
 
 ### Removed
 - The vendored C++ reference implementation (`reference/`) has been removed from the repository. The original project remains available at https://gitlab.com/lkkmpn/schoenflies.

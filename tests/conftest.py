@@ -40,7 +40,7 @@ EXPECTED_POINT_GROUPS: dict[str, str] = {
     "triethylamine.xyz":           "C3",
     "E-hex-3-ene.xyz":             "Ci",
     "bicyclooctane.xyz":           "D3",
-    "pentaborane-9.xyz":           "C4v",
+    "pentaborane-9.xyz":           "C4v"
 }
 
 

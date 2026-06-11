@@ -1,1 +1,36 @@
-site_name: My Docs
+site_name: pyrrhotite
+site_description: Automatic Schoenflies point group determination, character table generation, and 3-D molecule visualization
+repo_url: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.top
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - User Guide: user-guide.md
+  - Algorithm & Supported Groups: algorithm.md
+  - About: about.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences

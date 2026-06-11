@@ -19,26 +19,38 @@ from .structure import Structure
 from .symmetry import Symmetry
 from .periodic_table import get_element
 from .operations.operation_label import OperationLabel
-from .character_tables import (
-    parse_point_group_name,
-    get_or_generate_point_group,
-)
+from .character_tables import get_or_generate_point_group
+from .structure_generator import generate_idealized_structure, format_xyz, write_xyz
 
 
 def _print_group(name: str, *, use_complex: bool, plain: bool) -> int:
     """Print the character table for a named point group; return 0 on success, 1 on error."""
     try:
-        label = parse_point_group_name(name)
+        pg = get_or_generate_point_group(name)
     except ValueError as exc:
         print(f"ERROR: unrecognised point group '{name}': {exc}", file=sys.stderr)
         return 1
 
-    pg = get_or_generate_point_group(label)
     if pg is None:
         print(f"ERROR: could not generate character table for '{name}'", file=sys.stderr)
         return 1
 
     pg.print_character_table(complex=use_complex, plain=plain)
+    return 0
+
+
+def _generate_xyz(name: str, path: str) -> int:
+    """Generate an idealized structure for *name* and write it as XYZ; return 0/1."""
+    try:
+        structure = generate_idealized_structure(name)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    if path == "-":
+        sys.stdout.write(format_xyz(structure))
+    else:
+        write_xyz(structure, path)
     return 0
 
 
@@ -175,6 +187,17 @@ def main() -> None:
         help="Print the character table for a named group without an XYZ file (e.g. C3v, D6h, Oh)",
     )
     parser.add_argument(
+        "--xyz",
+        nargs="?",
+        const="-",
+        metavar="PATH",
+        help=(
+            "With -g/--group, generate an idealized structure for the named "
+            "axial point group (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) and write it "
+            "as XYZ to PATH, or to stdout if PATH is omitted"
+        ),
+    )
+    parser.add_argument(
         "--visualize", "-vis",
         action="store_true",
         help="Open an interactive 3-D viewer after analysis (requires pip install 'pyrrhotite[vis]')",
@@ -190,11 +213,15 @@ def main() -> None:
     # Mutual exclusion: --group and FILE positional args cannot be combined.
     if args.group and args.files:
         parser.error("--group / -g cannot be combined with FILE arguments")
+    if args.xyz is not None and not args.group:
+        parser.error("--xyz requires -g/--group")
     if not args.group and not args.files:
         parser.print_help()
         sys.exit(1)
 
     if args.group:
+        if args.xyz is not None:
+            sys.exit(_generate_xyz(args.group, args.xyz))
         sys.exit(_print_group(args.group, use_complex=args.complex, plain=args.plain))
 
     exit_code = 0

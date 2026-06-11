@@ -7,6 +7,7 @@ Direct translation of reference/src/symmetry/operations/operation_manager.h/cpp.
 from __future__ import annotations
 
 import copy
+import math
 from typing import TYPE_CHECKING
 
 from .operation import Operation
@@ -107,17 +108,29 @@ class OperationManager:
         return True
 
     def _check_operation(self, operation: Operation) -> bool:
-        """Run the operation on the structure and return True if error < 0.1.
+        """Run the operation on the structure and return True if its error is below threshold.
 
-        The 0.1 Å threshold is an empirical value from the reference C++
+        The base 0.1 threshold is an empirical value from the reference C++
         implementation.  It is large enough to accept operations whose
         validity is obscured by XYZ coordinate rounding (typical precision
         is 3-4 decimal places, giving errors up to ~0.001 Å), but small
         enough to reject candidate axes that genuinely do not map atoms onto
         atoms (errors typically >> 0.1 Å for wrong axes).
+
+        For high-order Cn/Sn candidates (degree >= 8) the angular spacing
+        between Cn and its neighbouring orders shrinks below what the base
+        threshold can distinguish (e.g. C9's 40 degree spacing is only 5
+        degrees away from a C8 candidate at 45 degrees, giving an error of
+        ~0.087 — under 0.1). The threshold is tightened to half the angular
+        gap to the next-higher order, pi / (degree * (degree + 1)), so that
+        a wrong-order candidate next to a genuine high-order axis is rejected
+        while the genuine axis (error ~ 0) is unaffected.
         """
         operation.do_operation(self._structure)
-        return operation.error < 0.1
+        threshold = 0.1
+        if operation.degree >= 8:
+            threshold = min(threshold, math.pi / (operation.degree * (operation.degree + 1)))
+        return operation.error < threshold
 
     # ------------------------------------------------------------------
     # Point-group operation generation

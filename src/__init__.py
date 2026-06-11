@@ -4,6 +4,7 @@ from ._version import __version__
 from .structure import Structure
 from .rotor_class import RotorClass
 from .symmetry import Symmetry
+from .structure_generator import generate_idealized_structure, write_xyz
 
 from . import display
 from .display import (
@@ -32,6 +33,8 @@ __all__ = [
     "Structure",
     "RotorClass",
     "Symmetry",
+    "generate_idealized_structure",
+    "write_xyz",
     "display",
     "visualize",
     "list_sample_molecules",
