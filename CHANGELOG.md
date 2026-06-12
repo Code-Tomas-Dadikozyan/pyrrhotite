@@ -42,7 +42,49 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - PyPI long description: `README.md` rewritten for the project page — `pip install pyrrhotite` install instructions, quick-start example, full CLI flag reference, and example output
 
-## [Unreleased]
+## [0.2.0] - 2026-06-10
+
+### Added
+- `src/visualizer/` — interactive 3-D molecule viewer built on PyQt6 and OpenGL. Atoms are drawn as spheres (coloured per element from `periodic_table.py`), bonds as cylinders, with an orientation gizmo (red/green/blue arrows for x/y/z) and an optional element-symbol overlay. Controls: left-drag to rotate (arcball), scroll to zoom. Exposed as `pyrrhotite.visualize(structure, show_labels=False)`.
+- New optional install extra `pip install 'pyrrhotite[vis]'` (PyQt6, PyOpenGL, pyrr, matplotlib) for the visualizer.
+- New CLI flags `--visualize`/`-vis` (open the 3-D viewer after analysis) and `--labels`/`-l` (show element labels in the viewer; implies `--visualize`).
+- `src/display.py` — pretty-printing helpers (`print_bond_pairs`, `print_ops_with_atoms`, `print_basis_functions`, `print_char_table_programmatic`) and sample-molecule convenience functions (`list_sample_molecules`, `load_sample`, `analyse_sample`, `visualize_sample`, `show_character_table_sample`) built on the bundled `tests/files/` molecules. All re-exported from the top-level `pyrrhotite` package.
+- `src/character_tables/` — character table generation split out into its own subpackage:
+  - `generator.py` (moved from `src/point_groups/character_table_generator.py`)
+  - `html_formatter.py` — `format_html()` / `save_html()`, render character tables as standalone HTML
+  - `latex_formatter.py` — `format_latex()` / `save_latex()`, render character tables as LaTeX (requires the `booktabs` and `amsmath` packages)
+- `src/structure_generator.py` — `generate_idealized_structure(point_group, ...)` builds an idealized `Structure` (rings of placeholder atoms) for any of the seven axial point groups (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) and order n, round-tripping through `Symmetry` to recover the same label. Also adds `format_xyz()` / `write_xyz()` for serialising the result to XYZ. Exposed via `pyrrhotite.generate_idealized_structure` / `pyrrhotite.write_xyz`, and via the CLI as `pyrrhotite -g <NAME> --xyz [PATH]`.
+- `pyrrhotite.visualize_idealized_structure(point_group, ...)` — generates an idealized structure and opens the 3-D viewer directly, without writing it to an `.xyz` file first (requires `pip install 'pyrrhotite[vis]'`). Also available from the CLI as `pyrrhotite -g <NAME> --visualize` (or `--labels`/`-l`), when not combined with `--xyz`.
+- `tests/test_structure_generator.py` — round-trip tests for `generate_idealized_structure` across all seven axial families and orders n=3..10 (including n>8 to exercise the adaptive axis-order search), plus error-path tests for unsupported families/orders.
+- `example_usage.py` — new section 14 demonstrating `generate_idealized_structure`, `format_xyz`, and `write_xyz`: basic generation and round-trip detection, saving/reloading from disk, round-tripping all seven axial families at n=6, customising radius/height/element, and the error cases for unsupported groups/orders.
+
+### Fixed
+- `generate_idealized_structure`'s default `radius`/`height` (now 1.0 A / 0.6 A, previously 1.5 A / 1.0 A) were too large relative to `Structure.calculate_bond_pairs`'s bonding cutoff for the placeholder element, leaving e.g. the two rings of a generated D9d structure as disconnected components with no bonds between them. The new defaults keep both within-ring and (for Dn/Dnd) cross-ring atoms within bonding distance, so generated structures render as connected molecules in the 3-D viewer, while still round-tripping correctly through `Symmetry`.
+- `generate_idealized_structure`'s geometry has been redesigned per family so that `calculate_bond_pairs` produces realistic bonding patterns modelled on real molecules of the same point group, rather than over-connected uniform rings (previously every ring atom could end up bonded to ~4 neighbours, including spurious cross-ring bonds between otherwise unrelated rings):
+  - **Cnv**: the ring is now sized so its atoms stay *outside* bonding distance of each other (like ammonia's H...H, which doesn't bond), while the apex atom remains within bonding distance of every ring atom. Each ring atom bonds only to the apex (degree 1); the apex bonds to all n ring atoms (degree n).
+  - **Cn / Cnh**: the previous offset second ring (which could bond to multiple ring1 atoms, or to both an above and below decoration ring) is replaced by a single terminal-substituent atom per ring1 atom (like benzene's ring + H), giving each main-ring atom degree 3 (2 ring neighbours + 1 terminal atom) and each terminal atom degree 1.
+  - **Dn / Dnh / Dnd**: now built around a central "hub" atom (a larger-radius placeholder element, e.g. Fe), mirroring ferrocene's metal-sandwich structure (`ferrocene-eclipsed.xyz` / `ferrocene-staggered.xyz`). The two rings are separated far enough that they no longer bond directly to each other; each is connected to the structure only via the hub. Each ring atom now has degree 3 (2 ring neighbours + hub) instead of 4.
+  - **Sn**: also gains a central hub atom connecting the two halves of the antiprism (no more direct cross-ring bonds), with the existing Sn-symmetry-breaking "marker" atoms repositioned to bond as terminal substituents.
+  - All seven families, n=3..10 (Sn even n=4..10), were verified to produce a single connected component, no near-zero-length bonds, and correct round-trip detection through `Symmetry`.
+- `generate_idealized_structure`'s `Cn` family placed its terminal substituent atoms too close to their parent ring atom (bond length ~0.47 A, less than the sum of the two atoms' covalent radii), so the bond cylinder was completely hidden inside the overlapping atom spheres in the 3-D viewer. Each terminal atom is now placed at a fixed offset (~1 A) from its parent ring atom in that atom's local radial/tangential/z frame, giving a bond length comparable to the other families (and to a real C-H/N-H bond) regardless of `n`.
+- `generate_idealized_structure`'s placeholder elements are now chosen to look like more plausible molecules: a new `_element_for_degree` helper maps each atom's designed bonding degree to an element with a roughly matching valence (H for degree 1, O for degree 2, N for degree 3, C for degree 4, S for degree 5-6, and a metal-like "Fe" hub for degree >= 7, consistent with the existing ferrocene-hub motif). At the default `element="F"`, the primary ring element for each family is substituted accordingly via `_ring_element` (e.g. "N" for the degree-3 ring atoms in Cn/Cnh/Dn/Dnh/Dnd, "C" for the degree-4 ring atoms in Sn, "H" for the now degree-1 ring atoms in Cnv, with the Cnv apex element chosen by its degree n). Since F, N, O, and C all share the same covalent radius (0.4 A), this is purely a cosmetic relabelling for those cases and does not change any bonding distances.
+- `generate_idealized_structure`'s `Cnv` ring radius (previously sized purely from the ring-ring *unbonding* distance with a fixed margin) could, for `n >= 12`, end up larger than the apex-ring bonding cutoff itself, leaving the apex bonded to *no* ring atoms at all (an isolated apex floating in the centre of an unbonded ring, with zero visible bonds in the 3-D viewer). The ring radius is now sized as a fixed fraction of the apex-ring bonding cutoff instead, so the apex always bonds to every ring atom regardless of `n`; for `n <= 12` this still leaves ring atoms unbonded to each other (ammonia-like, degree 1), while for `n >= 13` neighbouring ring atoms also end up bonded (degree 3: 2 ring neighbours + apex) -- both patterns are connected and render with visible bonds.
+- `generate_idealized_structure`'s `Cn` terminal-substituent offset's tangential component (0.4 A) could, for `n >= 12`, place the substituent within bonding distance of the *neighbouring* ring1 atom as well as its own (since ring1's nearest-neighbour spacing shrinks towards ~1.35 A as `n` grows), giving ring1 atoms degree 4 and substituents degree 2 instead of the intended benzene-like degree 3 / degree 1. The tangential component is now 0.2 A, which keeps the substituent bonded only to its own ring1 atom for all `n` up to 20.
+
+
+### Changed
+- Character table generation now lives under `src/character_tables/` instead of `src/point_groups/character_table_generator.py`; `parse_point_group_name`, `generate_point_group`, `get_or_generate_point_group`, and `print_character_table_for` are imported from `src.character_tables`.
+- Symmetry **detection** (`src/symmetry.py`) no longer caps proper-rotation search at Cn, n<=8. The three candidate-axis search functions (`_find_proper_rotational_axes_along_principal_axes`, `_find_proper_rotational_axes_through_atoms`, `_find_proper_rotational_axes_between_atoms`) now use a new `_max_plausible_order` helper, which derives a per-axis upper bound (capped at n=20) from the size of the largest ring of symmetry-equivalent atoms (same element, distance from axis, and position along axis) found around that axis.
+- `src/operations/operation_manager.py`: the operation-validity tolerance is now tightened for high-order Cn/Sn candidates (degree >= 8), to `min(0.1, pi / (degree * (degree + 1)))`. This prevents a high-order axis (e.g. genuine C9) from also spuriously validating a neighbouring wrong-order candidate (e.g. C8), whose angular spacing would otherwise fall within the original fixed 0.1 tolerance.
+- `find_point_group`, `get_or_generate_point_group`, and `generate_point_group` now accept either a `PointGroupLabel` or a Schoenflies name string (e.g. `"D6h"`), parsing the string internally via `parse_point_group_name`. Callers no longer need to write `find_point_group(parse_point_group_name("D6h"))` — `find_point_group("D6h")` is now sufficient.
+
+### Documentation
+- `src/symmetry.py` (`Symmetry._MAX_AXIS_ORDER`) and the README "Known limitations" section now explain why the n=20 adaptive-search cap can't simply be raised further: the per-degree validation tolerance shrinks roughly as 1/n^2 and approaches typical `.xyz` coordinate precision beyond n~20, detecting Cn still requires an actual n-fold ring of equivalent atoms in the molecule, and the ring-grouping search is O(atoms^2) per candidate axis.
+
+### Removed
+- The vendored C++ reference implementation (`reference/`) has been removed from the repository. The original project remains available at https://gitlab.com/lkkmpn/schoenflies.
+
+## [0.2.1] - 2026-06-12
 
 ### Fixed
 - `Symmetry._find_point_group` no longer silently mis-identifies molecules whose
@@ -100,6 +142,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   ~0.87 Å to ~1.28 Å, versus a ~0.8 Å rendered sphere diameter).
 
 ### Documentation
+- Simplified the `pyrrhotite`-vs-`schoenflies` comparison table in `README.md` and
+  `docs/about.md`: folded the HTML/LaTeX export row into a single "Character tables"
+  row and added an "Idealized structure generation" row reflecting that feature.
+- `README.md` polish: added PyPI/Python/license/docs badges, a name-origin note,
+  a linked table of contents, a documentation-site pointer, a 3-D viewer screenshot
+  (`docs/assets/visualizer-fullerene.png`), a rendered LaTeX export example, and cross-links
+  to the User Guide / Algorithm pages. Consolidated the "viewer does not draw
+  symmetry overlays yet" caveat to a single canonical spot, and fixed the stale
+  `tests/files/*.xyz` CLI example to `src/sample_molecules/*.xyz`.
+- Added a disclaimer to the idealized-structure-generator section (`README.md` and
+  `docs/user-guide.md`) clarifying that it only illustrates a point group's
+  geometry — element and bond choices are for visualization only and do not
+  represent real chemical structures — and documenting the supported families
+  (no `Dnv`; only `Dnh`/`Dnd`) and the high-`n` rendering/detection limits (n ≤ 20).
 - Added docstrings to previously undocumented helpers across the codebase: the
   10 internal row-builders in `character_tables/generator.py`, the visualizer's
   Qt/OpenGL override methods (`gl_widget`, `shader_program`, `model_manager`,
@@ -118,45 +174,3 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `.claude/CLAUDE.md`: rewritten to describe the actual `src/` package layout
   (the file still referenced the obsolete `schoenflies/` + `reference/` layout).
 - Source files normalised to plain UTF-8 (BOM removed).
-
-## [0.2.0] - 2026-06-10
-
-### Added
-- `src/visualizer/` — interactive 3-D molecule viewer built on PyQt6 and OpenGL. Atoms are drawn as spheres (coloured per element from `periodic_table.py`), bonds as cylinders, with an orientation gizmo (red/green/blue arrows for x/y/z) and an optional element-symbol overlay. Controls: left-drag to rotate (arcball), scroll to zoom. Exposed as `pyrrhotite.visualize(structure, show_labels=False)`.
-- New optional install extra `pip install 'pyrrhotite[vis]'` (PyQt6, PyOpenGL, pyrr, matplotlib) for the visualizer.
-- New CLI flags `--visualize`/`-vis` (open the 3-D viewer after analysis) and `--labels`/`-l` (show element labels in the viewer; implies `--visualize`).
-- `src/display.py` — pretty-printing helpers (`print_bond_pairs`, `print_ops_with_atoms`, `print_basis_functions`, `print_char_table_programmatic`) and sample-molecule convenience functions (`list_sample_molecules`, `load_sample`, `analyse_sample`, `visualize_sample`, `show_character_table_sample`) built on the bundled `tests/files/` molecules. All re-exported from the top-level `pyrrhotite` package.
-- `src/character_tables/` — character table generation split out into its own subpackage:
-  - `generator.py` (moved from `src/point_groups/character_table_generator.py`)
-  - `html_formatter.py` — `format_html()` / `save_html()`, render character tables as standalone HTML
-  - `latex_formatter.py` — `format_latex()` / `save_latex()`, render character tables as LaTeX (requires the `booktabs` and `amsmath` packages)
-- `src/structure_generator.py` — `generate_idealized_structure(point_group, ...)` builds an idealized `Structure` (rings of placeholder atoms) for any of the seven axial point groups (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) and order n, round-tripping through `Symmetry` to recover the same label. Also adds `format_xyz()` / `write_xyz()` for serialising the result to XYZ. Exposed via `pyrrhotite.generate_idealized_structure` / `pyrrhotite.write_xyz`, and via the CLI as `pyrrhotite -g <NAME> --xyz [PATH]`.
-- `pyrrhotite.visualize_idealized_structure(point_group, ...)` — generates an idealized structure and opens the 3-D viewer directly, without writing it to an `.xyz` file first (requires `pip install 'pyrrhotite[vis]'`). Also available from the CLI as `pyrrhotite -g <NAME> --visualize` (or `--labels`/`-l`), when not combined with `--xyz`.
-- `tests/test_structure_generator.py` — round-trip tests for `generate_idealized_structure` across all seven axial families and orders n=3..10 (including n>8 to exercise the adaptive axis-order search), plus error-path tests for unsupported families/orders.
-- `example_usage.py` — new section 14 demonstrating `generate_idealized_structure`, `format_xyz`, and `write_xyz`: basic generation and round-trip detection, saving/reloading from disk, round-tripping all seven axial families at n=6, customising radius/height/element, and the error cases for unsupported groups/orders.
-
-### Fixed
-- `generate_idealized_structure`'s default `radius`/`height` (now 1.0 A / 0.6 A, previously 1.5 A / 1.0 A) were too large relative to `Structure.calculate_bond_pairs`'s bonding cutoff for the placeholder element, leaving e.g. the two rings of a generated D9d structure as disconnected components with no bonds between them. The new defaults keep both within-ring and (for Dn/Dnd) cross-ring atoms within bonding distance, so generated structures render as connected molecules in the 3-D viewer, while still round-tripping correctly through `Symmetry`.
-- `generate_idealized_structure`'s geometry has been redesigned per family so that `calculate_bond_pairs` produces realistic bonding patterns modelled on real molecules of the same point group, rather than over-connected uniform rings (previously every ring atom could end up bonded to ~4 neighbours, including spurious cross-ring bonds between otherwise unrelated rings):
-  - **Cnv**: the ring is now sized so its atoms stay *outside* bonding distance of each other (like ammonia's H...H, which doesn't bond), while the apex atom remains within bonding distance of every ring atom. Each ring atom bonds only to the apex (degree 1); the apex bonds to all n ring atoms (degree n).
-  - **Cn / Cnh**: the previous offset second ring (which could bond to multiple ring1 atoms, or to both an above and below decoration ring) is replaced by a single terminal-substituent atom per ring1 atom (like benzene's ring + H), giving each main-ring atom degree 3 (2 ring neighbours + 1 terminal atom) and each terminal atom degree 1.
-  - **Dn / Dnh / Dnd**: now built around a central "hub" atom (a larger-radius placeholder element, e.g. Fe), mirroring ferrocene's metal-sandwich structure (`ferrocene-eclipsed.xyz` / `ferrocene-staggered.xyz`). The two rings are separated far enough that they no longer bond directly to each other; each is connected to the structure only via the hub. Each ring atom now has degree 3 (2 ring neighbours + hub) instead of 4.
-  - **Sn**: also gains a central hub atom connecting the two halves of the antiprism (no more direct cross-ring bonds), with the existing Sn-symmetry-breaking "marker" atoms repositioned to bond as terminal substituents.
-  - All seven families, n=3..10 (Sn even n=4..10), were verified to produce a single connected component, no near-zero-length bonds, and correct round-trip detection through `Symmetry`.
-- `generate_idealized_structure`'s `Cn` family placed its terminal substituent atoms too close to their parent ring atom (bond length ~0.47 A, less than the sum of the two atoms' covalent radii), so the bond cylinder was completely hidden inside the overlapping atom spheres in the 3-D viewer. Each terminal atom is now placed at a fixed offset (~1 A) from its parent ring atom in that atom's local radial/tangential/z frame, giving a bond length comparable to the other families (and to a real C-H/N-H bond) regardless of `n`.
-- `generate_idealized_structure`'s placeholder elements are now chosen to look like more plausible molecules: a new `_element_for_degree` helper maps each atom's designed bonding degree to an element with a roughly matching valence (H for degree 1, O for degree 2, N for degree 3, C for degree 4, S for degree 5-6, and a metal-like "Fe" hub for degree >= 7, consistent with the existing ferrocene-hub motif). At the default `element="F"`, the primary ring element for each family is substituted accordingly via `_ring_element` (e.g. "N" for the degree-3 ring atoms in Cn/Cnh/Dn/Dnh/Dnd, "C" for the degree-4 ring atoms in Sn, "H" for the now degree-1 ring atoms in Cnv, with the Cnv apex element chosen by its degree n). Since F, N, O, and C all share the same covalent radius (0.4 A), this is purely a cosmetic relabelling for those cases and does not change any bonding distances.
-- `generate_idealized_structure`'s `Cnv` ring radius (previously sized purely from the ring-ring *unbonding* distance with a fixed margin) could, for `n >= 12`, end up larger than the apex-ring bonding cutoff itself, leaving the apex bonded to *no* ring atoms at all (an isolated apex floating in the centre of an unbonded ring, with zero visible bonds in the 3-D viewer). The ring radius is now sized as a fixed fraction of the apex-ring bonding cutoff instead, so the apex always bonds to every ring atom regardless of `n`; for `n <= 12` this still leaves ring atoms unbonded to each other (ammonia-like, degree 1), while for `n >= 13` neighbouring ring atoms also end up bonded (degree 3: 2 ring neighbours + apex) -- both patterns are connected and render with visible bonds.
-- `generate_idealized_structure`'s `Cn` terminal-substituent offset's tangential component (0.4 A) could, for `n >= 12`, place the substituent within bonding distance of the *neighbouring* ring1 atom as well as its own (since ring1's nearest-neighbour spacing shrinks towards ~1.35 A as `n` grows), giving ring1 atoms degree 4 and substituents degree 2 instead of the intended benzene-like degree 3 / degree 1. The tangential component is now 0.2 A, which keeps the substituent bonded only to its own ring1 atom for all `n` up to 20.
-
-
-### Changed
-- Character table generation now lives under `src/character_tables/` instead of `src/point_groups/character_table_generator.py`; `parse_point_group_name`, `generate_point_group`, `get_or_generate_point_group`, and `print_character_table_for` are imported from `src.character_tables`.
-- Symmetry **detection** (`src/symmetry.py`) no longer caps proper-rotation search at Cn, n<=8. The three candidate-axis search functions (`_find_proper_rotational_axes_along_principal_axes`, `_find_proper_rotational_axes_through_atoms`, `_find_proper_rotational_axes_between_atoms`) now use a new `_max_plausible_order` helper, which derives a per-axis upper bound (capped at n=20) from the size of the largest ring of symmetry-equivalent atoms (same element, distance from axis, and position along axis) found around that axis.
-- `src/operations/operation_manager.py`: the operation-validity tolerance is now tightened for high-order Cn/Sn candidates (degree >= 8), to `min(0.1, pi / (degree * (degree + 1)))`. This prevents a high-order axis (e.g. genuine C9) from also spuriously validating a neighbouring wrong-order candidate (e.g. C8), whose angular spacing would otherwise fall within the original fixed 0.1 tolerance.
-- `find_point_group`, `get_or_generate_point_group`, and `generate_point_group` now accept either a `PointGroupLabel` or a Schoenflies name string (e.g. `"D6h"`), parsing the string internally via `parse_point_group_name`. Callers no longer need to write `find_point_group(parse_point_group_name("D6h"))` — `find_point_group("D6h")` is now sufficient.
-
-### Documentation
-- `src/symmetry.py` (`Symmetry._MAX_AXIS_ORDER`) and the README "Known limitations" section now explain why the n=20 adaptive-search cap can't simply be raised further: the per-degree validation tolerance shrinks roughly as 1/n^2 and approaches typical `.xyz` coordinate precision beyond n~20, detecting Cn still requires an actual n-fold ring of equivalent atoms in the molecule, and the ring-grouping search is O(atoms^2) per candidate axis.
-
-### Removed
-- The vendored C++ reference implementation (`reference/`) has been removed from the repository. The original project remains available at https://gitlab.com/lkkmpn/schoenflies.

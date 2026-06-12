@@ -239,6 +239,29 @@ Dnh, or Dnd structure for any supported order n.
     degree 5-6, and a metal-like hub for higher degrees), so the generated
     structure also looks reasonable in the 3-D viewer.
 
+!!! warning "A geometric illustration, not a chemistry tool"
+    The generator's only guarantee is that the resulting arrangement of points
+    has the requested point-group symmetry. The choice of elements and the bonds
+    drawn between them are picked purely so the structure *looks* like a
+    plausible molecule — they do **not** correspond to real, synthesisable
+    compounds, realistic bond lengths, or valid valences. Most generated
+    structures are not real molecules and should not be read as chemical claims.
+
+    **Supported families:** `Cn`, `Cnh`, `Cnv`, `Sn` (even orders), `Dn`,
+    `Dnh`, `Dnd`. There is no `Dnv` family — the dihedral families with mirror
+    planes are `Dnh` (horizontal) and `Dnd` (diagonal). Cubic, icosahedral,
+    linear, and low-symmetry groups are not generated.
+
+    **High-order limits.** Each family is built from one or two rings of `n`
+    atoms, so the rings get geometrically crowded as `n` grows — at large `n`
+    the fixed-radius spheres can visually touch and the bonds get hard to read.
+    The ring radius is capped so the central hub still bonds every ring atom
+    (`Dn`/`Dnh`/`Dnd`/`Sn`), and a large caesium hub keeps the rings spaced, but
+    these are tuned for the supported range up to **n = 20**. Beyond that the
+    visual quality degrades and detection tolerances tighten (see
+    [Algorithm & Supported Groups](algorithm.md)); treat very high orders as
+    schematic.
+
 ```python
 from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry
 from pyrrhotite.structure_generator import format_xyz

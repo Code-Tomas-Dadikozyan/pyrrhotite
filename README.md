@@ -1,12 +1,53 @@
 # pyrrhotite
 
-Automatic Schoenflies point group determination, character table generation, and
-3-D molecule visualization — from a plain `.xyz` file or from nothing at all.
+[![PyPI version](https://img.shields.io/pypi/v/pyrrhotite.svg)](https://pypi.org/project/pyrrhotite/)
+[![Python versions](https://img.shields.io/pypi/pyversions/pyrrhotite.svg)](https://pypi.org/project/pyrrhotite/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-online-brightgreen.svg)](https://code-tomas-dadikozyan.github.io/pyrrhotite/)
+
+Automatic Schoenflies point group determination, character table generation,
+idealized-structure generation, and 3-D molecule visualization — from a plain
+`.xyz` file or from nothing at all.
 
 Given a molecular geometry in `.xyz` format, `pyrrhotite` identifies the molecule's
 Schoenflies point group symbol by numerically detecting all present symmetry
 elements (rotations, reflections, inversions, and improper rotations), then builds
 the full character table for that group — even for groups it has never seen before.
+It can also work in reverse, [generating an idealized structure](#generating-idealized-structures)
+for any supported axial point group.
+
+📖 **Full documentation:** <https://code-tomas-dadikozyan.github.io/pyrrhotite/>
+
+> **Why "pyrrhotite"?** Pyrrhotite is an iron sulfide mineral that crystallises
+> into a range of related but distinct structures depending on composition and
+> temperature — a fitting namesake for a library all about classifying structures
+> by their symmetry.
+
+---
+
+## Contents
+
+- [Where this project came from](#where-this-project-came-from)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [What is a point group?](#what-is-a-point-group)
+- [Usage](#usage)
+  - [Point group determination](#point-group-determination)
+  - [Character table](#character-table)
+  - [Generating idealized structures](#generating-idealized-structures)
+  - [Rotor classification and principal axes](#rotor-classification-and-principal-axes)
+  - [Symmetry operations](#symmetry-operations)
+  - [Basis functions](#basis-functions)
+  - [3-D visualizer](#3-d-visualizer)
+  - [Sample molecules](#sample-molecules)
+  - [Command-line tool](#command-line-tool)
+- [Input format](#input-format)
+- [Supported point groups](#supported-point-groups)
+- [How the algorithm works](#how-the-algorithm-works)
+- [Known limitations](#known-limitations)
+- [Running tests](#running-tests)
+- [License](#license)
+- [References](#references)
 
 ---
 
@@ -190,6 +231,23 @@ print(format_latex(["C3v", "D6h"]))         # LaTeX string (requires \usepackage
 save_latex(["Oh"], "oh_table.tex")
 ```
 
+For example, `format_latex(["C3v"])` returns a ready-to-compile `tabular`:
+
+```latex
+\begin{tabular}{l c c c}
+\toprule
+$C_{3v}$ & $E$ & $2C_3$ & $3\sigma_v$ \\
+\midrule
+$A_1$ & $1$ & $1$ & $1$ \\
+$A_2$ & $1$ & $1$ & $-1$ \\
+$E$   & $2$ & $-1$ & $0$ \\
+\bottomrule
+\end{tabular}
+```
+
+while `format_html(["C3v"])` returns the equivalent `<table>` markup, ready to
+embed in a page.
+
 The same formatters are also runnable as standalone scripts:
 
 ```bash
@@ -211,6 +269,31 @@ bonding pattern in the 3-D viewer — including element choices that roughly
 match each atom's bonding degree (H for degree 1, O for degree 2, N for degree
 3, C for degree 4, S for degree 5-6, and a metal-like hub for higher degrees)
 — rather than an over-connected uniform ring:
+
+> **This is a geometric illustration, not a chemistry tool.** The generator's
+> only guarantee is that the resulting arrangement of points has the requested
+> point-group symmetry. The choice of elements and the bonds drawn between them
+> are picked purely so the structure *looks* like a plausible molecule in the
+> viewer — they do **not** correspond to real, synthesisable compounds, realistic
+> bond lengths, or valid valences. Most generated structures are not real
+> molecules and should not be read as chemical claims.
+>
+> **Supported families:** `Cn`, `Cnh`, `Cnv`, `Sn` (even orders), `Dn`, `Dnh`,
+> and `Dnd`. Note there is no `Dnv` family — the dihedral families with mirror
+> planes are `Dnh` (horizontal) and `Dnd` (diagonal). The cubic, icosahedral,
+> linear, and low-symmetry groups are not generated (their geometry isn't a
+> simple parametric ring/hub construction).
+>
+> **High-order limits.** Because the families are built from one or two rings of
+> `n` atoms, the rings get geometrically crowded as `n` grows: adjacent ring
+> atoms move closer together while each atom is drawn at a fixed radius, so at
+> large `n` the spheres can visually touch or overlap and the bonds become hard
+> to read. The generator caps the ring radius so the central hub still bonds to
+> every ring atom (for `Dn`/`Dnh`/`Dnd`/`Sn`), and uses a large caesium hub to
+> keep rings comfortably spaced, but these are tuned for the supported detection
+> range up to **n = 20**. Beyond that the visual quality degrades and detection
+> tolerances tighten (see [Known limitations](#known-limitations)); orders far
+> above 20 are best treated as schematic.
 
 ```python
 from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry
@@ -317,6 +400,8 @@ actually looks like* before or after analysis. It draws atoms as colour-coded
 spheres, bonds as cylinders, and a small red/green/blue arrow gizmo in the corner
 showing the x/y/z axes.
 
+![The pyrrhotite 3-D molecule viewer showing buckminsterfullerene](docs/assets/visualizer-fullerene.png)
+
 ```python
 from pyrrhotite import Structure, visualize
 
@@ -334,11 +419,8 @@ pip install 'pyrrhotite[vis]'
 ```
 
 If they aren't installed, `visualize()` raises an `ImportError` with instructions
-instead of crashing.
-
-> **Note:** unlike Luuk Kempen's original visualizer, this viewer does not (yet)
-> draw the detected symmetry elements (axes, mirror planes) on top of the molecule
-> — it shows only the molecule itself, the axis gizmo, and optional atom labels.
+instead of crashing. (This viewer does not yet draw the detected symmetry elements
+on top of the molecule — see [Known limitations](#known-limitations).)
 
 #### Sample molecules
 
@@ -414,6 +496,12 @@ A1  |      1 |      1 |      1 |       z |         z², x²+y²
 A2  |      1 |      1 |     -1 |      Rz |
 E   |      2 |     -1 |      0 | x, y, Rx, Ry | x²-y², xy, xz, yz
 ```
+
+> **Going deeper:** this README covers the essentials. For the full Python API,
+> a detailed walkthrough of the detection algorithm, and the complete list of
+> supported groups, see the [documentation site](https://code-tomas-dadikozyan.github.io/pyrrhotite/)
+> — in particular the [User Guide](https://code-tomas-dadikozyan.github.io/pyrrhotite/user-guide/)
+> and [Algorithm & Supported Groups](https://code-tomas-dadikozyan.github.io/pyrrhotite/algorithm/).
 
 ---
 

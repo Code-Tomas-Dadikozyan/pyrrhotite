@@ -25,6 +25,15 @@
   --pyrrhotite-navy: #1b2733;
 }
 
+/* Body text links (`.md-typeset a`) default to --md-typeset-a-color, which
+   falls back to --md-primary-fg-color — our navy. In dark/slate mode that's
+   a near-black link on a near-black background, i.e. invisible. Override it
+   to the lighter brand gold for the slate scheme so links (in admonitions,
+   cards, paragraphs, ...) stay readable against the dark background. */
+[data-md-color-scheme="slate"] {
+  --md-typeset-a-color: var(--pyrrhotite-gold);
+}
+
 /* Gold announcement bar (see docs/overrides/main.html). Material renders the
    {% block announce %} content inside `.md-banner` (not `.md-announce`), so the
    brand styling must target that class or it silently has no effect — which
