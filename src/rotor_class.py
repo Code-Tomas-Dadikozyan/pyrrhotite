@@ -1,6 +1,8 @@
 """
 Rotor classification by principal moment of inertia degeneracy.
-Direct translation of reference/src/symmetry/rotor_class.h.
+Translated from the original C++ `schoenflies` (was reference/src/symmetry/
+rotor_class.h; that vendored tree was removed in 0.2.0 — see
+https://gitlab.com/lkkmpn/schoenflies).
 
 Background
 ----------

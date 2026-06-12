@@ -43,6 +43,7 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
+"pyrrhotite" = ["sample_molecules/*.xyz"]
 "pyrrhotite.visualizer" = ["assets/shaders/*.vs", "assets/shaders/*.fs", "assets/models/*.obj"]
 
 [tool.setuptools.package-dir]

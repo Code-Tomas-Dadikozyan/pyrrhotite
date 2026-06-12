@@ -44,10 +44,80 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- `Symmetry._find_point_group` no longer silently mis-identifies molecules whose
+  detected proper-rotation order exceeds the hardcoded group range. Previously a
+  genuine high-order axis (e.g. a detected C11) could still match a low-order
+  hardcoded group such as D2h with a non-negative operation surplus and win,
+  because the analytical fallback only ran when *no* hardcoded group matched at
+  all. A hardcoded group is now accepted only if it can account for the
+  highest-order proper axis actually detected (new `Symmetry._group_accounts_for_axis`
+  / `PointGroup.num_proper_rotations`); otherwise the analytical generator is used.
+- `Symmetry._generate_point_group_from_ops` (the analytical fallback) was reading
+  reflection-plane σh/σv/σd labels that are not assigned until *after* point-group
+  determination, so its plane tests were always False — it could never produce a
+  Dnd group and misclassified Cnh/Dnh/Dnd. It now derives horizontal-vs-vertical
+  planes geometrically from each plane's normal relative to the principal axis
+  (the same criterion the labeller uses), correctly distinguishing Dnh (has σh)
+  from Dnd (only σd), and uses the improper-rotation order for the Sn label.
+  Net effect: the Cn/Cnh/Cnv/Dn/Dnh/Dnd families now round-trip correctly through
+  generate-then-detect for the full adaptive range n = 3–20 (previously only the
+  n ≤ 10 cases covered by the test suite were reliable).
+- Narrowed an overly broad `except (ValueError, Exception)` in the same fallback
+  to `except ValueError`, so unexpected errors are no longer silently swallowed.
+- `Symmetry._find_point_group` now also requires a candidate hardcoded group to
+  account for the highest-order *improper* (Sₙ) axis detected, not just the
+  highest proper axis (new `Symmetry._max_finite_degree` /
+  `_group_accounts_for_axes`, plus `PointGroup.num_improper_rotations`). This
+  fixes two high-order mis-detections: an Sₙ molecule (which contains the proper
+  rotation C_{n/2}) was matching a hardcoded C_{n/2} and hiding its Sₙ axis
+  (e.g. S12 → C6), and a genuine D8d — whose S16 class is under-counted by the
+  operation search — was losing to C8v. Both now fall through to the analytical
+  generator and resolve correctly. All seven axial families now round-trip
+  through generate-then-detect for the full adaptive range (Cn/Cnh/Cnv/Dn/Dnh/Dnd
+  n = 3–20, Sn n = 4–20).
+- `generate_idealized_structure`: for the Dn/Dnh/Dnd and Sn families the ring
+  radius is now capped so the central hub stays within bonding distance of every
+  ring atom regardless of n. Previously `_radius_for(n)` grew ~linearly with n,
+  so for larger structures (e.g. D20h) the rings drifted beyond the hub-ring
+  bonding cutoff and the hub rendered as an unconnected atom floating between the
+  two rings in the 3-D viewer (new `_hub_bonded_ring_radius` helper). Hub-ring
+  bonding is verified for all of Dn/Dnh/Dnd/Sn through n = 20.
+- `list_sample_molecules` (and the other `*_sample` helpers in `display.py`) raised
+  `FileNotFoundError: .../site-packages/tests/files` when called from a pip-installed
+  package, because the sample XYZ files lived only in the repo's `tests/files/`
+  directory, which is not shipped in the wheel. The sample molecules now live inside
+  the package at `pyrrhotite/sample_molecules/` (declared as package-data in
+  `pyproject.toml`) as the single source of truth: `display.py` resolves them there,
+  and the test suite's `XYZ_DIR` was repointed to the same directory, so the old
+  `tests/files/` directory has been removed.
+- `generate_idealized_structure`: ring atoms no longer visually crowd ("smush")
+  together at high orders. The central hub now uses caesium (the largest covalent
+  radius in `periodic_table.py`, raised to its true Alvarez-2008 value of 2.44 Å)
+  instead of iron; the wider hub-ring bonding cutoff lets the rings sit at a larger
+  radius while the hub still bonds to every ring atom, so adjacent ring atoms stay
+  comfortably separated through n = 20 (e.g. minimum atom spacing in D20h rose from
+  ~0.87 Å to ~1.28 Å, versus a ~0.8 Å rendered sphere diameter).
+
 ### Documentation
-- Added docstrings to previously undocumented helper functions (`Symmetry._find_z_axis`'s
-  nested `count_intersections`, `display._samples_dir`, and the `_build_parser` entry points
-  in the HTML/LaTeX character-table formatters) to satisfy the project's docstring convention.
+- Added docstrings to previously undocumented helpers across the codebase: the
+  10 internal row-builders in `character_tables/generator.py`, the visualizer's
+  Qt/OpenGL override methods (`gl_widget`, `shader_program`, `model_manager`,
+  `structure_renderer`, `window`, `obj_loader`), nested helpers in `symmetry.py`,
+  `display.py`, `operation_manager.py`, and `basis_functions.py`, and module
+  docstrings for the `visualizer/models` and `visualizer/shaders` packages.
+- Added teaching notes in `symmetry.py` explaining the deliberately permissive
+  asymmetric-top inertial filter and the scale-dependent absolute thresholds used
+  for linearity/planarity.
+- Reworded stale "Direct translation of reference/…" / "Mirrors reference/…"
+  module headers to note that the vendored `reference/` tree was removed in 0.2.0.
+- `README.md`: documented that improper-axis families (Sₙ, and the S₂ₙ axis of
+  Dₙd) detect reliably only to ~n = 10, while the proper-axis families now detect
+  across the full n = 3–20 adaptive range.
+- `docs/api.md`: added `structure_generator.format_xyz`.
+- `.claude/CLAUDE.md`: rewritten to describe the actual `src/` package layout
+  (the file still referenced the obsolete `schoenflies/` + `reference/` layout).
+- Source files normalised to plain UTF-8 (BOM removed).
 
 ## [0.2.0] - 2026-06-10
 

@@ -1,4 +1,4 @@
-﻿"""Integration tests: full Symmetry pipeline against all 32 reference molecules."""
+"""Integration tests: full Symmetry pipeline against all 32 reference molecules."""
 
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from pyrrhotite.rotor_class import RotorClass
 
 from .conftest import EXPECTED_POINT_GROUPS
 
-XYZ_DIR = Path(__file__).parent / "files"
+XYZ_DIR = Path(__file__).parent.parent / "src" / "sample_molecules"
 
 
 # ------------------------------------------------------------------

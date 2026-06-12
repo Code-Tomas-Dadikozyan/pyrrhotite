@@ -308,6 +308,7 @@ def _build_cnh(n: int) -> PointGroup:
         num_extra = 1 + len(s_cls) + 1    # i + S cols + σh
 
         def _build_row_cnh_even(cn_row: list[float], parity: int) -> list[float]:
+            """Append the i, S^k and σh columns to a Cn row to form a Cnh (even n) row."""
             # cn_row: E + Cn rotation values
             # extra cols: i corresponds to E col (index 0),
             #   S^k cols correspond to matching rot col by same k,
@@ -364,6 +365,7 @@ def _build_cnh(n: int) -> PointGroup:
         cn_chars = _cn_char_rows(n, rot_cls)
 
         def _add_cnh_odd_extra(cn_row: list[float], sign: int) -> list[float]:
+            """Append the σh and S^k columns to a Cn row to form a Cnh (odd n) row."""
             # σh: sign * dim (for A: ±1, for E: ±2)
             dim = cn_row[0]
             sigma_h_val = sign * dim
@@ -601,12 +603,14 @@ def _build_sn(n: int) -> PointGroup:
         # g irreps: at even k use +formula, at odd k and k=n/2 use -(formula)
         # u irreps: +formula for all k
         def _sn_chi(j: int, rc: _RotClass, parity: int) -> float:
+            """Return the χ value of the E_j irrep on rotation class `rc` for an Sn group."""
             val = 2.0 * math.cos(2.0 * math.pi * j * rc.k / n)
             if parity == 1 and (rc.k % 2 == 1 or rc.k == n // 2):
                 val = -val
             return val
 
         def _sn_row_1d(parity: int) -> list[float]:
+            """Build a 1D (A-type) irrep row for an Sn group; `parity` sets the improper-column sign."""
             # 1D A irrep: 1 at even-k cols (proper), parity*1 at odd-k/inv cols
             row = [1.0]   # E col
             for rc in ordered_cols:
@@ -796,6 +800,7 @@ def _build_dnh(n: int) -> PointGroup:
 
         # Dn character row (rotation + C2' + C2'' parts)
         def _dn_row(j: int) -> list[float]:
+            """Build a Dn (even n) character row: j<0 selects a 1D irrep (A1/A2/B1/B2), j≥1 an E_j."""
             # j < 0: 1D irrep: j=-1 → A1, j=-2 → A2, j=-3 → B1, j=-4 → B2
             if j == -1:   # A1: all 1s
                 return [1.0] * (1 + len(rot_cls)) + [1.0, 1.0]
@@ -814,6 +819,7 @@ def _build_dnh(n: int) -> PointGroup:
         # For g: same sign as Dn row
         # For u: negated
         def _extra_dnh_even(dn_row: list[float], dn_j: int, parity: int) -> list[float]:
+            """Append the i, S^k, σh and σv columns to a Dn row to form a Dnh (even n) row."""
             # i ↔ E col (index 0)
             extra = [dn_row[0] * parity]
             # S cols (same k as Cn rotation cols)
@@ -863,6 +869,7 @@ def _build_dnh(n: int) -> PointGroup:
                  [_add_prime(ir, _IPri.Double) for ir in dn_irreps]
 
         def _dn_row_odd(j: int) -> list[float]:
+            """Build a Dn (odd n) character row: j<0 selects a 1D irrep (A1/A2), j≥1 an E_j."""
             if j == -1:   # A1
                 return [1.0] * (1 + len(rot_cls)) + [1.0]
             if j == -2:   # A2
@@ -870,6 +877,7 @@ def _build_dnh(n: int) -> PointGroup:
             return [2.0] + [_chi_cn_k(j, rc.k, n) for rc in rot_cls] + [0.0]
 
         def _extra_dnh_odd(dn_row: list[float], sign: int) -> list[float]:
+            """Append the σh, S^k and σv columns to a Dn row to form a Dnh (odd n) row."""
             dim = dn_row[0]
             sigma_h_val = sign * dim
             s_vals = []
@@ -1011,6 +1019,7 @@ def _build_dnd(n: int) -> PointGroup:
 
         # character formula
         def _chi_dnd_even(j: int, rc: _RotClass) -> float:
+            """Return the χ value of the E_j irrep on class `rc` for a Dnd (even n) group."""
             # Both S and C columns use 2cos(πjk/n) where k is the S_{2n}^k power index.
             # For C_n^p: k=2p, so 2cos(πj·2p/n) = 2cos(2πjp/n) ✓
             return 2.0 * math.cos(math.pi * j * rc.k / n)
@@ -1073,6 +1082,7 @@ def _build_dnd(n: int) -> PointGroup:
         # σd column: 0 for E, ±1 for A
 
         def _build_dnd_odd_row(j: int, parity: int) -> list[float]:
+            """Build a Dnd (odd n) character row; `parity` selects the g/u inversion subscript."""
             # j ≥ 1: E_j;  j == -1: A1;  j == -2: A2
             # parity: +1 for g, -1 for u
             if j == -1:   # A1: C2'=+1, i=+parity, S=+parity, σd=+parity

@@ -1,7 +1,8 @@
 """
 High-level renderer that turns a Structure into lists of draw calls.
 
-Mirrors reference/src/structure_renderer.h/.cpp.
+Mirrors the original C++ `schoenflies` structure_renderer.h/.cpp (the vendored
+reference/ tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies).
 
 Responsibilities
 ----------------
@@ -38,6 +39,7 @@ class StructureRenderer:
     """Converts a Structure to per-frame ModelInstance lists."""
 
     def __init__(self) -> None:
+        """Create an empty renderer with an identity camera (no structure loaded yet)."""
         self._structure: Structure | None = None
         self._bond_pairs: list[tuple[int, int]] = []
         self._span: float = 1.0
@@ -50,12 +52,14 @@ class StructureRenderer:
     # ------------------------------------------------------------------
 
     def set_structure(self, structure: Structure) -> None:
+        """Load a structure: compute its bond pairs and span, and reset the camera to frame it."""
         self._structure = structure
         self._bond_pairs = structure.calculate_bond_pairs()
         self._calculate_span()
         self._reset_camera()
 
     def reset_camera(self) -> None:
+        """Reset the camera to the default viewing angle (public wrapper for `_reset_camera`)."""
         self._reset_camera()
 
     # ------------------------------------------------------------------
@@ -101,6 +105,7 @@ class StructureRenderer:
         return self._camera_rotation
 
     def get_span(self) -> float:
+        """Return the structure's radial span (max atom distance from origin), used to frame the camera."""
         return self._span
 
     # ------------------------------------------------------------------
@@ -159,6 +164,7 @@ class StructureRenderer:
         self._arcball_rotation = np.eye(4, dtype=np.float32)
 
     def _calculate_span(self) -> None:
+        """Recompute `_span` as the largest atom distance from the origin (min 0.5)."""
         if self._structure is None or len(self._structure.coordinates) == 0:
             self._span = 1.0
             return
@@ -197,6 +203,7 @@ class StructureRenderer:
         len_b = (1.0 - split) * length
 
         def _half(trans: np.ndarray, seg_len: float, el) -> ModelInstance:
+            """Build one half-cylinder ModelInstance of length `seg_len`, coloured for element `el`."""
             scale = pyrr.matrix44.create_from_scale(
                 np.array([_CYLINDER_RADIUS, _CYLINDER_RADIUS, seg_len], dtype=np.float32)
             )

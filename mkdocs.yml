@@ -67,15 +67,15 @@ extra_css:
   - stylesheets/extra.css
 
 extra:
+  # The header already links to the repo (via repo_url), so the footer only
+  # adds the things that aren't reachable from there: filing an issue, and a
+  # full contact page (rather than a bare mailto: link).
   social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite
-      name: Source code on GitHub
     - icon: fontawesome/solid/bug
       link: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/issues
       name: Report an issue
     - icon: fontawesome/solid/envelope
-      link: mailto:tdadikozyan04@gmail.com
+      link: about/#contact
       name: Contact the maintainer
 
 nav:
@@ -100,8 +100,7 @@ markdown_extensions:
   - def_list
   - footnotes
   - tables
-  - toc:
-      permalink: true
+  - toc
   - pymdownx.highlight
   - pymdownx.details
   - pymdownx.tabbed:

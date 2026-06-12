@@ -55,6 +55,25 @@ For development (running the test suite):
 pip install 'pyrrhotite[dev]'   # installs pytest
 ```
 
+??? question "Common installation issues"
+    **`ModuleNotFoundError: No module named 'pyrrhotite'` right after installing**
+    : Check that the virtual environment you installed into is the one your
+      shell or IDE is actually using (`python -m pip show pyrrhotite` should
+      print a location). This is the most common cause when `pip install` and
+      `python` are picking up different environments.
+
+    **`pip install 'pyrrhotite[vis]'` fails to build `PyOpenGL` or `PyQt6`**
+    : These ship prebuilt wheels for all common platforms; a build-from-source
+      attempt usually means `pip` itself is outdated. Try
+      `python -m pip install --upgrade pip` first, then re-run the install.
+
+    **The 3-D viewer opens but is blank, or `visualize()` raises immediately on Linux**
+    : See the note above about Qt6/OpenGL system packages — the Python side
+      installed correctly, but the platform plugin or OpenGL driver is
+      missing.
+
+    **Still stuck?** See [About → Contact](about.md#contact).
+
 ---
 
 ## Quick start
@@ -107,7 +126,7 @@ centre of mass automatically.
 
 ```bash
 pyrrhotite molecule.xyz
-pyrrhotite tests/files/*.xyz
+pyrrhotite src/sample_molecules/*.xyz
 
 pyrrhotite -v ammonia.xyz             # rotor class + all operations
 pyrrhotite -ct ammonia.xyz            # character table

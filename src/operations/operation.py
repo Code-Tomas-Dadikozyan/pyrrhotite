@@ -1,6 +1,8 @@
 """
 Symmetry operation: matrix construction, application to atoms, equality check.
-Direct translation of reference/src/symmetry/operations/operation.h/cpp.
+Translated from the original C++ `schoenflies` (was reference/src/symmetry/
+operations/operation.h/cpp; that vendored tree was removed in 0.2.0 — see
+https://gitlab.com/lkkmpn/schoenflies).
 
 What is a symmetry operation?
 ------------------------------

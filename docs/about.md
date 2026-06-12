@@ -9,18 +9,18 @@ molecule.
 
 The two projects have since diverged:
 
-| | Luuk Kempen's `schoenflies` (C++) | `pyrrhotite` (this project) |
+| Feature | `schoenflies` (C++) | `pyrrhotite` |
 |---|---|---|
 | Point group determination from `.xyz` | ✅ | ✅ |
-| Character table generation | ❌ | ✅ — for **any** of the 18 Schoenflies classes, including arbitrary order Cₙ groups, with or without an `.xyz` file |
-| HTML / LaTeX export of character tables | ❌ | ✅ |
-| 3-D visualizer | ✅ — shows the molecule **and overlays the detected symmetry operations** (axes, planes) | ✅ — shows the molecule with an orientation gizmo and optional element labels (symmetry-operation overlays are not yet implemented) |
+| Character tables | ❌ | ✅ — generated for any of the 18 Schoenflies classes (axial families to arbitrary order), with or without an `.xyz` file, and exportable to HTML / LaTeX |
+| Idealized structure generation | ❌ | ✅ — build a molecule that has a requested axial symmetry, for testing or demonstration |
+| 3-D visualizer | ✅ — overlays the detected symmetry operations (axes, planes) on the molecule | ✅ — molecule, axis gizmo, and optional element labels (no operation overlays yet) |
 | Sample molecule library | ❌ | ✅ — 32 bundled `.xyz` files with one-line helpers |
 
-In short: if you need to *see* the symmetry operations drawn on a molecule, the
-original C++ tool is currently the better choice. If you need character
-tables — generated on demand for any point group, with or without a structure —
-`pyrrhotite` is the tool for that.
+In short: reach for the original C++ tool if you need to *see* the symmetry
+operations drawn on a molecule. Reach for `pyrrhotite` if you need character
+tables — on demand for any point group, with or without a structure — or any of
+the other features above.
 
 ---
 

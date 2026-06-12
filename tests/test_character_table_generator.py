@@ -1,4 +1,4 @@
-﻿"""Tests for the automatic character table generator.
+"""Tests for the automatic character table generator.
 
 Verification strategy:
 1. Consistency: generated tables match hardcoded tables for all axial groups

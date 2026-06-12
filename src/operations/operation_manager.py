@@ -1,7 +1,9 @@
 """
 Registry for discovered symmetry operations; validates, deduplicates, and
 generates the final point-group operation list.
-Direct translation of reference/src/symmetry/operations/operation_manager.h/cpp.
+Translated from the original C++ `schoenflies` (was reference/src/symmetry/
+operations/operation_manager.h/cpp; that vendored tree was removed in 0.2.0 — see
+https://gitlab.com/lkkmpn/schoenflies).
 """
 
 from __future__ import annotations
@@ -258,6 +260,7 @@ class OperationManager:
 
         # Fallback for terminals that cannot render Schoenflies Unicode symbols.
         def _safe(text: str) -> str:
+            """Return `text` unchanged if the stdout encoding supports it, else an ASCII fallback."""
             try:
                 text.encode(sys.stdout.encoding or "utf-8")
                 return text
@@ -269,6 +272,7 @@ class OperationManager:
 
         # Format a 3-vector as "(+x.xxx, +y.yyy, +z.zzz)" for axis display.
         def _fmt_vec(v: object) -> str:
+            """Format a 3-vector as a fixed-width, signed parenthesised string for display."""
             return f"({v[0]:+.3f}, {v[1]:+.3f}, {v[2]:+.3f})"
 
         E = OperationLabel.Element

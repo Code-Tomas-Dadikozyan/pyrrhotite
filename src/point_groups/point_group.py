@@ -108,6 +108,28 @@ class PointGroup:
         return self._order
 
     @property
+    def num_proper_rotations(self) -> dict[int, int]:
+        """Return the per-degree count of proper-rotation axes this group requires.
+
+        The key is the rotation degree (e.g. 3 for a C3 axis); degree 0 denotes
+        the infinite-order axis C∞ of the linear groups.  Used by the matcher to
+        check whether a candidate group can account for the highest-order axis
+        actually detected on a molecule.
+        """
+        return self._num_proper_rotations
+
+    @property
+    def num_improper_rotations(self) -> dict[int, int]:
+        """Return the per-degree count of improper-rotation (Sₙ) axes this group requires.
+
+        The key is the improper-rotation degree (e.g. 16 for an S16 axis); degree
+        0 denotes the infinite-order S∞ of the linear groups.  Used by the matcher
+        to check whether a candidate group can host the highest-order improper
+        axis actually detected on a molecule.
+        """
+        return self._num_improper_rotations
+
+    @property
     def unique_operations(self) -> list[OperationLabelCount]:
         """Return the list of unique operation labels with counts."""
         return self._unique_operations
@@ -211,6 +233,7 @@ class PointGroup:
         # ------------------------------------------------------------------
 
         def _safe(text: str) -> str:
+            """Return `text`, or an ASCII-substituted version if stdout cannot encode it."""
             # Some terminals (Windows cmd, certain SSH sessions) cannot encode
             # the Unicode characters used in Schoenflies/Mulliken notation.
             # We try to encode the string first; if that raises an exception
@@ -227,6 +250,7 @@ class PointGroup:
                         .replace("²", "^2").replace("¹", ""))
 
         def fmt(v: float) -> str:
+            """Format one character value: symbolic constant, integer, or trimmed decimal."""
             # Format a single character-table value for display.
             # Three rules, tried in order:
             #   1. If the value matches a known irrational constant (e.g. √2, φ),
@@ -364,6 +388,7 @@ class PointGroup:
             row_w = max((len(r) for r in row_labels), default=4)
 
             def _col_width(h: str, col_vals: list[str]) -> int:
+                """Return the display width for a column: max of header, its values, and a floor of 6."""
                 # Minimum width of 6 ensures that values like "-1" and "2cos(π/7)"
                 # always fit without truncation and columns are never unreadably thin.
                 return max(len(h), 6, max((len(v) for v in col_vals), default=1))

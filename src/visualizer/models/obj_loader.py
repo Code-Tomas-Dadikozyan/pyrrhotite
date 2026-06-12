@@ -5,7 +5,8 @@ Returns (vertices, indices) in the same layout as geometry.py:
   vertices — float32 (N, 6): [x, y, z, nx, ny, nz]
   indices  — uint32 triangle indices
 
-Mirrors reference/src/gui/models/obj_loader.h/.cpp.
+Mirrors the original C++ `schoenflies` gui/models/obj_loader.h/.cpp (the vendored
+reference/ tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies).
 Only handles 'v', 'vn', and 'f' directives (no materials, no texcoords).
 """
 
@@ -60,6 +61,7 @@ def load_obj(path: Path) -> tuple[np.ndarray, np.ndarray]:
 
 
 def _get_or_add(lst: list, item: tuple) -> int:
+    """Return the index of `item` in `lst`, appending it first if not already present (vertex dedup)."""
     try:
         return lst.index(item)
     except ValueError:

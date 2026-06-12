@@ -5,7 +5,8 @@ Each function returns (vertices, indices) where:
   vertices  — float32 array shaped (N, 6): [x, y, z, nx, ny, nz]
   indices   — uint32 array of triangle indices
 
-Mirrors reference/src/gui/models/geometry.h/.cpp.
+Mirrors the original C++ `schoenflies` gui/models/geometry.h/.cpp (the vendored
+reference/ tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies).
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-﻿"""Unit tests for point group data: POINT_GROUPS list, PointGroup matching."""
+"""Unit tests for point group data: POINT_GROUPS list, PointGroup matching."""
 
 import pytest
 

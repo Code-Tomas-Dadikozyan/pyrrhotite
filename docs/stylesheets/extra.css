@@ -73,6 +73,7 @@
 
 .pyrrhotite-hero .md-button {
   border-color: var(--pyrrhotite-gold);
+  color: #fff;
 }
 
 .pyrrhotite-hero .md-button--primary {
@@ -102,4 +103,74 @@
 .md-typeset .grid.cards > ul > li > p:first-child .twemoji,
 .md-typeset .grid.cards > ol > li > p:first-child .twemoji {
   color: var(--pyrrhotite-amber);
+}
+
+/* Give each major section a gold underline so pages read as distinct
+   sections rather than one continuous wall of text. */
+.md-typeset h2 {
+  padding-bottom: 0.3rem;
+  border-bottom: 0.05rem solid var(--pyrrhotite-amber);
+}
+
+/* ---------------------------------------------------------------------
+   Admonitions ("!!! note", "!!! tip", etc.) and collapsible "??? "
+   blocks default to a mix of blue/green/orange/red that clashes with the
+   site's navy + gold palette. Recolour them onto a shared gold/amber
+   scale so they read as "part of this site" rather than generic
+   Material defaults. Plain `note`/`info`/`tip`/`example`/`question` all
+   get the brand amber; `warning` keeps a distinct, slightly redder amber
+   so cautionary callouts still stand out from informational ones.
+   `.md-typeset` is repeated to win the specificity fight against
+   Material's own admonition rules. --------------------------------- */
+.md-typeset .admonition,
+.md-typeset details {
+  border-color: var(--pyrrhotite-amber);
+}
+
+.md-typeset .admonition > .admonition-title,
+.md-typeset details > summary {
+  background-color: rgba(212, 160, 23, 0.1);
+}
+
+.md-typeset .admonition > .admonition-title::before,
+.md-typeset details > summary::before,
+.md-typeset .admonition > .admonition-title::after,
+.md-typeset details > summary::after {
+  background-color: var(--pyrrhotite-amber);
+}
+
+.md-typeset .warning,
+.md-typeset details.warning {
+  border-color: #b5651d;
+}
+
+.md-typeset .warning > .admonition-title,
+.md-typeset details.warning > summary {
+  background-color: rgba(181, 101, 29, 0.1);
+}
+
+.md-typeset .warning > .admonition-title::before,
+.md-typeset details.warning > summary::before {
+  background-color: #b5651d;
+}
+
+/* Keep admonition body text the same shade as the rest of the page —
+   Material dims it slightly by default, which read as an inconsistency
+   once the surrounding colours changed. */
+.md-typeset .admonition > p,
+.md-typeset details > p {
+  color: var(--md-default-fg-color);
+}
+
+/* ---------------------------------------------------------------------
+   Mermaid diagrams (Algorithm page flowchart) default to Mermaid's own
+   blue/grey theme, which looks out of place next to the navy/gold site
+   palette. Material exposes these as CSS custom properties read by its
+   Mermaid integration at render time. --------------------------------- */
+.mermaid {
+  --md-mermaid-edge-color: var(--pyrrhotite-amber);
+  --md-mermaid-node-bg-color: rgba(212, 160, 23, 0.1);
+  --md-mermaid-node-fg-color: var(--md-default-fg-color);
+  --md-mermaid-label-bg-color: var(--md-default-bg-color);
+  --md-mermaid-label-fg-color: var(--md-default-fg-color);
 }

@@ -1,6 +1,8 @@
 """
 Periodic table data: atomic numbers, masses, covalent radii, and colours.
-Direct translation of reference/src/periodic_table/periodic_table.cpp.
+Translated from the original C++ `schoenflies` (was reference/src/periodic_table/
+periodic_table.cpp; that vendored tree was removed in 0.2.0 — see
+https://gitlab.com/lkkmpn/schoenflies).
 """
 
 from __future__ import annotations
@@ -121,7 +123,14 @@ ATOMIC_NUMBER_TO_ELEMENT: dict[int, Element] = {
     52 : Element("Te", "tellurium"    , 1.2 , 127.6   , (0.8313725, 0.4784314, 0        )),
     53 : Element("I" , "iodine"       , 1.2 , 126.9045, (0.5803922, 0        , 0.5803922)),
     54 : Element("Xe", "xenon"        , 1.2 , 131.293 , (0.2588235, 0.6196078, 0.6901961)),
-    55 : Element("Cs", "caesium"      , 1.2 , 132.9055, (0.3411765, 0.0901961, 0.5607843)),
+    # Caesium uses its true Alvarez (2008) covalent radius (2.44 Å) rather than
+    # the coarse 1.2 Å fallback the reference applied to most heavy atoms. It is
+    # the largest covalent radius in the table and is used deliberately by the
+    # structure generator as a "hub" atom (see structure_generator._hub_element):
+    # a large radius widens the hub-ring bonding cutoff sqrt(20 * r_hub * r_ring),
+    # which lets the generated rings sit at a larger radius so their atoms do not
+    # visually crowd together at high orders.
+    55 : Element("Cs", "caesium"      , 2.44, 132.9055, (0.3411765, 0.0901961, 0.5607843)),
     56 : Element("Ba", "barium"       , 1.2 , 137.327 , (0        , 0.7882353, 0        )),
     57 : Element("La", "lanthanum"    , 1.2 , 138.9055, (0.4392157, 0.8313725, 1        )),
     58 : Element("Ce", "cerium"       , 1.2 , 140.116 , (1        , 1        , 0.7803922)),

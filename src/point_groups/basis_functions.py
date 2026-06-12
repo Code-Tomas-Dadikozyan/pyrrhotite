@@ -264,6 +264,7 @@ def compute_basis_functions(pg: PointGroup) -> dict[str, dict[str, list[str]]]:
     }
 
     def _assign(key: str, labels: list[str], category: str) -> None:
+        """Attach display `labels` (under `category`) to every irrep that contains basis set `key`."""
         # For each irrep, if it appears at least once in this basis-function set
         # (multiplicity ≥ 1 after rounding), add the display labels to that irrep's
         # entry.  round() corrects for tiny floating-point errors in the sum.

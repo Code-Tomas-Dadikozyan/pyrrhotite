@@ -1,7 +1,8 @@
 """
 OpenGL shader program wrapper.
 
-Mirrors reference/src/gui/shaders/shader_program.h/.cpp:
+Mirrors the original C++ `schoenflies` gui/shaders/shader_program.h/.cpp (the vendored
+reference/ tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies):
   - Compile vertex + fragment source
   - Link into a program
   - Typed uniform setters (mat4, vec3, vec4, int, float)
@@ -19,6 +20,7 @@ class ShaderProgram:
     """Compiled and linked OpenGL shader program."""
 
     def __init__(self, vertex_path: Path, fragment_path: Path) -> None:
+        """Read, compile, and link the vertex and fragment shaders at the given paths."""
         vert_src = vertex_path.read_text(encoding="utf-8")
         frag_src = fragment_path.read_text(encoding="utf-8")
         self._id = self._compile_and_link(vert_src, frag_src)
@@ -32,6 +34,7 @@ class ShaderProgram:
         GL.glUseProgram(self._id)
 
     def delete(self) -> None:
+        """Delete the underlying GL program object."""
         GL.glDeleteProgram(self._id)
 
     # ------------------------------------------------------------------
@@ -44,18 +47,22 @@ class ShaderProgram:
         GL.glUniformMatrix4fv(loc, 1, GL.GL_FALSE, matrix.astype(np.float32).flatten())
 
     def set_vec3(self, name: str, v: np.ndarray | tuple) -> None:
+        """Upload a 3-component float uniform."""
         loc = GL.glGetUniformLocation(self._id, name)
         GL.glUniform3f(loc, float(v[0]), float(v[1]), float(v[2]))
 
     def set_vec4(self, name: str, v: np.ndarray | tuple) -> None:
+        """Upload a 4-component float uniform."""
         loc = GL.glGetUniformLocation(self._id, name)
         GL.glUniform4f(loc, float(v[0]), float(v[1]), float(v[2]), float(v[3]))
 
     def set_int(self, name: str, value: int) -> None:
+        """Upload an integer uniform."""
         loc = GL.glGetUniformLocation(self._id, name)
         GL.glUniform1i(loc, value)
 
     def set_float(self, name: str, value: float) -> None:
+        """Upload a float uniform."""
         loc = GL.glGetUniformLocation(self._id, name)
         GL.glUniform1f(loc, value)
 
@@ -65,6 +72,7 @@ class ShaderProgram:
 
     @staticmethod
     def _compile_shader(source: str, shader_type: int) -> int:
+        """Compile one shader stage from source, raising RuntimeError on a compile error."""
         shader = GL.glCreateShader(shader_type)
         GL.glShaderSource(shader, source)
         GL.glCompileShader(shader)
@@ -77,6 +85,7 @@ class ShaderProgram:
 
     @classmethod
     def _compile_and_link(cls, vert_src: str, frag_src: str) -> int:
+        """Compile the vertex and fragment stages and link them into a program (raises on link error)."""
         vert = cls._compile_shader(vert_src, GL.GL_VERTEX_SHADER)
         frag = cls._compile_shader(frag_src, GL.GL_FRAGMENT_SHADER)
         program = GL.glCreateProgram()

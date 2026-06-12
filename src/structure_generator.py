@@ -69,6 +69,23 @@ def _radius_for(n: int) -> float:
     return (lo + hi) / 2.0
 
 
+def _hub_bonded_ring_radius(hub_ring_cutoff: float, ring_height: float) -> float:
+    """Return the largest ring radius for which a central hub still bonds to ring atoms.
+
+    A ring atom sits at 3-D distance ``sqrt(ring_radius^2 + ring_height^2)`` from
+    a hub on the axis. For the hub to bond, that distance must stay under
+    ``hub_ring_cutoff`` (the ``sqrt(20 * r_hub * r_ring)`` threshold used by
+    `Structure.calculate_bond_pairs`). Aiming for 95% of the cutoff leaves a
+    small margin, so the maximum radius is ``sqrt((0.95*cutoff)^2 - ring_height^2)``.
+    If the ring plane is already farther from the hub than that target (so no
+    positive radius would bond), a small positive fallback is returned.
+    """
+    target = 0.95 * hub_ring_cutoff
+    if target <= ring_height:
+        return 0.5
+    return float(np.sqrt(target**2 - ring_height**2))
+
+
 def _decoration_element(element: str) -> str:
     """Pick a small, light placeholder element for terminal substituent atoms
     (e.g. the "H" in a benzene-like ring+H pattern), distinct from `element`.
@@ -78,9 +95,19 @@ def _decoration_element(element: str) -> str:
 
 def _hub_element(element: str) -> str:
     """Pick a large-radius (metal-like) placeholder element for a central hub
-    atom, distinct from `element` -- mirrors ferrocene's central Fe.
+    atom, distinct from `element`.
+
+    The hub plays ferrocene's central-Fe role, but we deliberately use caesium
+    (the largest covalent radius in `periodic_table.py`, 2.44 A) rather than Fe.
+    The hub must bond to every ring atom, and `Structure.calculate_bond_pairs`
+    treats two atoms as bonded only when dist^2 < 20 * r_i * r_j. A larger hub
+    radius widens that cutoff, so the rings can sit at a larger radius while the
+    hub still reaches them -- which spreads the ring atoms out and stops them
+    visually crowding ("smushing") together at high orders (large n). Caesium is
+    distinct from every default ring element, so a fallback is only needed in the
+    unlikely event the caller explicitly asks for a caesium ring.
     """
-    return "Fe" if element != "Fe" else "Co"
+    return "Cs" if element != "Cs" else "Fe"
 
 
 def _element_for_degree(degree: int) -> str:
@@ -293,13 +320,28 @@ def generate_idealized_structure(
             theta = np.pi / (2 * n)
 
         ring_z = get_atomic_number(_ring_element(element, 3))
-        ring_radius = _radius_for(n) * radius
+        hub_z = get_atomic_number(_hub_element(element))
         base_height = 0.8 if (group_class == _Class.Dd and n in (3, 4)) else 1.0
         ring_height = base_height * height_scale
 
+        # Ring radius: large enough that adjacent ring atoms bond to each other,
+        # but capped so the central hub stays within bonding distance of every
+        # ring atom even for large n. `_radius_for(n)` grows ~linearly with n, so
+        # without the cap the rings would drift outside the hub-ring bonding
+        # cutoff (e.g. for D20h the hub-ring distance reaches ~4.4 A versus a
+        # ~3.1 A cutoff), leaving the hub bonded to nothing -- a central atom
+        # floating unconnected between the two rings in the 3-D viewer. Capping
+        # the radius instead lets neighbouring ring atoms crowd closer (so they
+        # also bond, raising the ring-atom degree) while keeping the hub bonded;
+        # both patterns stay connected and round-trip correctly through Symmetry.
+        hub_ring_cutoff = np.sqrt(
+            20.0 * get_element(hub_z).radius * get_element(ring_z).radius
+        )
+        max_ring_radius = _hub_bonded_ring_radius(hub_ring_cutoff, ring_height)
+        ring_radius = min(_radius_for(n) * radius, max_ring_radius)
+
         ring_top = _ring(n, ring_radius, z=ring_height)
         ring_bottom = _ring(n, ring_radius, z=-ring_height, phase=theta)
-        hub_z = get_atomic_number(_hub_element(element))
         coords = np.vstack((np.array([[0.0, 0.0, 0.0]]), ring_top, ring_bottom))
         atomic_numbers = np.concatenate(([hub_z], np.full(2 * n, ring_z, dtype=int)))
         description = f"Idealized {label.name}: hub + twisted double {n}-ring (theta={theta:.4f} rad)"
@@ -323,14 +365,24 @@ def generate_idealized_structure(
         mr_factor = 1.05
 
         ring_z = get_atomic_number(_ring_element(element, 4))
+        hub_z = get_atomic_number(_hub_element(element))
+        ring_height = 1.0 * height_scale
+
+        # Cap the antiprism radius so the central hub stays bonded to the ring
+        # atoms even for large n (same reasoning as the Dn/Dnh/Dnd families: the
+        # m=n/2-gon radius from `_radius_for` grows with n and would otherwise
+        # carry the rings beyond the hub-ring bonding cutoff).
+        hub_ring_cutoff = np.sqrt(
+            20.0 * get_element(hub_z).radius * get_element(ring_z).radius
+        )
+        max_ring_radius = _hub_bonded_ring_radius(hub_ring_cutoff, ring_height)
 
         if n == 4:
             ring_radius = 0.7 * radius
             mz_off = 1.2 * height_scale
         else:
-            ring_radius = _radius_for(m) * radius
+            ring_radius = min(_radius_for(m) * radius, max_ring_radius)
             mz_off = {6: 1.25, 8: 1.2, 10: 1.1}.get(n, 1.2) * height_scale
-        ring_height = 1.0 * height_scale
 
         ring_top = _ring(m, ring_radius, z=ring_height)
         ring_bottom = _ring(m, ring_radius, z=-ring_height, phase=theta)
@@ -338,7 +390,6 @@ def generate_idealized_structure(
         marker_bottom = _ring(m, ring_radius * mr_factor, z=-(ring_height + mz_off), phase=theta + delta)
 
         marker_z = get_atomic_number(_decoration_element(element))
-        hub_z = get_atomic_number(_hub_element(element))
         coords = np.vstack((np.array([[0.0, 0.0, 0.0]]), ring_top, ring_bottom, marker_top, marker_bottom))
         atomic_numbers = np.concatenate(
             ([hub_z], np.full(2 * m, ring_z, dtype=int), np.full(2 * m, marker_z, dtype=int))

@@ -1,7 +1,8 @@
 """
 Main visualizer window.
 
-Mirrors reference/src/gui/main_window.h/.cpp.
+Mirrors the original C++ `schoenflies` gui/main_window.h/.cpp (the vendored
+reference/ tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies).
 Creates a QMainWindow with the GLWidget as its central widget.
 """
 
@@ -21,6 +22,7 @@ class VisualizerWindow(QMainWindow):
     """Top-level window for the molecule visualizer."""
 
     def __init__(self, structure: Structure, show_labels: bool = False, parent: QWidget | None = None) -> None:
+        """Build the main window: wire a renderer + GL widget for `structure` and set the title/size."""
         super().__init__(parent)
 
         self._renderer = StructureRenderer()

@@ -1,7 +1,8 @@
 """
 VAO/VBO registry for named 3-D models.
 
-Mirrors reference/src/gui/models/model_manager.h/.cpp.
+Mirrors the original C++ `schoenflies` gui/models/model_manager.h/.cpp (the vendored
+reference/ tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies).
 
 Usage
 -----
@@ -26,6 +27,7 @@ from ..shaders.shader_program import ShaderProgram
 
 @dataclass
 class _GPUModel:
+    """Handles for one GPU-resident model: its vertex array, vertex/element buffers, and index count."""
     vao: int
     vbo: int
     ebo: int
@@ -36,6 +38,7 @@ class ModelManager:
     """Registry of named OpenGL models (VAO + VBO + EBO)."""
 
     def __init__(self) -> None:
+        """Create an empty model registry (GPU upload happens later in `initialize`)."""
         self._models: dict[str, _GPUModel] = {}
 
     def initialize(self, arrow_obj_path) -> None:
@@ -128,6 +131,7 @@ class ModelManager:
         GL.glBindVertexArray(0)
 
     def cleanup(self) -> None:
+        """Delete every registered model's GPU buffers and clear the registry."""
         for m in self._models.values():
             GL.glDeleteVertexArrays(1, [m.vao])
             GL.glDeleteBuffers(1, [m.vbo])

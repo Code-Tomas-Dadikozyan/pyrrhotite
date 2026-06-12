@@ -1,4 +1,4 @@
-﻿"""
+"""
 Command-line interface for Schoenflies point group determination.
 
 Usage:

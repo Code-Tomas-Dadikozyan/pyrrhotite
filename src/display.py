@@ -10,7 +10,7 @@ This module has two halves:
 
 2. Sample-molecule convenience functions (`list_sample_molecules`, `load_sample`,
    `analyse_sample`, `visualize_sample`, `show_character_table_sample`) that work
-   with the 32 `.xyz` files bundled in `tests/files/`, so new users can try out
+   with the 32 `.xyz` files bundled in `pyrrhotite/sample_molecules/`, so new users can try out
    pyrrhotite without supplying their own molecule.
 """
 
@@ -90,16 +90,23 @@ def print_char_table_programmatic(pg: PointGroup) -> None:
 # Sample-molecule exploration
 # ---------------------------------------------------------------------------
 
-_SAMPLES_DIR = Path(__file__).parent.parent / "tests" / "files"
+# The sample-molecule XYZ files live *inside* the package
+# (src/sample_molecules/ -> pyrrhotite/sample_molecules/, declared as package-data
+# in pyproject.toml), so they ship in the wheel and resolve relative to this
+# module regardless of the working directory. This is what fixes the
+# `FileNotFoundError: .../site-packages/tests/files` a tester hit when calling
+# list_sample_molecules() from a pip-installed package: there is no longer any
+# dependency on a surrounding source checkout.
+_SAMPLES_DIR = Path(__file__).parent / "sample_molecules"
 
 
 def _samples_dir() -> Path:
     """Return the bundled sample-molecule directory, or raise if it is missing."""
     if not _SAMPLES_DIR.is_dir():
         raise FileNotFoundError(
-            f"Sample molecules directory not found at {_SAMPLES_DIR}. "
-            "Make sure you are running from the repository root and that "
-            "the tests/files/ directory is present."
+            f"Sample molecules directory not found at {_SAMPLES_DIR}. The package "
+            "data (pyrrhotite/sample_molecules/) appears to be missing from this "
+            "installation."
         )
     return _SAMPLES_DIR
 
@@ -107,7 +114,8 @@ def _samples_dir() -> Path:
 def list_sample_molecules() -> list[str]:
     """Return a sorted list of names of the built-in sample molecules.
 
-    Each name corresponds to the stem of an XYZ file in tests/files/ and can
+    Each name corresponds to the stem of an XYZ file in the bundled
+    pyrrhotite/sample_molecules/ directory and can
     be passed directly to :func:`load_sample`, :func:`analyse_sample`,
     :func:`visualize_sample`, or :func:`show_character_table_sample`.
     """

@@ -1,4 +1,4 @@
-﻿"""Unit tests for Operation: matrix construction, do_operation, equality."""
+"""Unit tests for Operation: matrix construction, do_operation, equality."""
 
 from pathlib import Path
 
@@ -9,7 +9,7 @@ from pyrrhotite.operations.operation import Operation
 from pyrrhotite.operations.operation_label import OperationLabel
 from pyrrhotite.structure import Structure
 
-XYZ_DIR = Path(__file__).parent / "files"
+XYZ_DIR = Path(__file__).parent.parent / "src" / "sample_molecules"
 
 E = OperationLabel.Element
 

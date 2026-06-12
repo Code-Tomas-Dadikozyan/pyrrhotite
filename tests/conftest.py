@@ -4,7 +4,9 @@ from pathlib import Path
 
 import pytest
 
-XYZ_DIR = Path(__file__).parent / "files"
+# Sample molecules live inside the package (and ship in the wheel) as the single
+# source of truth; the tests read them from there rather than a separate copy.
+XYZ_DIR = Path(__file__).parent.parent / "src" / "sample_molecules"
 
 # Filename → expected Schoenflies label string
 # Labels match PointGroupLabel.get_name() output (to be defined in point_group_label.py).

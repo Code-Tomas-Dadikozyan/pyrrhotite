@@ -1,7 +1,8 @@
 """
 Molecular structure representation: XYZ loading, centre-of-mass centering,
 closest-atom lookup, and bond-pair detection.
-Direct translation of reference/src/structure.h/cpp.
+Translated from the original C++ `schoenflies` (was reference/src/structure.h/cpp;
+that vendored tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies).
 """
 
 from __future__ import annotations
@@ -108,7 +109,7 @@ class Structure:
         """Return the index of the atom of the given element closest to coords.
 
         Only atoms whose atomic number matches are considered, mirroring
-        reference/src/structure.cpp find_closest_index.
+        the original C++ structure.cpp find_closest_index.
 
         This is used during the symmetry search to map a transformed atom
         position back onto a real atom: after applying a candidate symmetry

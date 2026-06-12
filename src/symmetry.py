@@ -1,7 +1,9 @@
 """
 Symmetry determination pipeline: principal axes, rotor classification,
 symmetry-operation search, point-group assignment, Cartesian axis labelling.
-Direct translation of reference/src/symmetry/symmetry.h/cpp.
+Translated from the original C++ `schoenflies` (was reference/src/symmetry/
+symmetry.h/cpp; that vendored tree was removed in 0.2.0 — see
+https://gitlab.com/lkkmpn/schoenflies).
 
 Algorithm overview
 ------------------
@@ -252,6 +254,14 @@ class Symmetry:
         """
         m = self._principal_moments  # sorted ascending by eigh: m[0] ≤ m[1] ≤ m[2]
 
+        # Note (A4): the degeneracy tests below are *relative* (e.g.
+        # (m[2]-m[0])/m[2]) and so are scale-invariant, but the linearity test
+        # `m[0] < 0.02` is an *absolute* threshold on a moment of inertia. It
+        # therefore implicitly assumes Ångström coordinates and atomic-mass-unit
+        # masses (the units used throughout this package): a genuinely linear
+        # molecule has Ia ≈ 0 in those units. Rescaling the inputs to other units
+        # would require rescaling this 0.02 too. The same caveat applies to the
+        # absolute 0.02 Å planarity threshold in _structure_is_planar.
         if (m[2] - m[0]) / m[2] < 0.02:
             self._rotor_class = RotorClass.SphericalTop
         elif (m[1] - m[0]) / m[1] < 0.02:
@@ -333,9 +343,16 @@ class Symmetry:
                 if dot < min_dot:
                     min_dot = dot
             # faithful translation: no abs() — matches C++ behaviour.
-            # The minimum (signed) dot product being small means the axis is
-            # roughly perpendicular to at least one principal axis, i.e. it
-            # lives close to the plane spanned by the other two.
+            #
+            # Teaching note (A2): because the dot product is *signed* and not
+            # wrapped in abs(), any candidate axis that is strongly *anti*-parallel
+            # to a principal axis (dot ≈ -1) trivially satisfies `min_dot < 0.02`.
+            # This makes the asymmetric-top filter deliberately permissive: it is a
+            # cheap pre-screen that errs on the side of *admitting* candidate axes,
+            # not a tight geometric constraint. Spurious axes that slip through here
+            # are still rejected later by the actual atom-mapping matrix test in
+            # OperationManager, so the looseness only costs a little extra work, not
+            # correctness. (A tighter version would use abs(float(np.dot(...))).)
             return min_dot < 0.02
 
         return False
@@ -678,6 +695,27 @@ class Symmetry:
         (not this group).  Among all candidates, we pick the one with the
         *smallest* surplus — the tightest fit to the operations actually present.
 
+        Accounting for the highest-order axis
+        -------------------------------------
+        A hardcoded group is only accepted if it can account for both the
+        highest-order proper rotation *and* the highest-order improper rotation
+        (Sₙ) actually detected.  Two distinct failure modes motivate each half:
+
+          • Proper axis.  A molecule with a genuine C11 axis (no hardcoded
+            C11-based group exists) would otherwise match a low-order group such
+            as D2h with a non-negative surplus and win — silently wrong.
+
+          • Improper axis.  An Sₙ molecule contains the proper rotation C_{n/2}
+            (e.g. S12 contains C6), so without the improper guard a hardcoded C6
+            would match and win, hiding the detected S12.  Likewise a genuine
+            D8d, whose S16 class is under-counted by the operation search, would
+            otherwise lose to C8v.
+
+        The adaptive search (capped at n=20) can detect axes far beyond the
+        hardcoded range (which stops at order 8), so both cases are reachable in
+        practice; when no hardcoded group accounts for the detected axes we fall
+        through to the analytical generator, which handles them correctly.
+
         Fallback generation
         -------------------
         If no hardcoded group matches (e.g. a C15v molecule), the algorithm
@@ -685,80 +723,156 @@ class Symmetry:
         character-table generator.  This handles arbitrarily high-order groups.
         """
         ops = self._operation_manager.operations
+
+        # Highest finite-order proper and improper rotations actually detected
+        # (degree 0 is the infinite axis C∞/S∞ of linear groups, handled by its
+        # own hardcoded entry, so it is excluded from these finite maxima).
+        max_proper_found = self._max_finite_degree(ops, _OL.Element.ProperRotation)
+        max_improper_found = self._max_finite_degree(ops, _OL.Element.ImproperRotation)
+
         min_diff = float("inf")
         best: PointGroup | None = None
         for pg in POINT_GROUPS:
             diff = pg.compare_to_symmetry_operations(ops)
-            if diff >= 0 and diff < min_diff:
-                min_diff = diff
-                best = pg
+            if diff < 0 or diff >= min_diff:
+                continue
+            if not self._group_accounts_for_axes(pg, max_proper_found, max_improper_found):
+                continue
+            min_diff = diff
+            best = pg
         if best is None:
             best = self._generate_point_group_from_ops(ops)
         self._point_group = best
+
+    @staticmethod
+    def _max_finite_degree(ops: list, element) -> int:
+        """Return the highest finite rotation degree among `ops` of the given element.
+
+        The infinite-order placeholder degree (`Operation.DEGREE_INF` == 0) is
+        excluded, so linear molecules report 0 here and are matched via their own
+        hardcoded C∞v/D∞h entries.
+        """
+        return max(
+            (op.degree for op in ops
+             if op.label.element == element
+             and op.degree != _Operation.DEGREE_INF),
+            default=0,
+        )
+
+    @staticmethod
+    def _group_accounts_for_axes(
+        pg: PointGroup, max_proper_found: int, max_improper_found: int
+    ) -> bool:
+        """Return True if `pg` can host the highest detected proper *and* improper axes.
+
+        A group hosting an infinite-order axis (degree 0) explains any detected
+        axis of that kind.  Otherwise the group's highest finite proper- and
+        improper-rotation degrees must each be at least the corresponding highest
+        order detected on the molecule; a group whose top axis is lower (e.g. D2h
+        for a C11 molecule, or C6 for an S12 molecule) cannot be the right answer.
+        """
+        def _hosts(group_degrees: dict[int, int], max_found: int) -> bool:
+            """True if `group_degrees` contains an infinite axis or one of order >= `max_found`."""
+            if _Operation.DEGREE_INF in group_degrees:
+                return True
+            return max(group_degrees, default=0) >= max_found
+
+        return (
+            _hosts(pg.num_proper_rotations, max_proper_found)
+            and _hosts(pg.num_improper_rotations, max_improper_found)
+        )
 
     def _generate_point_group_from_ops(
         self, ops: list
     ) -> PointGroup | None:
         """Infer an axial point-group label from the detected operations and generate it.
 
-        Used when no match is found in the hardcoded POINT_GROUPS list.
+        Used when no match is found in the hardcoded POINT_GROUPS list (e.g. a
+        high-order C15v whose order exceeds the hardcoded range).
+
+        Geometry, not labels
+        --------------------
+        This runs *before* `_label_symmetry_operations`, so reflection planes do
+        not yet carry σh/σv/σd labels — every reflection is still `Plane.none`.
+        The horizontal-vs-vertical distinction is therefore derived here directly
+        from each plane's normal relative to the principal (highest-order)
+        rotation axis:
+
+            • σh  — normal parallel to the principal axis (plane ⟂ axis);
+            • σv/σd — normal perpendicular to the principal axis (plane contains
+              the axis).
+
+        The presence of σh is also what distinguishes Dnh (has σh) from Dnd (no
+        σh, only vertical σd planes) for the same Dn skeleton.
         """
-        # Count operation types
+        tol = 0.02
+
         n_inv = sum(1 for op in ops
                     if op.label.element == _OL.Element.Inversion)
-        n_ref = sum(1 for op in ops
-                    if op.label.element == _OL.Element.Reflection)
         n_impr = sum(1 for op in ops
                      if op.label.element == _OL.Element.ImproperRotation)
 
-        # Highest-order proper rotation axis
-        proper_degs = [op.degree for op in ops
-                       if op.label.element == _OL.Element.ProperRotation]
-        if not proper_degs:
+        # Highest-order proper rotation axis: this is the principal (Cn) axis.
+        proper_rotations = [op for op in ops
+                            if op.label.element == _OL.Element.ProperRotation]
+        if not proper_rotations:
             return None
-        n = max(proper_degs)
+        n = max(op.degree for op in proper_rotations)
+        principal_axis = next(op.axis for op in proper_rotations if op.degree == n)
 
-        # Count C2 operations (potential C2' axes perpendicular to Cn)
-        n_c2 = sum(1 for op in ops
-                   if op.label.element == _OL.Element.ProperRotation
-                   and op.degree == 2)
-        # Subtract one C2 if it belongs to the main Cn axis (n even → C2 = Cn^(n/2))
-        n_c2_prime = n_c2 - (1 if n % 2 == 0 else 0)
+        def _is_parallel(a, b) -> bool:
+            """True if unit-ish vectors a and b are nearly (anti)parallel."""
+            return abs(float(np.dot(a, b))) > 1.0 - tol
 
+        def _is_perpendicular(a, b) -> bool:
+            """True if a and b are nearly perpendicular."""
+            return abs(float(np.dot(a, b))) < tol
+
+        # C2' axes are the degree-2 proper rotations perpendicular to the
+        # principal axis (the C2 that *is* the principal axis, for even n, is
+        # parallel to it and so excluded automatically by this geometric test).
+        n_c2_prime = sum(
+            1 for op in proper_rotations
+            if op.degree == 2 and _is_perpendicular(op.axis, principal_axis)
+        )
         has_c2_prime = n_c2_prime >= n   # at least n perpendicular C2 axes
-        has_sigma_h = any(
-            op.label.element == _OL.Element.Reflection
-            and op.label.plane == _OL.Plane.Horizontal
-            for op in ops
-        )
-        has_sigma_v_or_d = any(
-            op.label.element == _OL.Element.Reflection
-            and op.label.plane in (_OL.Plane.Vertical, _OL.Plane.Dihedral)
-            for op in ops
-        )
+
+        reflections = [op for op in ops
+                       if op.label.element == _OL.Element.Reflection]
+        has_sigma_h = any(_is_parallel(op.axis, principal_axis) for op in reflections)
+        has_vertical = any(_is_perpendicular(op.axis, principal_axis) for op in reflections)
+
+        if has_c2_prime:
+            if has_sigma_h:
+                pg_class = _PGL.Class.Dh          # Dnh: Dn + σh
+            elif has_vertical:
+                pg_class = _PGL.Class.Dd          # Dnd: Dn + σd, no σh
+            else:
+                pg_class = _PGL.Class.D            # Dn: no planes
+        elif has_sigma_h:
+            pg_class = _PGL.Class.Ch               # Cnh: Cn + σh
+        elif has_vertical:
+            pg_class = _PGL.Class.Cv               # Cnv: Cn + σv
+        elif n_impr > 0:
+            pg_class = _PGL.Class.S                 # Sn: improper axis, no planes
+        else:
+            pg_class = _PGL.Class.C                 # Cn: rotation axis only
+
+        # The label order is the principal proper-rotation degree for every axial
+        # family except Sn, whose order is the improper-rotation degree itself
+        # (e.g. S14 contains the proper rotation C7 but is labelled by its S14
+        # axis, the highest-order improper rotation present).
+        order = n
+        if pg_class == _PGL.Class.S:
+            order = max(
+                (op.degree for op in ops
+                 if op.label.element == _OL.Element.ImproperRotation),
+                default=n,
+            )
 
         try:
-            if has_c2_prime and (has_sigma_h or n_inv > 0):
-                pg_class = _PGL.Class.Dh
-            elif has_c2_prime and has_sigma_v_or_d:
-                pg_class = _PGL.Class.Dh
-            elif has_c2_prime:
-                pg_class = _PGL.Class.D
-            elif has_sigma_h and has_sigma_v_or_d:
-                pg_class = _PGL.Class.Dh
-            elif has_sigma_h:
-                pg_class = _PGL.Class.Ch
-            elif has_sigma_v_or_d:
-                pg_class = _PGL.Class.Cv
-            elif n_impr > 0 and n_inv > 0 and not has_sigma_v_or_d:
-                # S_{2n} with inversion — check if it's Sn or Dnd
-                pg_class = _PGL.Class.S
-            elif n_impr > 0:
-                pg_class = _PGL.Class.Dd
-            else:
-                pg_class = _PGL.Class.C
-            return _generate_pg(_PGL(pg_class, n))
-        except (ValueError, Exception):
+            return _generate_pg(_PGL(pg_class, order))
+        except ValueError:
             return None
 
     def _find_cartesian_axes(self) -> None:

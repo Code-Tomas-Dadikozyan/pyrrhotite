@@ -1,7 +1,8 @@
 """
 OpenGL rendering widget.
 
-Mirrors reference/src/gui/gl_widget.h/.cpp.
+Mirrors the original C++ `schoenflies` gui/gl_widget.h/.cpp (the vendored
+reference/ tree was removed in 0.2.0 — see https://gitlab.com/lkkmpn/schoenflies).
 
 Rendering pipeline (per frame)
 -------------------------------
@@ -46,6 +47,7 @@ class GLWidget(QOpenGLWidget):
     """PyQt6 OpenGL widget — mirrors GLWidget in the C++ reference."""
 
     def __init__(self, renderer: StructureRenderer, show_labels: bool = False, parent: QWidget | None = None) -> None:
+        """Create the GL widget bound to `renderer`; `show_labels` toggles element-symbol overlay."""
         super().__init__(parent)
         self._renderer = renderer
         self._show_labels = show_labels
@@ -64,6 +66,7 @@ class GLWidget(QOpenGLWidget):
     # ------------------------------------------------------------------
 
     def initializeGL(self) -> None:
+        """Qt hook: set up GL state, catching and logging any initialisation error."""
         try:
             self._initializeGL_impl()
         except Exception as exc:
@@ -72,6 +75,7 @@ class GLWidget(QOpenGLWidget):
             traceback.print_exc()
 
     def _initializeGL_impl(self) -> None:
+        """Compile shaders, load models, and configure depth/cull state (real init work)."""
         version = GL.glGetString(GL.GL_VERSION)
         renderer = GL.glGetString(GL.GL_RENDERER)
         print(f"[visualizer] OpenGL {version}  renderer={renderer}")
@@ -95,10 +99,12 @@ class GLWidget(QOpenGLWidget):
         print("[visualizer] GL initialisation complete")
 
     def resizeGL(self, w: int, h: int) -> None:
+        """Qt hook: remember the new widget size in logical pixels."""
         self._w = w
         self._h = h
 
     def paintGL(self) -> None:
+        """Qt hook: render one frame (structure pass, axis gizmo, label overlay)."""
         dpr = self.devicePixelRatioF()
         w, h = max(self.width(), 1), max(self.height(), 1)
         pw, ph = int(w * dpr), int(h * dpr)  # physical pixels for GL
@@ -141,17 +147,20 @@ class GLWidget(QOpenGLWidget):
     # ------------------------------------------------------------------
 
     def mousePressEvent(self, event) -> None:
+        """Begin an arcball drag on left-button press, recording the start point."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._mouse_pos = event.pos()
             self._arcball_active = True
 
     def mouseReleaseEvent(self, event) -> None:
+        """Commit the in-progress arcball rotation when the left button is released."""
         if event.button() == Qt.MouseButton.LeftButton and self._arcball_active:
             self._renderer.apply_arcball_rotation()
             self._arcball_active = False
             self.update()
 
     def mouseMoveEvent(self, event) -> None:
+        """Update the live arcball rotation from the drag start to the current cursor."""
         if not self._arcball_active:
             return
         p0 = self._arcball_vector(self._mouse_pos)   # click-start, never updated
@@ -174,6 +183,7 @@ class GLWidget(QOpenGLWidget):
         self.update()
 
     def wheelEvent(self, event) -> None:
+        """Zoom by adjusting the camera-distance multiplier on scroll (clamped to [0.1, 20])."""
         delta = event.angleDelta().y()
         self._zoom_multiplier *= (0.9 if delta > 0 else 1.1)
         self._zoom_multiplier = max(0.1, min(self._zoom_multiplier, 20.0))
@@ -184,6 +194,7 @@ class GLWidget(QOpenGLWidget):
     # ------------------------------------------------------------------
 
     def _projection_matrix(self) -> np.ndarray:
+        """Build the perspective projection matrix, scaling near/far to the molecule span and zoom."""
         w = max(self.width(), 1)
         h = max(self.height(), 1)
         span = self._renderer.get_span()

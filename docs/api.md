@@ -28,6 +28,8 @@ signature-level reference.
 
 ::: pyrrhotite.write_xyz
 
+::: pyrrhotite.structure_generator.format_xyz
+
 ---
 
 ## Character tables

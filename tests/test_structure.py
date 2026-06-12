@@ -1,4 +1,4 @@
-﻿"""Unit tests for Structure: XYZ loading, COM centering, closest-index lookup."""
+"""Unit tests for Structure: XYZ loading, COM centering, closest-index lookup."""
 
 from pathlib import Path
 
@@ -7,7 +7,7 @@ import pytest
 
 from pyrrhotite.structure import Structure
 
-XYZ_DIR = Path(__file__).parent / "files"
+XYZ_DIR = Path(__file__).parent.parent / "src" / "sample_molecules"
 
 
 def test_load_water():

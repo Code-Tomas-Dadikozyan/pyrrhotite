@@ -2,19 +2,18 @@
 
 # pyrrhotite
 
-**Automatic Schoenflies point group determination, character table generation, and
-3-D molecule visualization — from a plain `.xyz` file or from nothing at all.**
+Automatic Schoenflies point group determination, character table generation, and
+3-D molecule visualization — from a plain `.xyz` file or from nothing at all.
 
 [Get started :material-arrow-right:](getting-started.md){ .md-button .md-button--primary }
 [Read the user guide](user-guide.md){ .md-button }
-[View on GitHub :fontawesome-brands-github:](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite){ .md-button }
 
 </div>
 
 <div class="pyrrhotite-badges" markdown>
-[![License: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/blob/main/LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](getting-started.md#installation)
-![Status](https://img.shields.io/badge/status-active%20development-yellow.svg)
+[![License: GPLv3](https://img.shields.io/badge/license-GPLv3-d4a017.svg)](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-d4a017.svg)](getting-started.md#installation)
+![Status](https://img.shields.io/badge/status-active%20development-d4a017.svg)
 [![Schoenflies groups](https://img.shields.io/badge/point%20groups-18%20classes-d4a017.svg)](algorithm.md#supported-point-groups)
 </div>
 
@@ -142,6 +141,12 @@ full comparison and history.
 ---
 
 ## Explore the docs
+
+The site is split into three sections (see the top navigation bar): **Guide**
+walks you through using `pyrrhotite`, from installation to the full Python API;
+**Reference** is for looking things up — the algorithm, every supported point
+group, the API signatures, and a glossary of terms; **Project** covers history,
+licensing, and how to get in touch.
 
 <div class="grid cards" markdown>
 
