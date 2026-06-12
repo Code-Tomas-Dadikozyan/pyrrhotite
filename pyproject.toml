@@ -34,6 +34,7 @@ pyrrhotite = "pyrrhotite.__main__:main"
 [tool.setuptools]
 packages = [
     "pyrrhotite",
+    "pyrrhotite.character_tables",
     "pyrrhotite.operations",
     "pyrrhotite.point_groups",
     "pyrrhotite.visualizer",
