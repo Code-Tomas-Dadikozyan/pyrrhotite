@@ -314,6 +314,7 @@ def save_latex(names: list[str], path: str | None = None) -> Path:
 # ---------------------------------------------------------------------------
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build the argparse parser for the LaTeX-formatter command-line entry point."""
     p = argparse.ArgumentParser(
         prog="python -m pyrrhotite.character_tables.latex_formatter",
         description=(

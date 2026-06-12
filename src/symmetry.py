@@ -841,6 +841,7 @@ class Symmetry:
 
         # break tie: most atom intersections
         def count_intersections(axis: np.ndarray) -> int:
+            """Count atoms lying on `axis` (unit-vector dot > 1 - 0.02)."""
             n_unit = axis / np.linalg.norm(axis)
             count = 0
             for coord in self._structure.coordinates:

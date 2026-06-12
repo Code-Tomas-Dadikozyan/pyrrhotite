@@ -42,6 +42,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - PyPI long description: `README.md` rewritten for the project page — `pip install pyrrhotite` install instructions, quick-start example, full CLI flag reference, and example output
 
+## [Unreleased]
+
+### Documentation
+- Added docstrings to previously undocumented helper functions (`Symmetry._find_z_axis`'s
+  nested `count_intersections`, `display._samples_dir`, and the `_build_parser` entry points
+  in the HTML/LaTeX character-table formatters) to satisfy the project's docstring convention.
+
 ## [0.2.0] - 2026-06-10
 
 ### Added

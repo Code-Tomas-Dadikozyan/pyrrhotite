@@ -94,6 +94,7 @@ _SAMPLES_DIR = Path(__file__).parent.parent / "tests" / "files"
 
 
 def _samples_dir() -> Path:
+    """Return the bundled sample-molecule directory, or raise if it is missing."""
     if not _SAMPLES_DIR.is_dir():
         raise FileNotFoundError(
             f"Sample molecules directory not found at {_SAMPLES_DIR}. "

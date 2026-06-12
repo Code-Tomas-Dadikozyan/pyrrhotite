@@ -211,6 +211,7 @@ def save_html(names: list[str], path: str | None = None) -> Path:
 # ---------------------------------------------------------------------------
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build the argparse parser for the HTML-formatter command-line entry point."""
     p = argparse.ArgumentParser(
         prog="python -m pyrrhotite.character_tables.html_formatter",
         description="Print or save HTML character tables for Schoenflies point groups.",
