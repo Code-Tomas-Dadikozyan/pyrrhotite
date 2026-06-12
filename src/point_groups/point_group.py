@@ -119,7 +119,7 @@ class PointGroup:
 
     @property
     def characters(self) -> list[list[float]]:
-        """Return the character table indexed as [irrep][operation class]."""
+        """Return the character table indexed as ``[irrep][operation class]``."""
         return self._characters
 
     # ------------------------------------------------------------------

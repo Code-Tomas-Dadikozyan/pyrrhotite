@@ -25,13 +25,16 @@
   --pyrrhotite-navy: #1b2733;
 }
 
-/* Gold announcement bar (see docs/overrides/main.html) */
-.md-announce {
+/* Gold announcement bar (see docs/overrides/main.html). Material renders the
+   {% block announce %} content inside `.md-banner` (not `.md-announce`), so the
+   brand styling must target that class or it silently has no effect — which
+   left a navy link on the default dark banner, i.e. invisible. */
+.md-banner {
   background-color: var(--pyrrhotite-amber);
   color: var(--pyrrhotite-navy);
 }
 
-.md-announce a {
+.md-banner a {
   color: var(--pyrrhotite-navy);
   font-weight: 600;
   text-decoration: underline;

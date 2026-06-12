@@ -5,6 +5,11 @@ repo_name: Code-Tomas-Dadikozyan/pyrrhotite
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2026 Tomas Dadikozyan
 
+# Snippet/include fragments live under docs/includes/ and are pulled into pages
+# via pymdownx.snippets (e.g. auto_append); they are not standalone pages.
+exclude_docs: |
+  includes/
+
 theme:
   name: material
   custom_dir: docs/overrides
@@ -40,6 +45,24 @@ theme:
     - content.action.edit
     - content.action.view
 
+plugins:
+  # `search` is enabled by default, but listing `plugins:` disables that
+  # default, so it must be named explicitly to keep search working.
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            heading_level: 3
+            show_root_heading: true
+            show_root_full_path: false
+            show_source: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+            merge_init_into_class: true
+
 extra_css:
   - stylesheets/extra.css
 
@@ -57,13 +80,20 @@ extra:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
-  - User Guide: user-guide.md
-  - Algorithm & Supported Groups: algorithm.md
-  - About: about.md
-  - Changelog: changelog.md
+  - Guide:
+      - Getting Started: getting-started.md
+      - User Guide: user-guide.md
+      - Examples Gallery: gallery.md
+  - Reference:
+      - Algorithm & Supported Groups: algorithm.md
+      - API Reference: api.md
+      - Glossary: glossary.md
+  - Project:
+      - About: about.md
+      - Changelog: changelog.md
 
 markdown_extensions:
+  - abbr
   - admonition
   - attr_list
   - md_in_html
@@ -87,7 +117,10 @@ markdown_extensions:
   - pymdownx.snippets:
       base_path:
         - .
+        - docs
       check_paths: true
+      auto_append:
+        - includes/abbreviations.md
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.smartsymbols

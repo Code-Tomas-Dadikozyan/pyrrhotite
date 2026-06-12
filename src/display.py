@@ -161,13 +161,13 @@ def analyse_sample(name: str | None = None) -> "Symmetry":  # noqa: F821
 def visualize_sample(name: str | None = None) -> None:
     """Open the interactive 3-D viewer for a sample molecule.
 
+    Requires the visualizer optional dependency (``pip install 'pyrrhotite[vis]'``).
+
     Parameters
     ----------
     name:
         Stem of the XYZ file (e.g. ``"buckminsterfullerene"``).
         If *None* a molecule is chosen at random.
-
-    Requires the visualizer optional dependency (``pip install 'pyrrhotite[vis]'``).
     """
     from .visualizer import visualize as _vis
     structure = load_sample(name)

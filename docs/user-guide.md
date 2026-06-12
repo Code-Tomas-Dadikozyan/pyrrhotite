@@ -139,6 +139,88 @@ python -m pyrrhotite.character_tables.html_formatter Oh --save
 python -m pyrrhotite.character_tables.latex_formatter Oh D4h --save tables.tex
 ```
 
+The HTML is fully self-contained (it carries its own `<style>` block), so it
+drops straight into any page. Here is the *actual, unedited* output of
+`format_html(["C3v"])`, rendered live:
+
+<div markdown="0">
+<style>
+  .char-table {
+    border-collapse: collapse;
+    font-family: "Latin Modern", "STIX Two Text", serif;
+    font-size: 0.95em;
+    margin: 1.5em auto;
+  }
+  .char-table caption {
+    caption-side: top;
+    font-weight: bold;
+    margin-bottom: 0.4em;
+  }
+  .char-table th,
+  .char-table td {
+    padding: 0.35em 0.75em;
+    text-align: center;
+    border: 1px solid #bbb;
+  }
+  .char-table thead tr {
+    background: #e8e8e8;
+    border-bottom: 2px solid #555;
+  }
+  .char-table thead th:first-child {
+    text-align: left;
+  }
+  .char-table tbody td:first-child {
+    text-align: left;
+    font-style: normal;
+  }
+  .char-table tbody tr:nth-child(even) {
+    background: #f5f5f5;
+  }
+  .char-table tbody tr:hover {
+    background: #e0ecf8;
+  }
+</style>
+
+<table class="char-table">
+  <caption>Character table of <i>C</i><sub>3v</sub></caption>
+  <thead>
+    <tr>
+      <th><i>C</i><sub>3v</sub></th>
+      <th><i>E</i></th>
+      <th>2 <i>C</i><sub>3</sub></th>
+      <th>3 <i>&sigma;</i><sub>v</sub></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A<sub>1</sub></td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>A<sub>2</sub></td>
+      <td>1</td>
+      <td>1</td>
+      <td>-1</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td>2</td>
+      <td>-1</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+!!! note "Self-contained, light-styled tables"
+    The exported table ships with its own colours (a light grey header and
+    zebra striping), so it looks identical wherever you embed it — which also
+    means it keeps that light styling even on this page in dark mode. That is by
+    design: the export is meant to be portable into reports and slides, not to
+    inherit a host site's theme.
+
 ---
 
 ## Generating idealized structures

@@ -17,4 +17,7 @@ jobs:
 
       - run: pip install '.[docs]'
 
+      # Fail fast on broken links / nav / missing files before publishing.
+      - run: mkdocs build --strict
+
       - run: mkdocs gh-deploy --force
