@@ -1,5 +1,5 @@
 /* Custom "pyrrhotite" brand palette: navy primary + bronze/gold accent,
-   matching docs/assets/logo.svg. Activated via palette.primary/accent: custom
+   matching docs/assets/logo.png. Activated via palette.primary/accent: custom
    in mkdocs.yml. */
 
 [data-md-color-primary="custom"] {
