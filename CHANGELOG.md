@@ -141,6 +141,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   comfortably separated through n = 20 (e.g. minimum atom spacing in D20h rose from
   ~0.87 Å to ~1.28 Å, versus a ~0.8 Å rendered sphere diameter).
 
+- `generate_idealized_structure`: the central hub element for the Dn/Dnh/Dnd and
+  Sn families is now chosen dynamically by ring size instead of always being
+  caesium. A fixed Cs hub (covalent radius 2.44 Å) is right for large n — its
+  wide bonding cutoff lets far-out rings stay connected — but at small n the
+  rings sit only ~2 Å from the centre, so the 2.44 Å hub sphere visually engulfed
+  them in the 3-D viewer. `_hub_element_for` now picks the smallest hub that
+  still bonds to the ring at its natural radius (Cl → Fe → Cs), so small
+  structures get a small hub and only large orders escalate to caesium. The hub
+  still bonds to every ring atom and all seven axial families round-trip through
+  detection across n = 3–20 (Sn 4–20).
+
 ### Documentation
 - Simplified the `pyrrhotite`-vs-`schoenflies` comparison table in `README.md` and
   `docs/about.md`: folded the HTML/LaTeX export row into a single "Character tables"
@@ -182,7 +193,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   navigation cards whose title is a link are now clickable across the whole card
   (a stretched-link `::after` overlay), scoped so multi-link cards like the About
   page's Contact cards are unaffected.
-- `docs/api.md`: added `structure_generator.format_xyz`.
+- `docs/api.md`: added `structure_generator.format_xyz`, plus a new "Display
+  helpers" section documenting the four `pyrrhotite.display` pretty-printers
+  (`print_bond_pairs`, `print_ops_with_atoms`, `print_basis_functions`,
+  `print_char_table_programmatic`), which were previously undocumented.
+- Documented the `pyrrhotite.display` pretty-printers in `README.md` and
+  `docs/user-guide.md` as well, and surfaced the runnable `example_usage.py`
+  feature tour (previously only referenced in passing) in the README Quick start
+  and the User Guide intro.
+- `example_usage.py`: the showcase now loads its demo molecules via the bundled
+  `load_sample(...)` helper instead of hard-coded `tests\files\*.xyz` paths,
+  which no longer exist (samples moved into the package in 0.2.1) and were
+  Windows-only backslash paths — so the script now runs as-is on any platform
+  straight after `pip install pyrrhotite`.
 - `.claude/CLAUDE.md`: rewritten to describe the actual `src/` package layout
   (the file still referenced the obsolete `schoenflies/` + `reference/` layout).
 - Source files normalised to plain UTF-8 (BOM removed).

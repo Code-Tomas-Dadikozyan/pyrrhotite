@@ -3,6 +3,20 @@
 This page walks through the Python API in depth. For the command-line tool, see
 [Getting Started](getting-started.md#command-line-reference).
 
+!!! tip "Want one runnable script instead?"
+    The repository ships [`example_usage.py`](https://github.com/datomic117/pyrrhotite/blob/main/example_usage.py),
+    a single end-to-end tour that exercises every public feature in order —
+    structure loading, point-group determination, character tables, the
+    HTML/LaTeX exporters, the structure generator, and the 3-D viewer. It reads
+    from the bundled sample molecules, so it runs as-is straight after
+    `pip install pyrrhotite`:
+
+    ```bash
+    python example_usage.py
+    ```
+
+    The walkthrough below explains each piece it uses.
+
 ## How the pieces fit together
 
 Before diving into each piece individually, here's how the main objects relate
@@ -369,6 +383,38 @@ basis = compute_basis_functions(pg)
 for irrep, funcs in basis.items():
     print(irrep, funcs["linear"], funcs["quadratic"])
 ```
+
+---
+
+## Pretty-printing helpers
+
+Everything above is exposed as plain Python attributes so you can format it
+however you like. For quick, readable output while exploring in a shell or
+notebook, `pyrrhotite.display` bundles a few ready-made printers that take the
+objects you already have and print a tidy table:
+
+```python
+from pyrrhotite.display import (
+    print_bond_pairs,              # bonded atom pairs, e.g. "N0 — H1"
+    print_ops_with_atoms,          # each operation + the atoms on its axis/plane
+    print_basis_functions,         # irrep → linear/rotational & quadratic basis
+    print_char_table_programmatic, # character table built from the raw pg arrays
+)
+
+print_bond_pairs(s)                                       # s = a Structure
+print_ops_with_atoms(sym.operation_manager.operations, s)
+print_basis_functions(pg)                                 # pg = a PointGroup
+print_char_table_programmatic(pg)
+```
+
+!!! note "Convenience wrappers, not a separate data source"
+    These don't compute anything new — they're thin formatters over data that's
+    already on the objects (`s.calculate_bond_pairs()`, `pg.characters`,
+    `pg.irreps`, …). Use them for a quick look; reach for the underlying
+    attributes when you need the values programmatically. They live under
+    `pyrrhotite.display` rather than the top-level package namespace. See the
+    [API reference](api.md#display-helpers) for the individual signatures, and
+    `example_usage.py` (sections 1, 4, 6, 7) for each one in context.
 
 ---
 

@@ -38,6 +38,7 @@ for any supported axial point group.
   - [Rotor classification and principal axes](#rotor-classification-and-principal-axes)
   - [Symmetry operations](#symmetry-operations)
   - [Basis functions](#basis-functions)
+  - [Pretty-printing helpers](#pretty-printing-helpers)
   - [3-D visualizer](#3-d-visualizer)
   - [Sample molecules](#sample-molecules)
   - [Command-line tool](#command-line-tool)
@@ -130,6 +131,17 @@ Or from the command line:
 pyrrhotite molecule.xyz
 pyrrhotite -v -ct ammonia.xyz   # verbose + character table
 ```
+
+> **Prefer to learn by example?** The repository ships a single runnable tour,
+> [`example_usage.py`](example_usage.py), that exercises every public feature in
+> order — structure loading, point-group determination, character tables, the
+> HTML/LaTeX exporters, the structure generator, and the 3-D viewer. It reads
+> from the bundled sample molecules, so it runs as-is right after
+> `pip install pyrrhotite`:
+>
+> ```bash
+> python example_usage.py
+> ```
 
 ---
 
@@ -381,6 +393,33 @@ basis = compute_basis_functions(pg)
 for irrep, funcs in basis.items():
     print(irrep, funcs["linear"], funcs["quadratic"])
 ```
+
+#### Pretty-printing helpers
+
+The objects above (`Structure`, `Symmetry`, `PointGroup`) expose their data as
+plain Python attributes so you can format it however you like. For quick,
+readable output in a shell or notebook, `pyrrhotite.display` bundles a few
+ready-made printers that take those objects and print a tidy table:
+
+```python
+from pyrrhotite.display import (
+    print_bond_pairs,             # bonded atom pairs, e.g. "N0 — H1"
+    print_ops_with_atoms,         # each operation + the atoms on its axis/plane
+    print_basis_functions,        # irrep → linear/rotational & quadratic basis
+    print_char_table_programmatic # character table from raw pg arrays
+)
+
+print_bond_pairs(s)                          # s = a Structure
+print_ops_with_atoms(sym.operation_manager.operations, s)
+print_basis_functions(pg)                    # pg = a PointGroup
+print_char_table_programmatic(pg)
+```
+
+These are convenience wrappers, not a separate data source — everything they
+print is also reachable directly (`s.calculate_bond_pairs()`, `pg.characters`,
+and so on). They live under `pyrrhotite.display` rather than the top-level
+namespace; [`example_usage.py`](example_usage.py) (sections 1, 4, 6, 7) shows
+each one in context.
 
 #### Element data
 

@@ -29,6 +29,7 @@ pyrrhotite/
 │   ├── symmetry.py             determination pipeline
 │   ├── structure.py            XYZ loading / COM centering
 │   ├── structure_generator.py  idealized-structure generation
+│   ├── display.py              pretty-printers + sample-molecule helpers
 │   ├── rotor_class.py          rotor classification enum
 │   ├── periodic_table.py       element data
 │   ├── operations/             symmetry-operation classes + manager

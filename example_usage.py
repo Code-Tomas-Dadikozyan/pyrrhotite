@@ -18,8 +18,17 @@ Sections
 13.  3-D visualizer
 14.  Idealized structure generator
 
+This is the canonical "what can pyrrhotite do?" tour — every public feature is
+exercised once, with comments explaining what each call returns. It reads its
+molecules from the bundled sample set (via `load_sample`), so it runs as-is
+straight after `pip install pyrrhotite`, with no `.xyz` files of your own.
+
 Run:
     python example_usage.py
+
+Sections 13 and 14 open the interactive 3-D viewer; they are skipped
+automatically unless the optional viewer extras are installed
+(`pip install 'pyrrhotite[vis]'`).
 """
 
 import sys
@@ -34,7 +43,14 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-16"
 # Imports
 # ---------------------------------------------------------------------------
 
-from pyrrhotite import Structure, Symmetry, generate_idealized_structure, write_xyz, visualize_idealized_structure
+from pyrrhotite import (
+    Structure,
+    Symmetry,
+    load_sample,
+    generate_idealized_structure,
+    write_xyz,
+    visualize_idealized_structure,
+)
 from pyrrhotite.structure_generator import format_xyz
 from pyrrhotite.periodic_table import element, atomic_number
 from pyrrhotite.display import (
@@ -73,7 +89,11 @@ def section(n: int, title: str) -> None:
 
 section(1, "STRUCTURE LOADING & ATOM LIST")
 
-s = Structure(r"tests\files\ammonia.xyz")
+# We use the bundled sample molecules (load_sample) so this script runs
+# anywhere — including a plain `pip install pyrrhotite` with no source checkout.
+# To analyse your own molecule instead, replace this with:
+#     s = Structure("path/to/your_molecule.xyz")
+s = load_sample("ammonia")
 
 print(f"File        : {s.filename}")
 print(f"Description : {s.description}")
@@ -103,7 +123,7 @@ print(f"Point group : {pg.label.name}")
 print(f"Group order : {pg.order}   (total symmetry operations)")
 
 # Show a second molecule for comparison
-s_bz   = Structure(r"tests\files\benzene.xyz")
+s_bz   = load_sample("benzene")
 sym_bz = Symmetry(s_bz)
 pg_bz  = sym_bz.point_group
 print()

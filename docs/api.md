@@ -72,6 +72,24 @@ signature-level reference.
 
 ---
 
+## Display helpers
+
+Convenience pretty-printers for exploring results in a shell or notebook. They
+take objects already produced by `Structure`, `Symmetry`, or `PointGroup` and
+print them in a readable form — everything they show is also reachable directly
+from those objects' attributes. They live under the `pyrrhotite.display`
+namespace.
+
+::: pyrrhotite.display.print_bond_pairs
+
+::: pyrrhotite.display.print_ops_with_atoms
+
+::: pyrrhotite.display.print_basis_functions
+
+::: pyrrhotite.display.print_char_table_programmatic
+
+---
+
 ## Sample molecules
 
 ::: pyrrhotite.list_sample_molecules

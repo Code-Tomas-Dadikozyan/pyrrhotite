@@ -125,11 +125,12 @@ ATOMIC_NUMBER_TO_ELEMENT: dict[int, Element] = {
     54 : Element("Xe", "xenon"        , 1.2 , 131.293 , (0.2588235, 0.6196078, 0.6901961)),
     # Caesium uses its true Alvarez (2008) covalent radius (2.44 Å) rather than
     # the coarse 1.2 Å fallback the reference applied to most heavy atoms. It is
-    # the largest covalent radius in the table and is used deliberately by the
-    # structure generator as a "hub" atom (see structure_generator._hub_element):
-    # a large radius widens the hub-ring bonding cutoff sqrt(20 * r_hub * r_ring),
-    # which lets the generated rings sit at a larger radius so their atoms do not
-    # visually crowd together at high orders.
+    # the largest covalent radius in the table and is the largest "hub" atom the
+    # structure generator can pick (see structure_generator._hub_element_for):
+    # its large radius widens the hub-ring bonding cutoff sqrt(20 * r_hub * r_ring),
+    # which lets large generated rings (high orders) sit far out while the hub
+    # still bonds to them. Smaller structures get a smaller hub so the hub sphere
+    # does not visually engulf the ring.
     55 : Element("Cs", "caesium"      , 2.44, 132.9055, (0.3411765, 0.0901961, 0.5607843)),
     56 : Element("Ba", "barium"       , 1.2 , 137.327 , (0        , 0.7882353, 0        )),
     57 : Element("La", "lanthanum"    , 1.2 , 138.9055, (0.4392157, 0.8313725, 1        )),
