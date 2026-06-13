@@ -75,26 +75,24 @@ Questions, bug reports, and feature requests are all welcome:
 
 <div class="grid cards" markdown>
 
--   :fontawesome-brands-github: **GitHub Issues**
+-   :fontawesome-brands-github: **[GitHub Issues](https://github.com/datomic117/pyrrhotite/issues)**
 
     ---
 
     Found a bug, or detection giving an unexpected point group? Open an issue
-    with the `.xyz` file (or a minimal reproduction) on the
-    [issue tracker](https://github.com/datomic117/pyrrhotite/issues).
+    with the `.xyz` file (or a minimal reproduction) on the issue tracker.
 
--   :material-source-repository: **Source code**
+-   :material-source-repository: **[Source code](https://github.com/datomic117/pyrrhotite)**
 
     ---
 
-    Browse the code, open a pull request, or fork the project on
-    [GitHub](https://github.com/datomic117/pyrrhotite).
+    Browse the code, open a pull request, or fork the project on GitHub.
 
--   :material-email-outline: **Email**
+-   :material-email-outline: **[Email](mailto:tdadikozyan04@gmail.com)**
 
     ---
 
     For anything that doesn't fit a public issue, reach the maintainer at
-    [tdadikozyan04@gmail.com](mailto:tdadikozyan04@gmail.com).
+    tdadikozyan04@gmail.com.
 
 </div>
