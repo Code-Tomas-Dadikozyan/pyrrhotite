@@ -295,21 +295,22 @@ match each atom's bonding degree (H for degree 1, O for degree 2, N for degree
 > molecules and should not be read as chemical claims.
 >
 > **Supported families:** `Cn`, `Cnh`, `Cnv`, `Sn` (even orders), `Dn`, `Dnh`,
-> and `Dnd`. Note there is no `Dnv` family — the dihedral families with mirror
-> planes are `Dnh` (horizontal) and `Dnd` (diagonal). The cubic, icosahedral,
-> linear, and low-symmetry groups are not generated (their geometry isn't a
-> simple parametric ring/hub construction).
+> and `Dnd`. The cubic, icosahedral, linear, and low-symmetry groups are not
+> generated (their geometry isn't a simple parametric ring/hub construction).
 >
 > **High-order limits.** Because the families are built from one or two rings of
 > `n` atoms, the rings get geometrically crowded as `n` grows: adjacent ring
 > atoms move closer together while each atom is drawn at a fixed radius, so at
 > large `n` the spheres can visually touch or overlap and the bonds become hard
-> to read. The generator caps the ring radius so the central hub still bonds to
-> every ring atom (for `Dn`/`Dnh`/`Dnd`/`Sn`), and uses a large caesium hub to
-> keep rings comfortably spaced, but these are tuned for the supported detection
-> range up to **n = 20**. Beyond that the visual quality degrades and detection
-> tolerances tighten (see [Known limitations](#known-limitations)); orders far
-> above 20 are best treated as schematic.
+> to read. For the hub families (`Dn`/`Dnh`/`Dnd`/`Sn`) the central hub element
+> is chosen adaptively — the smallest atom (Cl → Fe → Cs) that still bonds to
+> every ring atom at the ring's natural radius — so small `n` gets a compact hub
+> instead of a giant caesium sphere swallowing the rings, escalating to caesium
+> only for large `n`; the ring radius is then capped so that hub stays bonded.
+> These are tuned for the supported detection range up to **n = 20**. Beyond that
+> the visual quality degrades and detection tolerances tighten (see
+> [Known limitations](#known-limitations)); orders far above 20 are best treated
+> as schematic.
 
 ```python
 from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry

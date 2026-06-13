@@ -263,19 +263,20 @@ Dnh, or Dnd structure for any supported order n.
     structures are not real molecules and should not be read as chemical claims.
 
     **Supported families:** `Cn`, `Cnh`, `Cnv`, `Sn` (even orders), `Dn`,
-    `Dnh`, `Dnd`. There is no `Dnv` family — the dihedral families with mirror
-    planes are `Dnh` (horizontal) and `Dnd` (diagonal). Cubic, icosahedral,
-    linear, and low-symmetry groups are not generated.
+    `Dnh`, `Dnd`. Cubic, icosahedral, linear, and low-symmetry groups are not
+    generated.
 
     **High-order limits.** Each family is built from one or two rings of `n`
     atoms, so the rings get geometrically crowded as `n` grows — at large `n`
     the fixed-radius spheres can visually touch and the bonds get hard to read.
-    The ring radius is capped so the central hub still bonds every ring atom
-    (`Dn`/`Dnh`/`Dnd`/`Sn`), and a large caesium hub keeps the rings spaced, but
-    these are tuned for the supported range up to **n = 20**. Beyond that the
-    visual quality degrades and detection tolerances tighten (see
-    [Algorithm & Supported Groups](algorithm.md)); treat very high orders as
-    schematic.
+    For the hub families (`Dn`/`Dnh`/`Dnd`/`Sn`) the hub element is chosen
+    adaptively — the smallest atom (Cl → Fe → Cs) that still bonds to the ring
+    at its natural radius — so small `n` gets a compact hub rather than a giant
+    caesium sphere, escalating to caesium only for large `n`; the ring radius is
+    then capped so that hub stays bonded. These are tuned for the supported range
+    up to **n = 20**. Beyond that the visual quality degrades and detection
+    tolerances tighten (see [Algorithm & Supported Groups](algorithm.md)); treat
+    very high orders as schematic.
 
 ```python
 from pyrrhotite import generate_idealized_structure, write_xyz, Symmetry
