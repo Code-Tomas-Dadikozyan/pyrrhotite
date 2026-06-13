@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/pyrrhotite.svg)](https://pypi.org/project/pyrrhotite/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pyrrhotite.svg)](https://pypi.org/project/pyrrhotite/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-online-brightgreen.svg)](https://code-tomas-dadikozyan.github.io/pyrrhotite/)
+[![Documentation](https://img.shields.io/badge/docs-online-brightgreen.svg)](https://datomic117.github.io/pyrrhotite/)
 
 Automatic Schoenflies point group determination, character table generation,
 idealized-structure generation, and 3-D molecule visualization — from a plain
@@ -16,7 +16,7 @@ the full character table for that group — even for groups it has never seen be
 It can also work in reverse, [generating an idealized structure](#generating-idealized-structures)
 for any supported axial point group.
 
-📖 **Full documentation:** <https://code-tomas-dadikozyan.github.io/pyrrhotite/>
+📖 **Full documentation:** <https://datomic117.github.io/pyrrhotite/>
 
 > **Why "pyrrhotite"?** Pyrrhotite is an iron sulfide mineral that crystallises
 > into a range of related but distinct structures depending on composition and
@@ -499,9 +499,9 @@ E   |      2 |     -1 |      0 | x, y, Rx, Ry | x²-y², xy, xz, yz
 
 > **Going deeper:** this README covers the essentials. For the full Python API,
 > a detailed walkthrough of the detection algorithm, and the complete list of
-> supported groups, see the [documentation site](https://code-tomas-dadikozyan.github.io/pyrrhotite/)
-> — in particular the [User Guide](https://code-tomas-dadikozyan.github.io/pyrrhotite/user-guide/)
-> and [Algorithm & Supported Groups](https://code-tomas-dadikozyan.github.io/pyrrhotite/algorithm/).
+> supported groups, see the [documentation site](https://datomic117.github.io/pyrrhotite/)
+> — in particular the [User Guide](https://datomic117.github.io/pyrrhotite/user-guide/)
+> and [Algorithm & Supported Groups](https://datomic117.github.io/pyrrhotite/algorithm/).
 
 ---
 

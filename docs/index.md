@@ -11,7 +11,7 @@ Automatic Schoenflies point group determination, character table generation, and
 </div>
 
 <div class="pyrrhotite-badges" markdown>
-[![License: GPLv3](https://img.shields.io/badge/license-GPLv3-d4a017.svg)](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/blob/main/LICENSE)
+[![License: GPLv3](https://img.shields.io/badge/license-GPLv3-d4a017.svg)](https://github.com/datomic117/pyrrhotite/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-d4a017.svg)](getting-started.md#installation)
 ![Status](https://img.shields.io/badge/status-active%20development-d4a017.svg)
 [![Schoenflies groups](https://img.shields.io/badge/point%20groups-18%20classes-d4a017.svg)](algorithm.md#supported-point-groups)
@@ -185,6 +185,6 @@ licensing, and how to get in touch.
 !!! warning "Work in progress"
     `pyrrhotite` is under active development — both the source code and these
     docs change frequently. If something here looks out of date compared to the
-    [README](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite#readme) or the
+    [README](https://github.com/datomic117/pyrrhotite#readme) or the
     code itself, the code is the source of truth. Found a discrepancy? See
     [About → Contact](about.md#contact) for how to report it.

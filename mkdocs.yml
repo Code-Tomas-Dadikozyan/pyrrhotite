@@ -1,7 +1,7 @@
 site_name: pyrrhotite
 site_description: Automatic Schoenflies point group determination, character table generation, and 3-D molecule visualization
-repo_url: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite
-repo_name: Code-Tomas-Dadikozyan/pyrrhotite
+repo_url: https://github.com/datomic117/pyrrhotite
+repo_name: datomic117/pyrrhotite
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2026 Tomas Dadikozyan
 
@@ -72,7 +72,7 @@ extra:
   # full contact page (rather than a bare mailto: link).
   social:
     - icon: fontawesome/solid/bug
-      link: https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/issues
+      link: https://github.com/datomic117/pyrrhotite/issues
       name: Report an issue
     - icon: fontawesome/solid/envelope
       link: about/#contact

@@ -30,14 +30,14 @@ the other features above.
     There isn't a dedicated paper for `pyrrhotite` itself yet — please cite
     the original `schoenflies` project and the symmetry-adapted wavefunction
     reference below, and link back to the
-    [GitHub repository](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite).
+    [GitHub repository](https://github.com/datomic117/pyrrhotite).
 
 ---
 
 ## License
 
 `pyrrhotite` is released under the GNU General Public License v3.0 — see
-[LICENSE](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/blob/main/LICENSE)
+[LICENSE](https://github.com/datomic117/pyrrhotite/blob/main/LICENSE)
 for details.
 
 ---
@@ -63,7 +63,7 @@ python -m pytest tests/ -v
 
 !!! tip "Keep an eye on the changelog"
     `pyrrhotite` is under active development. See the project's
-    [CHANGELOG](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/blob/main/CHANGELOG.md)
+    [CHANGELOG](https://github.com/datomic117/pyrrhotite/blob/main/CHANGELOG.md)
     for a history of recent changes — useful context if something here
     doesn't quite match the installed version.
 
@@ -81,14 +81,14 @@ Questions, bug reports, and feature requests are all welcome:
 
     Found a bug, or detection giving an unexpected point group? Open an issue
     with the `.xyz` file (or a minimal reproduction) on the
-    [issue tracker](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite/issues).
+    [issue tracker](https://github.com/datomic117/pyrrhotite/issues).
 
 -   :material-source-repository: **Source code**
 
     ---
 
     Browse the code, open a pull request, or fork the project on
-    [GitHub](https://github.com/Code-Tomas-Dadikozyan/pyrrhotite).
+    [GitHub](https://github.com/datomic117/pyrrhotite).
 
 -   :material-email-outline: **Email**
 
