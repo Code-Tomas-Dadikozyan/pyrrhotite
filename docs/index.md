@@ -132,7 +132,7 @@ detects symmetry operations from an `.xyz` file and visualizes them on the
 molecule. The two projects have since diverged — see [About](about.md) for the
 full comparison and history.
 
-!!! info "Why \"pyrrhotite\"?"
+!!! info "Why “pyrrhotite”?"
     Pyrrhotite is an iron sulfide mineral that crystallises into a range of
     related but distinct structures depending on composition and temperature —
     a fitting namesake for a library all about classifying structures by their

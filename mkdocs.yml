@@ -1,4 +1,5 @@
 site_name: pyrrhotite
+site_url: https://datomic117.github.io/pyrrhotite/
 site_description: Automatic Schoenflies point group determination, character table generation, and 3-D molecule visualization
 repo_url: https://github.com/datomic117/pyrrhotite
 repo_name: datomic117/pyrrhotite
@@ -75,7 +76,7 @@ extra:
       link: https://github.com/datomic117/pyrrhotite/issues
       name: Report an issue
     - icon: fontawesome/solid/envelope
-      link: about/#contact
+      link: https://datomic117.github.io/pyrrhotite/about/#contact
       name: Contact the maintainer
 
 nav:
@@ -84,6 +85,7 @@ nav:
       - Getting Started: getting-started.md
       - User Guide: user-guide.md
       - Examples Gallery: gallery.md
+      - Example Script: example.md
   - Reference:
       - Algorithm & Supported Groups: algorithm.md
       - API Reference: api.md

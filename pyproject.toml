@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyrrhotite"
-version = "0.2.1"
+version = "0.2.2"
 readme = "README.md"
 description = "Automatic Schoenflies point group determination from molecular coordinates and character table generation"
 requires-python = ">=3.10"

@@ -4,7 +4,8 @@ This page walks through the Python API in depth. For the command-line tool, see
 [Getting Started](getting-started.md#command-line-reference).
 
 !!! tip "Want one runnable script instead?"
-    The repository ships [`example_usage.py`](https://github.com/datomic117/pyrrhotite/blob/main/example_usage.py),
+    The repository ships [`example_usage.py`](example.md) (also viewable
+    [on GitHub](https://github.com/datomic117/pyrrhotite/blob/main/example_usage.py)),
     a single end-to-end tour that exercises every public feature in order —
     structure loading, point-group determination, character tables, the
     HTML/LaTeX exporters, the structure generator, and the 3-D viewer. It reads
