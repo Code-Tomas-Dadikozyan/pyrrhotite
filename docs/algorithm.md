@@ -42,6 +42,65 @@ flowchart LR
 
 ---
 
+## Detecting high-order axes (n > 10)
+
+Earlier versions hard-capped the proper-rotation search at n ≤ 8. Detection now
+adapts all the way up to n = 20, through three independent mechanisms that work
+together.
+
+### 1. Geometry-bounded search order
+
+A Cₙ axis can only exist if there is a *ring* of at least n symmetry-equivalent
+atoms around it. So rather than blindly testing every order up to some fixed cap
+(slow, and prone to false positives), for each candidate axis `pyrrhotite` first
+groups the atoms by **same element, same perpendicular distance from the axis,
+and same projection along the axis** (each compared within 0.1), and takes the
+largest such group as the ceiling for n, clamped to [2, 20]. Atoms lying
+essentially *on* the axis map to themselves under any rotation and are excluded
+from the count. This both prunes the search to orders the geometry could actually
+support, **and** prevents "inventing" a high order in a molecule that has no such
+ring.
+
+### 2. Order-dependent validation tolerance
+
+The base acceptance tolerance is a **relative 10%** — the per-atom mismatch is
+normalised by the distance to the symmetry element, not a fixed 0.1 Å — which
+makes it scale-free across large and small molecules. For high orders
+(degree ≥ 8) it is tightened to:
+
+```text
+threshold = min(0.1, π / (degree · (degree + 1)))
+```
+
+Why this is necessary: adjacent rotation orders crowd together as n grows. C₉ is
+a 40° rotation, C₈ is 45° — only 5° apart. Applying the *wrong* C₈ rotation to a
+genuine C₉ ring produces a normalised error of ~0.087, which slips under a fixed
+0.1 and would validate **both** orders. The tightened bound is roughly half the
+angular gap to the next order (≈ 0.044 rad at degree 8, shrinking as ~1/n²), so
+only the true order passes.
+
+### 3. Matching that respects the highest detected axis
+
+Detecting a high-order axis is useless if point-group *matching* then falls back
+to a low-order hardcoded group. Matching now requires the chosen group to account
+for the highest detected **proper *and* improper** axis; otherwise the character
+table is generated analytically on the fly. This is what stopped a detected C₁₁
+from being mislabelled D₂ₕ, or an S₁₂ from collapsing to C₆.
+
+!!! question "Is the fixed 10% tolerance a problem?"
+    Not for what it's mainly for. The relative 10% is deliberately forgiving so
+    that real, finite-precision `.xyz` coordinates still validate — and a *wrong*
+    axis doesn't produce a borderline error, it produces one far above the
+    threshold. The genuine weaknesses are (a) **neighbouring-order confusion at
+    high n**, which is addressed by the order-dependent tightening above rather
+    than by changing the base 10%, and (b) **slightly distorted geometries**,
+    which a fixed global tolerance can occasionally over-accept (a listed
+    limitation). The principled fix for pushing further isn't to loosen 10% — it
+    is to make the tolerance *configurable* (see the roadmap below), so clean or
+    synthetic geometries can be detected with a tighter bound.
+
+---
+
 ## Supported point groups
 
 Symmetry **detection** (from an `.xyz` file) currently covers:

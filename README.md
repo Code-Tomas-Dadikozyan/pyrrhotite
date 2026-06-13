@@ -44,6 +44,7 @@ for any supported axial point group.
 - [Input format](#input-format)
 - [Supported point groups](#supported-point-groups)
 - [How the algorithm works](#how-the-algorithm-works)
+- [Detecting high-order axes (n > 10)](#detecting-high-order-axes-n--10)
 - [Known limitations](#known-limitations)
 - [Running tests](#running-tests)
 - [License](#license)
@@ -579,6 +580,54 @@ generated analytically for *any* order n ≥ 2 — not just the ranges above. So
 5. **Axis assignment and labelling.** The Cartesian frame is standardised (z along
    the highest-order proper rotation; x to maximise atoms in the xz-plane) and
    operations are labelled (σₕ, σᵥ, σd, C₂′, C₂″).
+
+---
+
+## Detecting high-order axes (n > 10)
+
+Earlier versions hard-capped the proper-rotation search at n ≤ 8. Detection now
+adapts all the way up to n = 20, through three independent mechanisms that work
+together.
+
+**1. Geometry-bounded search order.** A Cₙ axis can only exist if there is a
+*ring* of at least n symmetry-equivalent atoms around it. So rather than blindly
+testing every order up to a fixed cap, for each candidate axis `pyrrhotite` first
+groups the atoms by **same element, same perpendicular distance from the axis,
+and same projection along the axis** (each within 0.1) and takes the largest such
+group as the ceiling for n, clamped to [2, 20]. Atoms lying essentially *on* the
+axis map to themselves under any rotation and are excluded. This both prunes the
+search to orders the geometry could actually support *and* prevents "inventing" a
+high order in a molecule that has no such ring. (See `_max_plausible_order` in
+[src/symmetry.py](src/symmetry.py).)
+
+**2. Order-dependent validation tolerance.** The base acceptance tolerance is a
+**relative 10%** — the per-atom mismatch normalised by the distance to the
+symmetry element, not a fixed 0.1 Å — which makes it scale-free. For high orders
+(degree ≥ 8) it tightens to `min(0.1, π / (degree·(degree + 1)))`. Adjacent orders
+crowd together as n grows: C₉ is a 40° rotation, C₈ is 45° — only 5° apart, so
+applying the wrong C₈ to a genuine C₉ ring gives a normalised error of ~0.087 that
+slips under a fixed 0.1 and would validate *both* orders. The tightened bound is
+roughly half the angular gap to the next order (≈0.044 rad at degree 8, shrinking
+as ~1/n²), so only the true order passes. (See
+[src/operations/operation_manager.py](src/operations/operation_manager.py).)
+
+**3. Matching that respects the highest detected axis.** Detecting a high-order
+axis is useless if point-group *matching* then falls back to a low-order hardcoded
+group. Matching now requires the chosen group to account for the highest detected
+**proper *and* improper** axis; otherwise the character table is generated
+analytically on the fly. This is what stopped a detected C₁₁ from being mislabelled
+D₂ₕ, or an S₁₂ from collapsing to C₆.
+
+**Is the fixed 10% tolerance a problem?** Not for what it's mainly for. The
+relative 10% is deliberately forgiving so that real, finite-precision `.xyz`
+coordinates still validate — and a *wrong* axis doesn't produce a borderline
+error, it produces one far above the threshold. The genuine weaknesses are
+(a) **neighbouring-order confusion at high n**, addressed by the order-dependent
+tightening above rather than by changing the base 10%, and (b) **slightly
+distorted geometries**, which a fixed global tolerance can occasionally
+over-accept (see [Known limitations](#known-limitations)). The principled way to
+push further isn't to loosen 10% — it's to make the tolerance *configurable*, so
+clean or synthetic geometries can be detected with a tighter bound.
 
 ---
 

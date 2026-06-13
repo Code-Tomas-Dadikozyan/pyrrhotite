@@ -170,6 +170,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `README.md`: documented that improper-axis families (Sₙ, and the S₂ₙ axis of
   Dₙd) detect reliably only to ~n = 10, while the proper-axis families now detect
   across the full n = 3–20 adaptive range.
+- Added a "Detecting high-order axes (n > 10)" explainer to both `README.md` and
+  `docs/algorithm.md` covering the three mechanisms that lift the cap from n ≤ 8
+  to n = 20 (geometry-bounded search order via `_max_plausible_order`, the
+  order-dependent validation tolerance `min(0.1, π/(degree·(degree+1)))`, and
+  matching that respects the highest detected proper/improper axis), plus an
+  assessment of whether the fixed 10% tolerance is problematic.
+- `docs/stylesheets/extra.css`: the Mermaid flowcharts on the User Guide and
+  Algorithm pages now fill their nodes with the brand amber on navy (matching the
+  "Get started" button) instead of a faint 10%-opacity wash; and the home-page
+  navigation cards whose title is a link are now clickable across the whole card
+  (a stretched-link `::after` overlay), scoped so multi-link cards like the About
+  page's Contact cards are unaffected.
 - `docs/api.md`: added `structure_generator.format_xyz`.
 - `.claude/CLAUDE.md`: rewritten to describe the actual `src/` package layout
   (the file still referenced the obsolete `schoenflies/` + `reference/` layout).

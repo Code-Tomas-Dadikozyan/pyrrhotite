@@ -114,6 +114,32 @@
   color: var(--pyrrhotite-amber);
 }
 
+/* Make the whole card clickable when its *title* is a link (the navigation
+   cards on the home page, where the first line is e.g. **[Getting Started](...)**).
+   We stretch that title link's hit area over the entire card with a transparent
+   ::after overlay (the classic "stretched link" pattern), so clicking anywhere
+   on the card — not just the title text — follows the link, matching the
+   whole-card hover highlight above.
+
+   This is deliberately scoped to a link inside the first paragraph only, so
+   cards whose title is plain text and whose *body* contains links (e.g. the
+   "Contact" cards on the About page) are left completely alone: with no link in
+   the first paragraph no overlay is created, so their body links keep working
+   normally and the card is not turned into one big link. Setting position on
+   every card is harmless — only cards that actually get the ::after overlay use
+   it as the positioning context. */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid.cards > ol > li {
+  position: relative;
+}
+
+.md-typeset .grid.cards > ul > li > p:first-child a::after,
+.md-typeset .grid.cards > ol > li > p:first-child a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
 /* Give each major section a gold underline so pages read as distinct
    sections rather than one continuous wall of text. */
 .md-typeset h2 {
@@ -172,14 +198,20 @@
 }
 
 /* ---------------------------------------------------------------------
-   Mermaid diagrams (Algorithm page flowchart) default to Mermaid's own
+   Mermaid diagrams (the User Guide "How the pieces fit together" and the
+   Algorithm "How the algorithm works" flowcharts) default to Mermaid's own
    blue/grey theme, which looks out of place next to the navy/gold site
    palette. Material exposes these as CSS custom properties read by its
-   Mermaid integration at render time. --------------------------------- */
+   Mermaid integration at render time.
+
+   The node fill/text are set to the same amber-on-navy as the home page
+   "Get started" button (--pyrrhotite-amber fill, --pyrrhotite-navy text/border)
+   so the boxes read as solidly "branded" rather than the faint 10%-opacity
+   wash they used before. --------------------------------- */
 .mermaid {
   --md-mermaid-edge-color: var(--pyrrhotite-amber);
-  --md-mermaid-node-bg-color: rgba(212, 160, 23, 0.1);
-  --md-mermaid-node-fg-color: var(--md-default-fg-color);
+  --md-mermaid-node-bg-color: var(--pyrrhotite-amber);
+  --md-mermaid-node-fg-color: var(--pyrrhotite-navy);
   --md-mermaid-label-bg-color: var(--md-default-bg-color);
   --md-mermaid-label-fg-color: var(--md-default-fg-color);
 }
