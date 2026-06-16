@@ -109,3 +109,37 @@ which the inertia tensor is diagonal.
 A plain-text molecular geometry format: an atom count, a comment line, then one
 `element x y z` line per atom (coordinates in Ångströms). The standard input to
 `pyrrhotite`.
+
+---
+
+## Next steps
+
+<div class="grid cards" markdown>
+
+-   :material-cog:{ .lg .middle } __Algorithm & Supported Groups__
+
+    ---
+
+    See these terms in action — how detection works and which groups are
+    supported.
+
+    [:octicons-arrow-right-24: How it works](algorithm.md)
+
+-   :material-book-open-variant:{ .lg .middle } __User Guide__
+
+    ---
+
+    The full Python API, with each concept put to use.
+
+    [:octicons-arrow-right-24: Open the User Guide](user-guide.md)
+
+-   :material-api:{ .lg .middle } __API Reference__
+
+    ---
+
+    The exact signatures, parameters, and return types for every public
+    function and class.
+
+    [:octicons-arrow-right-24: Open the reference](api.md)
+
+</div>

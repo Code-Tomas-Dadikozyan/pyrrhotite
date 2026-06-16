@@ -114,7 +114,7 @@ Symmetry **detection** (from an `.xyz` file) currently covers:
 | Improper axes | S₄ – S₂₀* (even orders) |
 | Dihedral | D₂ – D₂₀* |
 | Dihedral with σₕ | D₂ₕ – D₂₀ₕ*, D∞ₕ |
-| Dihedral with σd | D₃d – D₂₀d* |
+| Dihedral with σ<sub>d</sub> | D₃<sub>d</sub> – D₂₀<sub>d</sub>* |
 | Cubic | T, Td, Tₕ, O, Oₕ |
 | Icosahedral | I, Iₕ |
 | Linear | C∞ᵥ, D∞ₕ |
@@ -185,3 +185,37 @@ generated analytically for *any* order n ≥ 2 — not just the ranges above. So
     Have a use case that needs one of these sooner rather than later? See
     [About → Contact](about.md#contact) — real examples are exactly what helps
     prioritise this list.
+
+---
+
+## Next steps
+
+<div class="grid cards" markdown>
+
+-   :material-api:{ .lg .middle } __API Reference__
+
+    ---
+
+    The exact signatures, parameters, and return types for every public
+    function and class.
+
+    [:octicons-arrow-right-24: Open the reference](api.md)
+
+-   :material-book-alphabet:{ .lg .middle } __Glossary__
+
+    ---
+
+    Definitions for the symmetry and point-group terms used throughout these
+    docs.
+
+    [:octicons-arrow-right-24: Open the glossary](glossary.md)
+
+-   :material-book-open-variant:{ .lg .middle } __User Guide__
+
+    ---
+
+    Put the algorithm to work through the full Python API.
+
+    [:octicons-arrow-right-24: Open the User Guide](user-guide.md)
+
+</div>

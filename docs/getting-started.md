@@ -185,9 +185,49 @@ E   |      2 |     -1 |      0 | x, y, Rx, Ry | x²-y², xy, xz, yz
 
 ## Next steps
 
-- Walk through the full Python API in the [User Guide](user-guide.md).
-- Learn how detection works and what's supported in
-  [Algorithm & Supported Groups](algorithm.md).
+You've installed `pyrrhotite` and run your first analysis — here's the rest of
+the documentation. Each card is a separate page (also listed in the navigation
+sidebar on the left):
+
+<div class="grid cards" markdown>
+
+-   :material-book-open-variant:{ .lg .middle } __User Guide__
+
+    ---
+
+    A deep walkthrough of the full Python API — structures, character tables,
+    the HTML/LaTeX exporters, basis functions, and the visualizer.
+
+    [:octicons-arrow-right-24: Open the User Guide](user-guide.md)
+
+-   :material-image-multiple:{ .lg .middle } __Examples Gallery__
+
+    ---
+
+    Worked examples across point-group families, with output and rendered
+    character tables you can compare against.
+
+    [:octicons-arrow-right-24: Browse the gallery](gallery.md)
+
+-   :material-script-text:{ .lg .middle } __Example Script__
+
+    ---
+
+    `example_usage.py` — one runnable tour that exercises every public feature
+    in order. Runs as-is right after `pip install`.
+
+    [:octicons-arrow-right-24: Read the script](example.md)
+
+-   :material-cog:{ .lg .middle } __Algorithm & Supported Groups__
+
+    ---
+
+    How detection works under the hood, and the full list of supported point
+    groups and order ranges.
+
+    [:octicons-arrow-right-24: How it works](algorithm.md)
+
+</div>
 
 ??? question "Something not working as expected?"
     Double-check the [Input format](#input-format) above (units, file

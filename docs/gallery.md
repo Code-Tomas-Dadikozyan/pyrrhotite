@@ -65,3 +65,37 @@ of symmetry operations in the detected group (the group **order**).
     your own `.xyz` files — see [Getting Started](getting-started.md) — or build
     an idealized structure for a *named* group with
     [`generate_idealized_structure`](user-guide.md#generating-idealized-structures).
+
+---
+
+## Next steps
+
+<div class="grid cards" markdown>
+
+-   :material-book-open-variant:{ .lg .middle } __User Guide__
+
+    ---
+
+    The full Python API behind these examples — structures, character tables,
+    exporters, and the visualizer.
+
+    [:octicons-arrow-right-24: Open the User Guide](user-guide.md)
+
+-   :material-script-text:{ .lg .middle } __Example Script__
+
+    ---
+
+    `example_usage.py` — one runnable tour exercising every public feature in
+    order.
+
+    [:octicons-arrow-right-24: Read the script](example.md)
+
+-   :material-cog:{ .lg .middle } __Algorithm & Supported Groups__
+
+    ---
+
+    How detection works under the hood, and the full list of supported groups.
+
+    [:octicons-arrow-right-24: How it works](algorithm.md)
+
+</div>

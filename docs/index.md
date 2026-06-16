@@ -116,7 +116,7 @@ that encodes all of this.
 
 </div>
 
-!!! tip "Try it without installing anything yet"
+!!! tip "Try it without .xyz files"
     Every code example on this site uses the bundled sample molecules, so you
     can follow along the moment `pyrrhotite` is installed — no need to find or
     write your own `.xyz` files first. See
@@ -136,7 +136,8 @@ full comparison and history.
     Pyrrhotite is an iron sulfide mineral that crystallises into a range of
     related but distinct structures depending on composition and temperature —
     a fitting namesake for a library all about classifying structures by their
-    symmetry.
+    symmetry. Also, I found py(thon) + rhotite (sounds a bit like rotate) to be
+    clever.
 
 ---
 

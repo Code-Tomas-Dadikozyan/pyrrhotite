@@ -113,3 +113,36 @@ namespace.
 ::: pyrrhotite.visualize_idealized_structure
 
 ::: pyrrhotite.visualize_sample
+
+---
+
+## Next steps
+
+<div class="grid cards" markdown>
+
+-   :material-book-open-variant:{ .lg .middle } __User Guide__
+
+    ---
+
+    These functions shown in context, with worked explanations and options.
+
+    [:octicons-arrow-right-24: Open the User Guide](user-guide.md)
+
+-   :material-book-alphabet:{ .lg .middle } __Glossary__
+
+    ---
+
+    Definitions for the symmetry and point-group terms used in these
+    signatures.
+
+    [:octicons-arrow-right-24: Open the glossary](glossary.md)
+
+-   :material-cog:{ .lg .middle } __Algorithm & Supported Groups__
+
+    ---
+
+    How detection works under the hood, and the full list of supported groups.
+
+    [:octicons-arrow-right-24: How it works](algorithm.md)
+
+</div>

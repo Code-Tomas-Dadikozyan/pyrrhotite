@@ -224,6 +224,22 @@ pg = get_or_generate_point_group("C12v")
 pg.print_character_table()
 ```
 
+These two functions sit at different levels, so pick whichever matches what you
+need:
+
+- **`print_character_table_for(name)`** is a fire-and-forget convenience: it
+  looks the group up (or generates it) and prints the table straight to stdout,
+  returning nothing. Reach for it when all you want is to *see* the table.
+- **`get_or_generate_point_group(name)`** returns the `PointGroup` object itself,
+  so you can do anything else with it — inspect `pg.irreps` / `pg.characters`,
+  feed it to the HTML/LaTeX exporters, or call `pg.print_character_table()` with
+  options like `complex=True`. Reach for it when you want the *data*, not just a
+  printout. (For axial groups outside the hardcoded list the table is generated
+  on the fly; the rest come from the built-in table — hence "get or generate".)
+
+In other words, `print_character_table_for("D4h")` is just shorthand for
+`get_or_generate_point_group("D4h").print_character_table()`.
+
 Or from the command line:
 
 ```bash
@@ -579,7 +595,7 @@ Symmetry **detection** (from an `.xyz` file) currently covers:
 | Improper axes | S₄ – S₂₀* (even orders) |
 | Dihedral | D₂ – D₂₀* |
 | Dihedral with σₕ | D₂ₕ – D₂₀ₕ*, D∞ₕ |
-| Dihedral with σd | D₃d – D₂₀d* |
+| Dihedral with σ<sub>d</sub> | D₃<sub>d</sub> – D₂₀<sub>d</sub>* |
 | Cubic | T, Td, Tₕ, O, Oₕ |
 | Icosahedral | I, Iₕ |
 | Linear | C∞ᵥ, D∞ₕ |

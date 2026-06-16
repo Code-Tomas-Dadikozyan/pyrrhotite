@@ -21,6 +21,41 @@ The full script is reproduced below (kept in sync with the copy in the
 repository on every docs build). You can also
 [view or download it on GitHub](https://github.com/datomic117/pyrrhotite/blob/main/example_usage.py).
 
+## Next steps
+
+<div class="grid cards" markdown>
+
+-   :material-book-open-variant:{ .lg .middle } __User Guide__
+
+    ---
+
+    Each feature in the script, explained in depth with its full set of
+    options.
+
+    [:octicons-arrow-right-24: Open the User Guide](user-guide.md)
+
+-   :material-image-multiple:{ .lg .middle } __Examples Gallery__
+
+    ---
+
+    Worked examples across point-group families, with output and rendered
+    character tables.
+
+    [:octicons-arrow-right-24: Browse the gallery](gallery.md)
+
+-   :material-api:{ .lg .middle } __API Reference__
+
+    ---
+
+    The exact signatures, parameters, and return types for everything the
+    script uses.
+
+    [:octicons-arrow-right-24: Open the reference](api.md)
+
+</div>
+
+---
+
 ```python title="example_usage.py"
 --8<-- "example_usage.py"
 ```

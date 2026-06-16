@@ -3,6 +3,54 @@
 All notable changes to this project will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+## [0.2.3] - 2026-06-16
+
+### Fixed
+- 3-D visualizer: scrolling now actually zooms. The mouse-wheel handler updated
+  `GLWidget._zoom_multiplier`, but the camera's eye distance in
+  `StructureRenderer.get_view_matrix` was hard-coded to `4 × span` and ignored
+  it — so the wheel only nudged the near/far clip planes (invisible under a
+  perspective projection) and the molecule never changed apparent size.
+  `get_view_matrix` now takes the zoom multiplier and folds it into the eye
+  distance (`4 × span × zoom`), matching the near/far scaling already used in
+  `_projection_matrix`.
+- "Supported point groups" table (`README.md` and `docs/algorithm.md`): the
+  "Dihedral with σd" row rendered the *d* full-size while the σₕ/σᵥ rows used
+  proper subscripts, because there is no Unicode subscript letter "d". The *d*
+  subscripts (`σ<sub>d</sub>`, `D₃<sub>d</sub>`, `D₂₀<sub>d</sub>`) now use
+  `<sub>` so they align with the rest of the table.
+
+### Documentation
+- `README.md` and `docs/user-guide.md`: clarified the difference between
+  `print_character_table_for` (fire-and-forget convenience that prints and
+  returns nothing) and `get_or_generate_point_group` (returns the `PointGroup`
+  object for further use), noting that the former is shorthand for
+  `get_or_generate_point_group(name).print_character_table()`.
+- Documentation site: added a consistent "Next steps" card grid (matching the
+  Home page style) to the bottom of every content page — Getting Started, User
+  Guide, Examples Gallery, Example Script, Algorithm & Supported Groups, API
+  Reference, and Glossary — so each page routes onward to its logical neighbours
+  as prominent clickable cards rather than easily-missed footer links. On the
+  Example Script page the cards sit above the embedded `example_usage.py` dump so
+  they aren't buried below a long scroll.
+- `docs/user-guide.md`: every feature that has a command-line equivalent now
+  shows it via a consistent "Python / Command line" tabbed pair (point-group
+  determination, character tables, HTML/LaTeX export, idealized-structure
+  generation and preview, rotor classification, symmetry operations, basis
+  functions, the 3-D visualizer, and the sample molecules). Purely-Python helpers
+  (`periodic_table`, the `display` printers) now say so explicitly instead of
+  leaving the CLI status ambiguous.
+- `docs/user-guide.md`: expanded the prose for each function to spell out what
+  inputs are required or optional (e.g. that the exporters take a *list* of group
+  names, that the sample helpers take a sample *name* rather than a path, that
+  `generate_idealized_structure` reads the order from the group name) and why each
+  one is useful.
+- `docs/index.md`: renamed the "Try it without installing anything yet" tip to
+  "Try it without .xyz files", and extended the "Why pyrrhotite?" note with the
+  py(thon) + rhotite (≈ rotate) wordplay behind the name.
+
 ## [0.2.2] - 2026-06-13
 
 ### Fixed

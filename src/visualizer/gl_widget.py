@@ -122,7 +122,7 @@ class GLWidget(QOpenGLWidget):
             return
 
         proj = self._projection_matrix()
-        view = self._renderer.get_view_matrix()
+        view = self._renderer.get_view_matrix(self._zoom_multiplier)
 
         # --- Structure pass (atoms + bonds) ---
         for inst in self._renderer.get_structure_model_instances():

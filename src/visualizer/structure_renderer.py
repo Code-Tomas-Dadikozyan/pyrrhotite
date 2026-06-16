@@ -82,9 +82,15 @@ class StructureRenderer:
         U, _, Vt = np.linalg.svd(self._camera_rotation[:3, :3])
         self._camera_rotation[:3, :3] = U @ Vt
 
-    def get_view_matrix(self) -> np.ndarray:
-        """Camera view matrix: translate back by 4 × span, then rotate."""
-        dist = 4.0 * self._span
+    def get_view_matrix(self, zoom_multiplier: float = 1.0) -> np.ndarray:
+        """Camera view matrix: translate back by 4 × span × zoom, then rotate.
+
+        ``zoom_multiplier`` scales the camera-to-origin distance so that
+        scrolling actually changes the molecule's apparent size.  Without it the
+        eye stays at a fixed distance and the wheel only nudges the clip planes,
+        which is invisible under a perspective projection.
+        """
+        dist = 4.0 * self._span * zoom_multiplier
         translate = pyrr.matrix44.create_from_translation(
             np.array([0.0, 0.0, -dist], dtype=np.float32)
         )
