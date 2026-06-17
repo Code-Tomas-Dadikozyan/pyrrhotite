@@ -4,6 +4,30 @@ All notable changes to this project will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [Unreleased]
+
+### Tests
+- Character table generator: added an independent **column-orthogonality** check
+  (`test_column_orthogonality_large_n` in
+  `tests/test_character_table_generator.py`) verifying the *second* great
+  orthogonality relation — Σ_i χ_i(C_p)·χ_i(C_q) = (|G|/h_p)·δ_pq — for freshly
+  generated tables at n = 11, 12, 15, 20. This complements the existing
+  *row*-orthogonality test: it sums down columns over irreps rather than across
+  rows over operations, so it catches a class of error the row relation cannot.
+  It is restricted to the non-abelian families (Cnv, Dn, Dnh, Dnd), whose E
+  irreps are genuine 2-D representations; the abelian families (Cn, Cnh, Sn)
+  represent each complex-conjugate irrep pair as a single combined real "E" row,
+  which is reducible and so does not satisfy the simple column relation (those
+  families remain covered by the relaxed row-orthogonality check). Suite total:
+  240 → 253 tests.
+
+### Documentation
+- Added a "How generated character tables are verified" section to
+  `docs/algorithm.md` and `README.md`, documenting the four-way validation of the
+  on-the-fly generator (consistency against the hardcoded literature tables, row
+  and column orthogonality, and structural sanity / analytical spot-checks).
+
+
 ## [0.2.3] - 2026-06-16
 
 ### Fixed

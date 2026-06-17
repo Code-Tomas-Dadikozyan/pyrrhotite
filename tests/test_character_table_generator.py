@@ -2,10 +2,21 @@
 
 Verification strategy:
 1. Consistency: generated tables match hardcoded tables for all axial groups
-   already in POINT_GROUPS (within floating-point tolerance).
-2. Orthogonality: for freshly generated groups at n=11,12,15,20 the great
-   orthogonality theorem relations hold.
-3. Structural sanity: correct order, correct irrep count, E col = dimension.
+   already in POINT_GROUPS (within floating-point tolerance). This is the
+   strongest check, because the hardcoded tables are the literature values, so
+   it pins the generated tables to an external ground truth wherever the two
+   overlap.
+2. Row orthogonality: for freshly generated groups at n=11,12,15,20 the first
+   great orthogonality relation (over operations, summing across columns) holds.
+3. Column orthogonality: the *second*, independent great orthogonality relation
+   (over irreps, summing down columns) holds for the non-abelian families. This
+   is checked separately because, unlike row orthogonality, it is not implied by
+   the construction and so catches a different class of error. It is restricted
+   to Cnv/Dn/Dnh/Dnd: the abelian families (Cn, Cnh, Sn) represent each pair of
+   complex-conjugate 1-D irreps as a single combined real "E" row, which is a
+   reducible representation for which the simple column relation does not apply
+   (those families are covered by the relaxed row check in 2 instead).
+4. Structural sanity: correct order, correct irrep count, E col = dimension.
 """
 from __future__ import annotations
 
@@ -68,6 +79,49 @@ def _check_orthogonality(pg_label: PGL) -> None:
             f"{pg_label.name} irrep {i}: diagonal {val:.6f} "
             f"is not a multiple of |G|={order}"
         )
+
+
+def _check_column_orthogonality(pg_label: PGL) -> None:
+    """Assert the second great orthogonality relation (columns) for a table.
+
+    For a genuine character table the columns are orthogonal:
+
+        Σ_i  χ_i(C_p) · χ_i(C_q)*  =  (|G| / h_p) · δ_{pq}
+
+    where the sum runs over the irreducible representations i and h_p is the
+    number of group elements in class p. Summing *down* a column over irreps is
+    independent of the row relation in ``_check_orthogonality`` (which sums
+    *across* a row over operations), so this catches errors the row check would
+    miss. The tables here are real, so χ* = χ.
+
+    This is only valid where every row is a genuine irreducible character, i.e.
+    the non-abelian families Cnv/Dn/Dnh/Dnd. It must NOT be applied to the
+    abelian families, whose combined complex-pair "E" rows are reducible.
+    """
+    pg = generate_point_group(pg_label)
+    chars = pg.characters
+    ops = pg.unique_operations
+    order = pg.order
+
+    # Class sizes h_p; the implicit E column always has exactly one element.
+    multiplicities = [1] + [olc.count for olc in ops]
+    n_irreps = len(chars)
+    n_cols = len(chars[0])
+
+    for p in range(n_cols):
+        for q in range(p, n_cols):
+            val = sum(chars[i][p] * chars[i][q] for i in range(n_irreps))
+            if p == q:
+                expected = order / multiplicities[p]
+                assert abs(val - expected) < _TOL, (
+                    f"{pg_label.name} column self-overlap failed at class {p}: "
+                    f"got {val:.6f}, expected |G|/h_p = {expected:.6f}"
+                )
+            else:
+                assert abs(val) < _TOL, (
+                    f"{pg_label.name} column orthogonality failed for classes "
+                    f"{p},{q}: got {val:.6f}"
+                )
 
 
 def _check_sanity(pg_label: PGL) -> None:
@@ -173,6 +227,31 @@ def test_orthogonality_large_n(lbl):
 def test_sanity_large_n(lbl):
     """Structural sanity: correct irrep count and positive dimensions."""
     _check_sanity(lbl)
+
+
+# Column orthogonality is only well-defined for the non-abelian families, whose
+# E irreps are genuine 2-D representations (see _check_column_orthogonality).
+_LARGE_N_NONABELIAN_LABELS = [
+    PGL(_C.Cv, 11),
+    PGL(_C.Cv, 12),
+    PGL(_C.Cv, 15),
+    PGL(_C.Cv, 20),
+    PGL(_C.D,  11),
+    PGL(_C.D,  12),
+    PGL(_C.D,  20),
+    PGL(_C.Dh, 11),
+    PGL(_C.Dh, 12),
+    PGL(_C.Dh, 20),
+    PGL(_C.Dd, 11),
+    PGL(_C.Dd, 12),
+    PGL(_C.Dd, 20),
+]
+
+
+@pytest.mark.parametrize("lbl", _LARGE_N_NONABELIAN_LABELS)
+def test_column_orthogonality_large_n(lbl):
+    """Second (column) orthogonality relation holds for non-abelian groups."""
+    _check_column_orthogonality(lbl)
 
 
 # ---------------------------------------------------------------------------

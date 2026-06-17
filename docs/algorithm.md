@@ -135,6 +135,50 @@ generated analytically for *any* order n ≥ 2 — not just the ranges above. So
 
 ---
 
+## How generated character tables are verified
+
+Generating a character table on the fly is only useful if the result can be
+trusted — especially for high-order groups (e.g. `C30v`) whose tables are too
+large to have ever been checked by hand. The test suite
+(`tests/test_character_table_generator.py`) verifies the generator in four
+complementary ways:
+
+1. **Consistency with the literature.** Wherever a generated table overlaps with
+   one of the built-in hardcoded tables (which hold the established literature
+   values), every character value must match. This is the strongest check: it
+   pins the generator to an external ground truth for all the lower-order groups.
+
+2. **Row orthogonality.** For freshly generated groups at n = 11, 12, 15, 20 the
+   *first* great orthogonality relation must hold — the rows (irreducible
+   representations), summed across the operation classes with their
+   multiplicities, are mutually orthogonal.
+
+3. **Column orthogonality.** The *second*, independent great orthogonality
+   relation must also hold — the columns (operation classes), summed down over
+   the irreducible representations, satisfy
+   Σ<sub>i</sub> χ<sub>i</sub>(C<sub>p</sub>)·χ<sub>i</sub>(C<sub>q</sub>) =
+   (|G| / h<sub>p</sub>)·δ<sub>pq</sub>. Because it sums over irreps rather than
+   over operations, it catches a class of error the row check cannot. This check
+   is applied to the non-abelian families (Cnv, Dn, Dnh, Dnd), whose E irreps are
+   genuine two-dimensional representations; the abelian families (Cn, Cnh, Sn)
+   represent each complex-conjugate irrep pair as a single combined real "E" row,
+   which is reducible and so is covered by the (relaxed) row check instead.
+
+4. **Structural sanity and spot-checks.** The number of irreducible
+   representations must equal the number of operation classes, the E column must
+   give each irrep's dimension, the group order must be correct, and individual
+   character values are spot-checked against their known analytical expressions
+   (e.g. the C₁₁ E₁ character at 2C₁₁ must equal 2·cos(2π/11)).
+
+!!! note "Why orthogonality is enough at high order"
+    Conditions 2–4 are *necessary* properties of any genuine character table.
+    Together with the exact agreement against literature tables wherever the two
+    overlap (condition 1), they give high confidence that the analytically
+    generated tables are correct even where no reference table exists to compare
+    against directly.
+
+---
+
 ## Known limitations
 
 !!! warning "The n = 20 detection cap is fundamental, not arbitrary"

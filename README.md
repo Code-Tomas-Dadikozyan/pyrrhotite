@@ -45,6 +45,7 @@ for any supported axial point group.
 - [Input format](#input-format)
 - [Supported point groups](#supported-point-groups)
 - [How the algorithm works](#how-the-algorithm-works)
+- [How generated character tables are verified](#how-generated-character-tables-are-verified)
 - [Detecting high-order axes (n > 10)](#detecting-high-order-axes-n--10)
 - [Known limitations](#known-limitations)
 - [Running tests](#running-tests)
@@ -639,6 +640,34 @@ generated analytically for *any* order n ≥ 2 — not just the ranges above. So
 5. **Axis assignment and labelling.** The Cartesian frame is standardised (z along
    the highest-order proper rotation; x to maximise atoms in the xz-plane) and
    operations are labelled (σₕ, σᵥ, σd, C₂′, C₂″).
+
+---
+
+## How generated character tables are verified
+
+A character table generated on the fly is only useful if it can be trusted —
+especially for high-order groups (e.g. `C30v`) whose tables are too large to
+check by hand. The test suite (`tests/test_character_table_generator.py`)
+verifies the generator four ways:
+
+1. **Consistency with the literature** — wherever a generated table overlaps with
+   a built-in hardcoded table (the established literature values), every character
+   must match. This pins the generator to an external ground truth for the
+   lower-order groups.
+2. **Row orthogonality** — generated tables (tested at n = 11, 12, 15, 20) satisfy
+   the first great orthogonality relation (irreps orthogonal across operations).
+3. **Column orthogonality** — they also satisfy the *independent* second relation,
+   Σᵢ χᵢ(C_p)·χᵢ(C_q) = (|G|/h_p)·δ_pq (operation classes orthogonal across
+   irreps), which catches errors the row check cannot. Applied to the non-abelian
+   families (Cnv, Dn, Dnh, Dnd); the abelian families (Cn, Cnh, Sn) use combined
+   real "E" rows and are covered by the row check instead.
+4. **Structural sanity & spot-checks** — #irreps = #classes, the E column gives
+   each irrep's dimension, the order is correct, and individual values are checked
+   against their known analytical expressions.
+
+Conditions 2–4 are necessary properties of any genuine character table; combined
+with the literature match in (1), they give high confidence that the generated
+tables are correct even where no reference table exists.
 
 ---
 
