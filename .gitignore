@@ -220,3 +220,5 @@ __marimo__/
 # Claude
 settings.local.json
 
+# Latex
+main.tex
