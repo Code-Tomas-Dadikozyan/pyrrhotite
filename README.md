@@ -4,6 +4,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/pyrrhotite.svg)](https://pypi.org/project/pyrrhotite/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-online-brightgreen.svg)](https://datomic117.github.io/pyrrhotite/)
+[![DOI](https://zenodo.org/badge/1231828425.svg)](https://doi.org/10.5281/zenodo.20746186)
 
 Automatic Schoenflies point group determination, character table generation,
 idealized-structure generation, and 3-D molecule visualization — from a plain

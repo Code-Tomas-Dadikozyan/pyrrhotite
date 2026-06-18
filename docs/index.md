@@ -15,6 +15,7 @@ Automatic Schoenflies point group determination, character table generation, and
 [![Python](https://img.shields.io/badge/python-3.10%2B-d4a017.svg)](getting-started.md#installation)
 ![Status](https://img.shields.io/badge/status-active%20development-d4a017.svg)
 [![Schoenflies groups](https://img.shields.io/badge/point%20groups-18%20classes-d4a017.svg)](algorithm.md#supported-point-groups)
+[![DOI](https://zenodo.org/badge/1231828425.svg)](https://doi.org/10.5281/zenodo.20746186)
 </div>
 
 Given a molecular geometry in `.xyz` format, `pyrrhotite` identifies the molecule's
