@@ -570,6 +570,8 @@ actually looks like* before or after analysis. It draws atoms as colour-coded
 spheres, bonds as cylinders, and a small red/green/blue arrow gizmo in the corner
 showing the x/y/z axes.
 
+![Visualizer showing a C₆₀ fullerene](assets/visualizer-fullerene.png)
+
 === "Python"
 
     ```python
