@@ -1,0 +1,225 @@
+/* Custom "pyrrhotite" brand palette: navy primary + bronze/gold accent,
+   matching docs/assets/logo.png. Activated via palette.primary/accent: custom
+   in mkdocs.yml. */
+
+/* Enlarge the header/nav logo. The Material default caps the logo image at
+   ~1.2rem; the cropped crystal mark reads better a bit larger. */
+.md-header__button.md-logo img,
+.md-nav__title .md-logo img {
+  height: 2rem;
+  width: auto;
+}
+
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: #1b2733;
+  --md-primary-fg-color--light: #3a4a5c;
+  --md-primary-fg-color--dark: #11181f;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: hsla(0, 0%, 100%, 0.7);
+}
+
+[data-md-color-accent="custom"] {
+  --md-accent-fg-color: #d4a017;
+  --md-accent-fg-color--transparent: rgba(212, 160, 23, 0.1);
+  --md-accent-bg-color: #ffffff;
+  --md-accent-bg-color--light: hsla(0, 0%, 100%, 0.7);
+}
+
+/* Extra brand color used outside the primary/accent system, e.g. for the
+   home page hero banner gradient. */
+:root {
+  --pyrrhotite-gold: #f0cf8a;
+  --pyrrhotite-amber: #d4a017;
+  --pyrrhotite-navy: #1b2733;
+}
+
+/* Body text links (`.md-typeset a`) default to --md-typeset-a-color, which
+   falls back to --md-primary-fg-color — our navy. In dark/slate mode that's
+   a near-black link on a near-black background, i.e. invisible. Override it
+   to the lighter brand gold for the slate scheme so links (in admonitions,
+   cards, paragraphs, ...) stay readable against the dark background. */
+[data-md-color-scheme="slate"] {
+  --md-typeset-a-color: var(--pyrrhotite-gold);
+}
+
+/* Gold announcement bar (see docs/overrides/main.html). Material renders the
+   {% block announce %} content inside `.md-banner` (not `.md-announce`), so the
+   brand styling must target that class or it silently has no effect — which
+   left a navy link on the default dark banner, i.e. invisible. */
+.md-banner {
+  background-color: var(--pyrrhotite-amber);
+  color: var(--pyrrhotite-navy);
+}
+
+.md-banner a {
+  color: var(--pyrrhotite-navy);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Hero banner on the home page */
+.pyrrhotite-hero {
+  margin: 1.5rem 0 2rem;
+  padding: 2rem 2rem 1.75rem;
+  border-radius: 0.4rem;
+  background: linear-gradient(135deg, #1b2733 0%, #2c3e50 55%, #a47a30 100%);
+  background-size: 200% 200%;
+  animation: pyrrhotite-hero-shift 18s ease infinite;
+  color: #fff;
+}
+
+@keyframes pyrrhotite-hero-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pyrrhotite-hero {
+    animation: none;
+  }
+}
+
+.pyrrhotite-hero h1 {
+  color: #fff;
+  margin-top: 0;
+}
+
+.pyrrhotite-hero p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pyrrhotite-hero .md-button {
+  border-color: var(--pyrrhotite-gold);
+  color: #fff;
+}
+
+.pyrrhotite-hero .md-button--primary {
+  background-color: var(--pyrrhotite-amber);
+  border-color: var(--pyrrhotite-amber);
+  color: var(--pyrrhotite-navy);
+}
+
+.pyrrhotite-hero .md-button:hover {
+  background-color: var(--pyrrhotite-gold);
+  border-color: var(--pyrrhotite-gold);
+  color: var(--pyrrhotite-navy);
+}
+
+/* Badge row on the home page */
+.pyrrhotite-badges img {
+  margin: 0.1rem;
+}
+
+/* Give the feature/navigation grid cards a gold accent on hover */
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid.cards > ol > li:hover {
+  border-color: var(--pyrrhotite-amber);
+  box-shadow: 0 0.2rem 0.5rem rgba(212, 160, 23, 0.25);
+}
+
+.md-typeset .grid.cards > ul > li > p:first-child .twemoji,
+.md-typeset .grid.cards > ol > li > p:first-child .twemoji {
+  color: var(--pyrrhotite-amber);
+}
+
+/* Make the whole card clickable when its *title* is a link (the navigation
+   cards on the home page, where the first line is e.g. **[Getting Started](...)**).
+   We stretch that title link's hit area over the entire card with a transparent
+   ::after overlay (the classic "stretched link" pattern), so clicking anywhere
+   on the card — not just the title text — follows the link, matching the
+   whole-card hover highlight above.
+
+   This is deliberately scoped to a link inside the first paragraph only, so
+   cards whose title is plain text and whose *body* contains links (e.g. the
+   "Contact" cards on the About page) are left completely alone: with no link in
+   the first paragraph no overlay is created, so their body links keep working
+   normally and the card is not turned into one big link. Setting position on
+   every card is harmless — only cards that actually get the ::after overlay use
+   it as the positioning context. */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid.cards > ol > li {
+  position: relative;
+}
+
+.md-typeset .grid.cards > ul > li > p:first-child a::after,
+.md-typeset .grid.cards > ol > li > p:first-child a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* Give each major section a gold underline so pages read as distinct
+   sections rather than one continuous wall of text. */
+.md-typeset h2 {
+  padding-bottom: 0.3rem;
+  border-bottom: 0.05rem solid var(--pyrrhotite-amber);
+}
+
+/* ---------------------------------------------------------------------
+   Admonitions ("!!! note", "!!! tip", etc.) and collapsible "??? "
+   blocks default to a mix of blue/green/orange/red that clashes with the
+   site's navy + gold palette. Recolour them onto a shared gold/amber
+   scale so they read as "part of this site" rather than generic
+   Material defaults. Plain `note`/`info`/`tip`/`example`/`question` all
+   get the brand amber; `warning` keeps a distinct, slightly redder amber
+   so cautionary callouts still stand out from informational ones.
+   `.md-typeset` is repeated to win the specificity fight against
+   Material's own admonition rules. --------------------------------- */
+.md-typeset .admonition,
+.md-typeset details {
+  border-color: var(--pyrrhotite-amber);
+}
+
+.md-typeset .admonition > .admonition-title,
+.md-typeset details > summary {
+  background-color: rgba(212, 160, 23, 0.1);
+}
+
+.md-typeset .admonition > .admonition-title::before,
+.md-typeset details > summary::before,
+.md-typeset .admonition > .admonition-title::after,
+.md-typeset details > summary::after {
+  background-color: var(--pyrrhotite-amber);
+}
+
+.md-typeset .warning,
+.md-typeset details.warning {
+  border-color: #b5651d;
+}
+
+.md-typeset .warning > .admonition-title,
+.md-typeset details.warning > summary {
+  background-color: rgba(181, 101, 29, 0.1);
+}
+
+.md-typeset .warning > .admonition-title::before,
+.md-typeset details.warning > summary::before {
+  background-color: #b5651d;
+}
+
+/* Keep admonition body text the same shade as the rest of the page —
+   Material dims it slightly by default, which read as an inconsistency
+   once the surrounding colours changed. */
+.md-typeset .admonition > p,
+.md-typeset details > p {
+  color: var(--md-default-fg-color);
+}
+
+/* ---------------------------------------------------------------------
+   Mermaid diagrams (the User Guide "How the pieces fit together" and the
+   Algorithm "How the algorithm works" flowcharts) default to Mermaid's own
+   blue/grey theme, which looks out of place next to the navy/gold site
+   palette. Material exposes these as CSS custom properties read by its
+   Mermaid integration at render time.
+
+   The node fill/text are set to the same amber-on-navy as the home page
+   "Get started" button (--pyrrhotite-amber fill, --pyrrhotite-navy text/border)
+   so the boxes read as solidly "branded" rather than the faint 10%-opacity
+   wash they used before. --------------------------------- */
+.mermaid {
+  --md-mermaid-edge-color: var(--pyrrhotite-amber);
+  --md-mermaid-node-bg-color: var(--pyrrhotite-amber);
+  --md-mermaid-node-fg-color: var(--pyrrhotite-navy);
+  --md-mermaid-label-bg-color: var(--md-default-bg-color);
+  --md-mermaid-label-fg-color: var(--md-default-fg-color);
+}

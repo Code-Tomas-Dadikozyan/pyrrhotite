@@ -1,0 +1,1890 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Automatic Schoenflies point group determination, character table generation, and 3-D molecule visualization">
+      
+      
+      
+        <link rel="canonical" href="https://datomic117.github.io/pyrrhotite/user-guide/">
+      
+      
+        <link rel="prev" href="../getting-started/">
+      
+      
+        <link rel="next" href="../gallery/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>User Guide - pyrrhotite</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#user-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+  <span>🚧 <strong>pyrrhotite</strong> is under active development —
+  see the <a href="../changelog/">Changelog</a> for what's new.</span>
+
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="pyrrhotite" class="md-header__button md-logo" aria-label="pyrrhotite" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            pyrrhotite
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              User Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/datomic117/pyrrhotite" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    datomic117/pyrrhotite
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../getting-started/" class="md-tabs__link">
+          
+  
+  
+  Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../algorithm/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../about/" class="md-tabs__link">
+          
+  
+  
+  Project
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="pyrrhotite" class="md-nav__button md-logo" aria-label="pyrrhotite" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    pyrrhotite
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/datomic117/pyrrhotite" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    datomic117/pyrrhotite
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-pieces-fit-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the pieces fit together
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#point-group-determination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Point group determination
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#character-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character tables
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Character tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#character-tables-for-any-group-no-xyz-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character tables for any group — no XYZ needed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exporting-character-tables-html-latex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exporting character tables (HTML / LaTeX)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generating-idealized-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generating idealized structures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotor-classification-and-principal-axes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rotor classification and principal axes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#symmetry-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symmetry operations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basis-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basis functions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pretty-printing-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pretty-printing helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#element-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-d-visualizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3-D visualizer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-molecules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample molecules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples Gallery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../algorithm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Algorithm & Supported Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href=".." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../getting-started/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Guide
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/datomic117/pyrrhotite/edit/main/docs/user-guide.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/datomic117/pyrrhotite/raw/main/docs/user-guide.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="user-guide">User Guide</h1>
+<p>This page walks through the Python API in depth. For the command-line tool, see
+<a href="../getting-started/#command-line-reference">Getting Started</a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Want one runnable script instead?</p>
+<p>The repository ships <a href="../example/"><code>example_usage.py</code></a> (also viewable
+<a href="https://github.com/datomic117/pyrrhotite/blob/main/example_usage.py">on GitHub</a>),
+a single end-to-end tour that exercises every public feature in order —
+structure loading, point-group determination, character tables, the
+HTML/LaTeX exporters, the structure generator, and the 3-D viewer. It reads
+from the bundled sample molecules, so it runs as-is straight after
+<code>pip install pyrrhotite</code>:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>example_usage.py
+</code></pre></div>
+<p>The walkthrough below explains each piece it uses.</p>
+</div>
+<h2 id="how-the-pieces-fit-together">How the pieces fit together</h2>
+<p>Before diving into each piece individually, here's how the main objects relate
+to one another:</p>
+<pre class="mermaid"><code>flowchart LR
+    XYZ[".xyz file"] --&gt; S["Structure"]
+    S --&gt; SYM["Symmetry"]
+    SYM --&gt; PG["PointGroup"]
+    SYM --&gt; OM["OperationManager"]
+    PG --&gt; CT["Character table"]
+    CT --&gt; EXP["HTML / LaTeX export"]
+    PG --&gt; BF["Basis functions"]
+    S --&gt; VIS["3-D visualizer"]</code></pre>
+<ul>
+<li><strong><code>Structure</code></strong> loads and re-centres the atoms from an <code>.xyz</code> file — or is
+  built synthetically by
+  <a href="#generating-idealized-structures"><code>generate_idealized_structure</code></a>.</li>
+<li><strong><code>Symmetry</code></strong> runs the detection pipeline described in
+  <a href="../algorithm/">Algorithm &amp; Supported Groups</a> and exposes the result as a
+  <strong><code>PointGroup</code></strong>, plus an <strong><code>OperationManager</code></strong> holding every individual
+  symmetry operation that was found.</li>
+<li>A <strong><code>PointGroup</code></strong> knows its character table and basis functions, and can be
+  exported to HTML/LaTeX — or obtained directly by name, with no <code>Structure</code>
+  at all (see
+  <a href="#character-tables-for-any-group-no-xyz-needed">Character tables for any group</a>).</li>
+<li>A <strong><code>Structure</code></strong> can also be handed straight to the 3-D <strong>visualizer</strong>,
+  independently of <code>Symmetry</code>.</li>
+</ul>
+<hr />
+<h2 id="point-group-determination">Point group determination</h2>
+<p>This is the core workflow: take a geometry and find its point group.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Python</label><label for="__tabbed_1_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite</span><span class="w"> </span><span class="kn">import</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">Symmetry</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span><span class="s2">&quot;ammonia.xyz&quot;</span><span class="p">)</span>     <span class="c1"># path to an .xyz file (str or pathlib.Path)</span>
+<span class="n">sym</span> <span class="o">=</span> <span class="n">Symmetry</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>                <span class="c1"># runs detection on the loaded Structure</span>
+
+<span class="n">pg</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">point_group</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>        <span class="c1"># &quot;C3v&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>              <span class="c1"># 6  (total number of symmetry operations)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>ammonia.xyz<span class="w">       </span><span class="c1"># prints the detected point group</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Inputs.</strong> <code>Structure(...)</code> takes the path to a standard <code>.xyz</code> file — see
+<a href="../getting-started/#input-format">Input format</a> for the expected layout. The
+molecule does <em>not</em> need to be pre-centred: <code>Structure</code> loads the atoms and
+coordinates and automatically re-centres them on the centre of mass, which is
+where symmetry detection expects the origin to be. <code>Symmetry(...)</code> then takes
+that <code>Structure</code> and runs the full detection pipeline, exposing the result as a
+<code>PointGroup</code>.</p>
+<p><strong>Why it's useful.</strong> The <code>PointGroup</code> you get back is the gateway to everything
+else on this page — its character table, <abbr title="Irreducible representations — the fundamental symmetry species (rows) of a character table. See the Glossary.">irreps</abbr>, and basis functions — so a
+single <code>Symmetry(Structure(...))</code> call is usually the first thing you write.</p>
+<div class="admonition tip">
+<p class="admonition-title">Want to see <em>why</em> a group was assigned?</p>
+<p><code>sym.operation_manager</code> gives you every individual symmetry operation that
+was detected, along with its axis and a numerical error estimate — see
+<a href="#symmetry-operations">Symmetry operations</a> below.</p>
+</div>
+<h2 id="character-tables">Character tables</h2>
+<p>A character table is a small grid that summarises everything the point group
+tells you about the molecule: which combinations of atomic orbitals are allowed
+to mix, and which vibrations/rotations show up in infrared or Raman spectra.</p>
+<p>Once you have a <code>PointGroup</code> (<code>pg = sym.point_group</code> from the section above), you
+can print its table or read the underlying data directly.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Python</label><label for="__tabbed_2_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1"># Print with rich formatting (falls back to plain if rich is not installed)</span>
+<span class="n">pg</span><span class="o">.</span><span class="n">print_character_table</span><span class="p">()</span>
+
+<span class="c1"># Plain text — no colour/box-drawing, good for logs and piping</span>
+<span class="n">pg</span><span class="o">.</span><span class="n">print_character_table</span><span class="p">(</span><span class="n">plain</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># ε-notation for cyclic / Sn groups</span>
+<span class="n">pg</span><span class="o">.</span><span class="n">print_character_table</span><span class="p">(</span><span class="nb">complex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Access the data directly</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">irreps</span><span class="p">)</span>             <span class="c1"># list of IrrepLabel objects</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">characters</span><span class="p">)</span>         <span class="c1"># list[list[float]] — [irrep][operation class]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">unique_operations</span><span class="p">)</span>  <span class="c1"># conjugacy classes (excluding E)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>-ct<span class="w"> </span>ammonia.xyz<span class="w">             </span><span class="c1"># character table</span>
+pyrrhotite<span class="w"> </span>-ct<span class="w"> </span>--plain<span class="w"> </span>ammonia.xyz<span class="w">     </span><span class="c1"># force plain-text output</span>
+pyrrhotite<span class="w"> </span>-ct<span class="w"> </span>--complex<span class="w"> </span>ammonia.xyz<span class="w">   </span><span class="c1"># ε-notation</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Inputs.</strong> <code>print_character_table()</code> takes two optional booleans: <code>plain=True</code>
+suppresses the <code>rich</code> formatting (use it when output is going to a file, a log,
+or another program), and <code>complex=True</code> switches to ε-notation (see the note
+below). The <code>pg.irreps</code>, <code>pg.characters</code>, and <code>pg.unique_operations</code> attributes
+expose the same data as plain Python objects when you need the values
+programmatically rather than printed.</p>
+<div class="admonition note">
+<p class="admonition-title">ε-notation</p>
+<p>Cyclic groups (Cₙ, Sₙ, …) with n &gt; 2 have complex-valued irreducible
+representations. <code>print_character_table(complex=True)</code> displays these
+using ε = e^(2πi/n) notation instead of expanding them numerically — the
+conventional form used in most textbooks and reference tables.</p>
+</div>
+<h3 id="character-tables-for-any-group-no-xyz-needed">Character tables for any group — no XYZ needed</h3>
+<p>You can also generate a character table for a named point group without loading
+any molecule. This works for all 18 <abbr title="The point-group notation pyrrhotite uses (C2v, D6h, Td, …), common in chemistry. See the Glossary.">Schoenflies</abbr> classes — the seven axial
+families (Cn, Cnh, Cnv, Sn, Dn, Dnh, Dnd) are generated analytically for any
+order, and the rest (cubic, icosahedral, linear, and the low-symmetry groups)
+come from a built-in table.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Python</label><label for="__tabbed_3_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite.character_tables</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_or_generate_point_group</span><span class="p">,</span>
+    <span class="n">print_character_table_for</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">print_character_table_for</span><span class="p">(</span><span class="s2">&quot;D4h&quot;</span><span class="p">)</span>
+
+<span class="n">pg</span> <span class="o">=</span> <span class="n">get_or_generate_point_group</span><span class="p">(</span><span class="s2">&quot;C12v&quot;</span><span class="p">)</span>
+<span class="n">pg</span><span class="o">.</span><span class="n">print_character_table</span><span class="p">()</span>
+</code></pre></div>
+<p>These two functions sit at different levels:</p>
+<ul>
+<li><strong><code>print_character_table_for(name)</code></strong> is a fire-and-forget convenience —
+  it looks the group up (or generates it) and prints the table straight to
+  stdout, returning nothing. Use it when you just want to <em>see</em> the table.</li>
+<li><strong><code>get_or_generate_point_group(name)</code></strong> returns the <code>PointGroup</code> object,
+  so you can inspect <code>pg.irreps</code> / <code>pg.characters</code>, hand it to the
+  HTML/LaTeX exporters, or call <code>pg.print_character_table(complex=True)</code>.
+  Use it when you want the <em>data</em>, not just a printout. (Axial groups
+  outside the hardcoded list are generated on the fly; the rest come from
+  the built-in table — hence "get or generate".)</li>
+</ul>
+<p>So <code>print_character_table_for("D4h")</code> is just shorthand for
+<code>get_or_generate_point_group("D4h").print_character_table()</code>.</p>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>-g<span class="w"> </span>C3v
+pyrrhotite<span class="w"> </span>-g<span class="w"> </span>D6h<span class="w"> </span>--plain
+pyrrhotite<span class="w"> </span>-g<span class="w"> </span>C12v<span class="w">   </span><span class="c1"># arbitrary order — generated on the fly</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="exporting-character-tables-html-latex">Exporting character tables (HTML / LaTeX)</h3>
+<p>For reports, slides, or web pages, character tables can be exported directly to
+HTML or LaTeX:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Python</label><label for="__tabbed_4_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite.character_tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_html</span><span class="p">,</span> <span class="n">save_html</span><span class="p">,</span> <span class="n">format_latex</span><span class="p">,</span> <span class="n">save_latex</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">format_html</span><span class="p">([</span><span class="s2">&quot;C3v&quot;</span><span class="p">,</span> <span class="s2">&quot;D6h&quot;</span><span class="p">]))</span>          <span class="c1"># HTML string, ready to embed in a page</span>
+<span class="n">save_html</span><span class="p">([</span><span class="s2">&quot;Oh&quot;</span><span class="p">],</span> <span class="s2">&quot;oh_table.html&quot;</span><span class="p">)</span>          <span class="c1"># write a standalone HTML file</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">format_latex</span><span class="p">([</span><span class="s2">&quot;C3v&quot;</span><span class="p">,</span> <span class="s2">&quot;D6h&quot;</span><span class="p">]))</span>         <span class="c1"># LaTeX string (requires \usepackage{booktabs,amsmath})</span>
+<span class="n">save_latex</span><span class="p">([</span><span class="s2">&quot;Oh&quot;</span><span class="p">],</span> <span class="s2">&quot;oh_table.tex&quot;</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pyrrhotite.character_tables.html_formatter<span class="w"> </span>C3v<span class="w"> </span>D6h
+python<span class="w"> </span>-m<span class="w"> </span>pyrrhotite.character_tables.html_formatter<span class="w"> </span>Oh<span class="w"> </span>--save
+python<span class="w"> </span>-m<span class="w"> </span>pyrrhotite.character_tables.latex_formatter<span class="w"> </span>Oh<span class="w"> </span>D4h<span class="w"> </span>--save<span class="w"> </span>tables.tex
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Inputs.</strong> Every exporter takes a <strong>list of group names</strong> (e.g.
+<code>["C3v", "D6h"]</code>) rather than a single string, so you can render several tables
+in one call. The <code>format_*</code> functions <em>return</em> the markup as a string (handy for
+embedding into a larger document); the <code>save_*</code> functions write it to the file
+path you give and return nothing. The module-script form (<code>python -m ...</code>) is the
+command-line equivalent: pass group names as arguments and <code>--save</code> to write to
+disk. These work for any of the 18 classes, with no <code>.xyz</code> file or <code>Structure</code>
+needed.</p>
+<p>The HTML is fully self-contained (it carries its own <code>&lt;style&gt;</code> block), so it
+drops straight into any page. Here is the <em>actual, unedited</em> output of
+<code>format_html(["C3v"])</code>, rendered live:</p>
+<div markdown="0">
+<style>
+  .char-table {
+    border-collapse: collapse;
+    font-family: "Latin Modern", "STIX Two Text", serif;
+    font-size: 0.95em;
+    margin: 1.5em auto;
+  }
+  .char-table caption {
+    caption-side: top;
+    font-weight: bold;
+    margin-bottom: 0.4em;
+  }
+  .char-table th,
+  .char-table td {
+    padding: 0.35em 0.75em;
+    text-align: center;
+    border: 1px solid #bbb;
+  }
+  .char-table thead tr {
+    background: #e8e8e8;
+    border-bottom: 2px solid #555;
+  }
+  .char-table thead th:first-child {
+    text-align: left;
+  }
+  .char-table tbody td:first-child {
+    text-align: left;
+    font-style: normal;
+  }
+  .char-table tbody tr:nth-child(even) {
+    background: #f5f5f5;
+  }
+  .char-table tbody tr:hover {
+    background: #e0ecf8;
+  }
+</style>
+
+<table class="char-table">
+  <caption>Character table of <i>C</i><sub>3v</sub></caption>
+  <thead>
+    <tr>
+      <th><i>C</i><sub>3v</sub></th>
+      <th><i>E</i></th>
+      <th>2 <i>C</i><sub>3</sub></th>
+      <th>3 <i>&sigma;</i><sub>v</sub></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A<sub>1</sub></td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>A<sub>2</sub></td>
+      <td>1</td>
+      <td>1</td>
+      <td>-1</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td>2</td>
+      <td>-1</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="admonition note">
+<p class="admonition-title">Self-contained, light-styled tables</p>
+<p>The exported table ships with its own colours (a light grey header and
+zebra striping), so it looks identical wherever you embed it — which also
+means it keeps that light styling even on this page in dark mode. That is by
+design: the export is meant to be portable into reports and slides, not to
+inherit a host site's theme.</p>
+</div>
+<hr />
+<h2 id="generating-idealized-structures">Generating idealized structures</h2>
+<p>For testing or demonstration, <code>pyrrhotite</code> can build an idealized <code>Structure</code>
+that has, by construction, a requested axial point-group symmetry — a ring (or
+combination of rings) of placeholder atoms arranged as a Cn, Cnh, Cnv, Sn, Dn,
+Dnh, or Dnd structure for any supported order n.</p>
+<div class="admonition info">
+<p class="admonition-title">Plausible geometry, not just placeholder points</p>
+<p>The geometry of each family is modelled on a real molecule with that
+symmetry (e.g. ammonia-like apex+ring substituents for Cnv, benzene's
+ring+substituent for Cnh, ferrocene's metal-hub sandwich for
+Dn/Dnh/Dnd/Sn). Element choices roughly match each atom's bonding degree
+(H for degree 1, O for degree 2, N for degree 3, C for degree 4, S for
+degree 5-6, and a metal-like hub for higher degrees), so the generated
+structure also looks reasonable in the 3-D viewer.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">A geometric illustration, not a chemistry tool</p>
+<p>The generator's only guarantee is that the resulting arrangement of points
+has the requested point-group symmetry. The choice of elements and the bonds
+drawn between them are picked purely so the structure <em>looks</em> like a
+plausible molecule — they do <strong>not</strong> correspond to real, synthesisable
+compounds, realistic bond lengths, or valid valences. Most generated
+structures are not real molecules and should not be read as chemical claims.</p>
+<p><strong>Supported families:</strong> <code>Cn</code>, <code>Cnh</code>, <code>Cnv</code>, <code>Sn</code> (even orders), <code>Dn</code>,
+<code>Dnh</code>, <code>Dnd</code>. Cubic, icosahedral, linear, and low-symmetry groups are not
+generated.</p>
+<p><strong>High-order limits.</strong> Each family is built from one or two rings of <code>n</code>
+atoms, so the rings get geometrically crowded as <code>n</code> grows — at large <code>n</code>
+the fixed-radius spheres can visually touch and the bonds get hard to read.
+For the hub families (<code>Dn</code>/<code>Dnh</code>/<code>Dnd</code>/<code>Sn</code>) the hub element is chosen
+adaptively — the smallest atom (Cl → Fe → Cs) that still bonds to the ring
+at its natural radius — so small <code>n</code> gets a compact hub rather than a giant
+caesium sphere, escalating to caesium only for large <code>n</code>; the ring radius is
+then capped so that hub stays bonded. These are tuned for the supported range
+up to <strong>n = 20</strong>. Beyond that the visual quality degrades and detection
+tolerances tighten (see <a href="../algorithm/">Algorithm &amp; Supported Groups</a>); treat
+very high orders as schematic.</p>
+</div>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Python</label><label for="__tabbed_5_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_idealized_structure</span><span class="p">,</span> <span class="n">write_xyz</span><span class="p">,</span> <span class="n">Symmetry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite.structure_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_xyz</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">generate_idealized_structure</span><span class="p">(</span><span class="s2">&quot;D12h&quot;</span><span class="p">)</span>    <span class="c1"># build an idealized D12h structure</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Symmetry</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">point_group</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>   <span class="c1"># &quot;D12h&quot;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">format_xyz</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>                        <span class="c1"># get it as XYZ text, no file needed</span>
+<span class="n">write_xyz</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s2">&quot;d12h.xyz&quot;</span><span class="p">)</span>                    <span class="c1"># or write it straight to an .xyz file</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>-g<span class="w"> </span>D12h<span class="w"> </span>--xyz<span class="w">                  </span><span class="c1"># print the generated structure as XYZ to stdout</span>
+pyrrhotite<span class="w"> </span>-g<span class="w"> </span>D12h<span class="w"> </span>--xyz<span class="w"> </span>d12h.xyz<span class="w">         </span><span class="c1"># save the generated structure as XYZ to a file</span>
+pyrrhotite<span class="w"> </span>d12h.xyz<span class="w"> </span>-v<span class="w">                    </span><span class="c1"># then analyse the generated file as usual</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Inputs.</strong> <code>generate_idealized_structure(...)</code> takes a <strong>group name</strong> string
+from one of the supported axial families (see the box above) — the order <code>n</code> is
+read straight from the name, so <code>"D12h"</code> builds a 12-fold structure. It returns a
+normal <code>Structure</code>, so you can feed it straight back into <code>Symmetry(...)</code>,
+<code>format_xyz(...)</code> (returns the XYZ text as a string), <code>write_xyz(...)</code> (writes it
+to a path), or the visualizer. Asking for an unsupported group or order raises a
+<code>ValueError</code> rather than silently producing a wrong structure.</p>
+<p>To preview a generated structure without writing it to disk first, use
+<code>visualize_idealized_structure</code> (requires <code>pip install 'pyrrhotite[vis]'</code>):</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Python</label><label for="__tabbed_6_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize_idealized_structure</span>
+
+<span class="n">visualize_idealized_structure</span><span class="p">(</span><span class="s2">&quot;D9d&quot;</span><span class="p">)</span>                  <span class="c1"># opens the 3-D viewer</span>
+<span class="n">visualize_idealized_structure</span><span class="p">(</span><span class="s2">&quot;D9d&quot;</span><span class="p">,</span> <span class="n">show_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># overlay element labels</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>-g<span class="w"> </span>D9d<span class="w"> </span>--visualize<span class="w">             </span><span class="c1"># preview the generated structure directly</span>
+pyrrhotite<span class="w"> </span>-g<span class="w"> </span>D9d<span class="w"> </span>-vis<span class="w"> </span>-l<span class="w">                 </span><span class="c1"># ... with element labels shown</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Round-trip testing</p>
+<p>Generating a structure for a group and then immediately running
+<code>Symmetry(...)</code> on it (as in the snippet above) is a good way to sanity-check
+that detection recovers the group you asked for — <code>example_usage.py</code> (section
+14) has a runnable demo covering all seven axial families, custom
+radius/height/element, and the error cases for unsupported groups/orders.</p>
+</div>
+<hr />
+<h2 id="rotor-classification-and-principal-axes">Rotor classification and principal axes</h2>
+<p>Before searching for symmetry operations, <code>pyrrhotite</code> classifies the molecule's
+overall shape from its moments of inertia — this narrows down which symmetry
+elements are even possible. These are read straight off the <code>Symmetry</code> object you
+already built; no extra arguments are involved.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:2"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Python</label><label for="__tabbed_7_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">sym</span><span class="o">.</span><span class="n">rotor_class</span><span class="p">)</span>            <span class="c1"># RotorClass.ProlateSymmetricTop</span>
+
+<span class="n">pm</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">principal_moments</span>        <span class="c1"># np.ndarray shape (3,) — Ia ≤ Ib ≤ Ic in u·Å²</span>
+<span class="n">axes</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">principal_axes</span>         <span class="c1"># np.ndarray shape (3, 3) — eigenvectors as columns</span>
+<span class="n">cart</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">cartesian_axes</span>         <span class="c1"># 3×3 matrix [x | y | z] in the conventional frame</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>-m<span class="w"> </span>ammonia.xyz<span class="w">         </span><span class="c1"># principal moments + Cartesian axes</span>
+pyrrhotite<span class="w"> </span>-v<span class="w"> </span>ammonia.xyz<span class="w">         </span><span class="c1"># rotor class (with the operation list)</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Why it's useful.</strong> The rotor class (spherical / symmetric / asymmetric top,
+linear, …) tells you at a glance what <em>kind</em> of molecule you have, and it's the
+first thing the detection pipeline computes — so inspecting it is a quick way to
+understand <em>why</em> a given set of axes was searched for.</p>
+<hr />
+<h2 id="symmetry-operations">Symmetry operations</h2>
+<p>Every symmetry operation found on the molecule (rotation axes, mirror planes,
+inversion centre, <abbr title="A rotation by 360°/n followed by a reflection through the perpendicular plane (an Sn operation). See the Glossary.">improper rotation</abbr> axes) is available individually, with its
+axis and a numerical error estimate showing how well the molecule actually
+matches that symmetry.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:2"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><input id="__tabbed_8_2" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Python</label><label for="__tabbed_8_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">manager</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">operation_manager</span>
+
+<span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">manager</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">short_name</span><span class="p">)</span>   <span class="c1"># &quot;C3&quot;, &quot;C3^2&quot;, &quot;σv&quot;, &quot;i&quot;, …</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>                <span class="c1"># unit-vector axis / plane normal</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>               <span class="c1"># worst-case atom mis-mapping distance (Å)</span>
+
+<span class="n">manager</span><span class="o">.</span><span class="n">proper_rotations</span>         <span class="c1"># filtered views onto the same operations</span>
+<span class="n">manager</span><span class="o">.</span><span class="n">improper_rotations</span>
+<span class="n">manager</span><span class="o">.</span><span class="n">reflections</span>
+<span class="n">manager</span><span class="o">.</span><span class="n">inversions</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>-v<span class="w"> </span>ammonia.xyz<span class="w">        </span><span class="c1"># list every detected operation</span>
+pyrrhotite<span class="w"> </span>-od<span class="w"> </span>ammonia.xyz<span class="w">       </span><span class="c1"># ... plus the atoms lying on each element</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Why it's useful.</strong> Where <code>point_group</code> gives you the single summary label, the
+<code>OperationManager</code> lets you drill into the individual elements behind it — useful
+for verifying a borderline assignment, or for picking out (say) just the mirror
+planes via the <code>manager.reflections</code> filtered view. The <code>op.error</code> field
+(explained in the note below) is your handle on <em>how cleanly</em> each operation
+holds.</p>
+<div class="admonition note">
+<p class="admonition-title">Reading <code>op.error</code></p>
+<p><code>op.error</code> is the worst-case distance (in Å) by which any atom misses its
+expected mapped position under that operation. A small, uniform error
+across all operations of a detected group is normal numerical noise; a
+much larger error on one operation than the others can indicate a slightly
+distorted geometry that's still close enough to pass the 10% tolerance.</p>
+</div>
+<hr />
+<h2 id="basis-functions">Basis functions</h2>
+<p>Basis functions tell you, for each irreducible representation (<abbr title="Irreducible representation — one fundamental symmetry species (row) of a character table. See the Glossary.">irrep</abbr>), which
+<code>x</code>, <code>y</code>, <code>z</code> coordinates, rotations, or quadratic combinations (<code>x²</code>, <code>xy</code>, …)
+transform the same way — useful for working out IR/Raman selection rules and
+orbital symmetries.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="9:2"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><input id="__tabbed_9_2" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Python</label><label for="__tabbed_9_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite.point_groups.basis_functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_basis_functions</span>
+
+<span class="n">basis</span> <span class="o">=</span> <span class="n">compute_basis_functions</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>   <span class="c1"># pg = any PointGroup</span>
+<span class="c1"># Returns dict[irrep_name, {&quot;linear&quot;: [...], &quot;quadratic&quot;: [...]}]</span>
+<span class="k">for</span> <span class="n">irrep</span><span class="p">,</span> <span class="n">funcs</span> <span class="ow">in</span> <span class="n">basis</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">irrep</span><span class="p">,</span> <span class="n">funcs</span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">],</span> <span class="n">funcs</span><span class="p">[</span><span class="s2">&quot;quadratic&quot;</span><span class="p">])</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>-ct<span class="w"> </span>ammonia.xyz<span class="w">       </span><span class="c1"># the basis functions appear in the table&#39;s</span>
+<span class="w">                                 </span><span class="c1"># &quot;Lin/Rot&quot; and &quot;Quadratic&quot; columns</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Inputs.</strong> <code>compute_basis_functions(...)</code> takes a <code>PointGroup</code> — whether it came
+from a <code>Symmetry</code> analysis or from <code>get_or_generate_point_group(name)</code> — and
+returns a dictionary keyed by <abbr title="Irreducible representation — one fundamental symmetry species (row) of a character table. See the Glossary.">irrep</abbr> name. On the command line the same
+information is rendered as the right-hand columns of the <code>-ct</code> character table,
+so reach for the Python form only when you need the assignments as data.</p>
+<hr />
+<h2 id="pretty-printing-helpers">Pretty-printing helpers</h2>
+<p>Everything above is exposed as plain Python attributes so you can format it
+however you like. For quick, readable output while exploring in a shell or
+notebook, <code>pyrrhotite.display</code> bundles a few ready-made printers that take the
+objects you already have (a <code>Structure</code>, an operation list, a <code>PointGroup</code>) and
+print a tidy table. These are a <em>Python convenience</em> — the command-line tool
+covers the same ground through its <code>-v</code>, <code>-ct</code>, and <code>-od</code> flags, so there's no
+separate CLI for them:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite.display</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">print_bond_pairs</span><span class="p">,</span>              <span class="c1"># bonded atom pairs, e.g. &quot;N0 — H1&quot;</span>
+    <span class="n">print_ops_with_atoms</span><span class="p">,</span>          <span class="c1"># each operation + the atoms on its axis/plane</span>
+    <span class="n">print_basis_functions</span><span class="p">,</span>         <span class="c1"># irrep → linear/rotational &amp; quadratic basis</span>
+    <span class="n">print_char_table_programmatic</span><span class="p">,</span> <span class="c1"># character table built from the raw pg arrays</span>
+<span class="p">)</span>
+
+<span class="n">print_bond_pairs</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>                                       <span class="c1"># s = a Structure</span>
+<span class="n">print_ops_with_atoms</span><span class="p">(</span><span class="n">sym</span><span class="o">.</span><span class="n">operation_manager</span><span class="o">.</span><span class="n">operations</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+<span class="n">print_basis_functions</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>                                 <span class="c1"># pg = a PointGroup</span>
+<span class="n">print_char_table_programmatic</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Convenience wrappers, not a separate data source</p>
+<p>These don't compute anything new — they're thin formatters over data that's
+already on the objects (<code>s.calculate_bond_pairs()</code>, <code>pg.characters</code>,
+<code>pg.irreps</code>, …). Use them for a quick look; reach for the underlying
+attributes when you need the values programmatically. They live under
+<code>pyrrhotite.display</code> rather than the top-level package namespace. See the
+<a href="../api/#display-helpers">API reference</a> for the individual signatures, and
+<code>example_usage.py</code> (sections 1, 4, 6, 7) for each one in context.</p>
+</div>
+<hr />
+<h2 id="element-data">Element data</h2>
+<p>A small lookup table of element properties (symbol, atomic number, mass) used
+internally for centre-of-mass centring and element colouring, exposed in case
+it's handy in your own scripts. This is a Python-only helper — there is no
+command-line equivalent.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite.periodic_table</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_element</span><span class="p">,</span> <span class="n">get_atomic_number</span>
+
+<span class="n">el</span> <span class="o">=</span> <span class="n">get_element</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>            <span class="c1"># accepts an atomic number ...</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>   <span class="c1"># &quot;C&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span>     <span class="c1"># 12.011</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="n">get_atomic_number</span><span class="p">(</span><span class="s2">&quot;Fe&quot;</span><span class="p">)</span>    <span class="c1"># ... or look a number up from a symbol -&gt; 26</span>
+</code></pre></div>
+<hr />
+<h2 id="3-d-visualizer">3-D visualizer</h2>
+<p><code>pyrrhotite</code> includes a small interactive viewer for checking <em>what the molecule
+actually looks like</em> before or after analysis. It draws atoms as colour-coded
+spheres, bonds as cylinders, and a small red/green/blue arrow gizmo in the corner
+showing the x/y/z axes.</p>
+<p><img alt="Visualizer showing a C₆₀ fullerene" src="../assets/visualizer-fullerene.png" /></p>
+<div class="tabbed-set tabbed-alternate" data-tabs="10:2"><input checked="checked" id="__tabbed_10_1" name="__tabbed_10" type="radio" /><input id="__tabbed_10_2" name="__tabbed_10" type="radio" /><div class="tabbed-labels"><label for="__tabbed_10_1">Python</label><label for="__tabbed_10_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite</span><span class="w"> </span><span class="kn">import</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">visualize</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span><span class="s2">&quot;ammonia.xyz&quot;</span><span class="p">)</span>
+<span class="n">visualize</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>                      <span class="c1"># opens a window</span>
+<span class="n">visualize</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">show_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>    <span class="c1"># also overlay element symbols (N, H, H, H, ...)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pyrrhotite<span class="w"> </span>ammonia.xyz<span class="w"> </span>--visualize<span class="w">   </span><span class="c1"># analyse, then open the viewer</span>
+pyrrhotite<span class="w"> </span>ammonia.xyz<span class="w"> </span>-vis<span class="w"> </span>-l<span class="w">       </span><span class="c1"># ... with element labels shown</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Inputs.</strong> <code>visualize(...)</code> takes a <code>Structure</code> (loaded from a file or generated)
+and an optional <code>show_labels</code> flag. Controls: <strong>left-click and drag</strong> to rotate
+the molecule, <strong>scroll</strong> to zoom.</p>
+<p>This requires the optional <code>vis</code> dependencies (PyQt6, PyOpenGL, pyrr):</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pyrrhotite[vis]&#39;</span>
+</code></pre></div>
+<p>If they aren't installed, <code>visualize()</code> raises an <code>ImportError</code> with
+instructions instead of crashing.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unlike Luuk Kempen's original visualizer, this viewer does not (yet) draw
+the detected symmetry elements (axes, mirror planes) on top of the molecule
+— it shows only the molecule itself, the axis gizmo, and optional atom
+labels.</p>
+</div>
+<hr />
+<h2 id="sample-molecules">Sample molecules</h2>
+<p>For learning and quick experiments, <code>pyrrhotite</code> bundles 32 <code>.xyz</code> files
+covering all major point-group families (water, ammonia, benzene, ferrocene,
+buckminsterfullerene, ...). These are exposed through a few convenience
+functions:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="11:2"><input checked="checked" id="__tabbed_11_1" name="__tabbed_11" type="radio" /><input id="__tabbed_11_2" name="__tabbed_11" type="radio" /><div class="tabbed-labels"><label for="__tabbed_11_1">Python</label><label for="__tabbed_11_2">Command line</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyrrhotite</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">list_sample_molecules</span><span class="p">,</span>
+    <span class="n">load_sample</span><span class="p">,</span>
+    <span class="n">analyse_sample</span><span class="p">,</span>
+    <span class="n">visualize_sample</span><span class="p">,</span>
+    <span class="n">show_character_table_sample</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">list_sample_molecules</span><span class="p">()</span>        <span class="c1"># [&#39;E-hex-3-ene&#39;, &#39;adamantane&#39;, &#39;ammonia&#39;, ...]</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">load_sample</span><span class="p">(</span><span class="s2">&quot;benzene&quot;</span><span class="p">)</span>     <span class="c1"># returns a Structure</span>
+<span class="n">analyse_sample</span><span class="p">(</span><span class="s2">&quot;benzene&quot;</span><span class="p">)</span>      <span class="c1"># prints point group + rotor class</span>
+<span class="n">show_character_table_sample</span><span class="p">(</span><span class="s2">&quot;benzene&quot;</span><span class="p">)</span>   <span class="c1"># prints the character table</span>
+
+<span class="n">visualize_sample</span><span class="p">(</span><span class="s2">&quot;buckminsterfullerene&quot;</span><span class="p">)</span>  <span class="c1"># opens the 3-D viewer (requires [vis])</span>
+<span class="n">analyse_sample</span><span class="p">()</span>               <span class="c1"># no name -&gt; picks a random sample molecule</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1"># The samples ship as plain .xyz files, so the normal CLI works on them too:</span>
+pyrrhotite<span class="w"> </span>src/sample_molecules/benzene.xyz<span class="w"> </span>-v<span class="w"> </span>-ct
+pyrrhotite<span class="w"> </span>src/sample_molecules/*.xyz<span class="w">        </span><span class="c1"># analyse all of them at once</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Inputs.</strong> Each helper takes a <strong>sample name</strong> (one of the strings returned by
+<code>list_sample_molecules()</code>) — <em>not</em> a file path. <code>load_sample</code> returns a
+<code>Structure</code> you can use like any other; <code>analyse_sample</code>,
+<code>show_character_table_sample</code>, and <code>visualize_sample</code> are one-call shortcuts that
+load <em>and</em> act on the sample. Calling <code>analyse_sample()</code> with no name picks one
+at random. The Python helpers exist purely so you don't have to know where the
+bundled files live; on the command line you point <code>pyrrhotite</code> at the <code>.xyz</code>
+files directly.</p>
+<div class="admonition tip">
+<p class="admonition-title">Good starting points for each rotor class</p>
+<p><code>analyse_sample()</code> with no argument picks a random molecule — handy for
+quickly seeing a variety of point groups and rotor classes without
+sourcing your own <code>.xyz</code> files. Combine it with <code>visualize_sample(...)</code> to
+see the geometry that produced a given result.</p>
+</div>
+<hr />
+<h2 id="next-steps">Next steps</h2>
+<div class="grid cards">
+<ul>
+<li>
+<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 16V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2m-11-4 2.03 2.71L16 11l4 5H8M2 6v14a2 2 0 0 0 2 2h14v-2H4V6"/></svg></span> <strong>Examples Gallery</strong></p>
+<hr />
+<p>See the API above applied across point-group families, with output and
+rendered character tables.</p>
+<p><a href="../gallery/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Browse the gallery</a></p>
+</li>
+<li>
+<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.8 20c-.4 1.2-1.5 2-2.8 2H5c-1.7 0-3-1.3-3-3v-1h12.2c.4 1.2 1.5 2 2.8 2zM19 2c1.7 0 3 1.3 3 3v1h-2V5c0-.6-.4-1-1-1s-1 .4-1 1v13h-1c-.6 0-1-.4-1-1v-1H5V5c0-1.7 1.3-3 3-3zM8 6v2h7V6zm0 4v2h6v-2z"/></svg></span> <strong>Example Script</strong></p>
+<hr />
+<p><code>example_usage.py</code> — every feature on this page, wired together into one
+runnable tour.</p>
+<p><a href="../example/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Read the script</a></p>
+</li>
+<li>
+<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 7H5a2 2 0 0 0-2 2v8h2v-4h2v4h2V9a2 2 0 0 0-2-2m0 4H5V9h2m7-2h-4v10h2v-4h2a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2m0 4h-2V9h2m6 0v6h1v2h-4v-2h1V9h-1V7h4v2Z"/></svg></span> <strong>API Reference</strong></p>
+<hr />
+<p>The exact signatures, parameters, and return types for every public
+function and class.</p>
+<p><a href="../api/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Open the reference</a></p>
+</li>
+<li>
+<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64z"/></svg></span> <strong>Algorithm &amp; Supported Groups</strong></p>
+<hr />
+<p>How detection works under the hood, and the full list of supported groups.</p>
+<p><a href="../algorithm/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> How it works</a></p>
+</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../getting-started/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Getting Started">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Getting Started
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../gallery/" class="md-footer__link md-footer__link--next" aria-label="Next: Examples Gallery">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Examples Gallery
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Tomas Dadikozyan
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/datomic117/pyrrhotite/issues" target="_blank" rel="noopener" title="Report an issue" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M192 96c0-53 43-96 96-96s96 43 96 96v3.6c0 15.7-12.7 28.4-28.4 28.4H220.5c-15.7 0-28.4-12.7-28.4-28.4V96zm345.6 12.8c10.6 14.1 7.7 34.2-6.4 44.8l-97.8 73.3c5.3 8.9 9.3 18.7 11.8 29.1H544c17.7 0 32 14.3 32 32s-14.3 32-32 32h-96v32c0 2.6-.1 5.3-.2 7.9l83.4 62.5c14.1 10.6 17 30.7 6.4 44.8s-30.7 17-44.8 6.4l-63.1-47.3c-23.2 44.2-66.5 76.2-117.7 83.9V280c0-13.3-10.7-24-24-24s-24 10.7-24 24v230.2c-51.2-7.7-94.5-39.7-117.7-83.9l-63.1 47.3c-14.1 10.6-34.2 7.7-44.8-6.4s-7.7-34.2 6.4-44.8l83.4-62.5c-.1-2.6-.2-5.2-.2-7.9v-32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h98.8c2.5-10.4 6.5-20.2 11.8-29.1l-97.8-73.3c-14.1-10.6-17-30.7-6.4-44.8s30.7-17 44.8-6.4L192 184c12.3-5.1 25.8-8 40-8h112c14.2 0 27.7 2.8 40 8l108.8-81.6c14.1-10.6 34.2-7.7 44.8 6.4"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://datomic117.github.io/pyrrhotite/about/#contact" target="_blank" rel="noopener" title="Contact the maintainer" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.top", "navigation.sections", "navigation.expand", "navigation.footer", "navigation.path", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
