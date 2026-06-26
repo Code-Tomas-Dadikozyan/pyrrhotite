@@ -78,6 +78,38 @@ def test_principal_moments_ascending():
     assert m[0] <= m[1] <= m[2], f"Moments not ascending: {m}"
 
 
+# ------------------------------------------------------------------
+# Regression: planar Cs molecule must not divide by zero
+# ------------------------------------------------------------------
+
+def test_planar_cs_no_zero_division():
+    """A planar Cs molecule (e.g. caffeine) must label its σh plane, not crash.
+
+    Regression for a ZeroDivisionError in _label_reflection_planes_cyclic_dihedral:
+    Cs (= C1h) carries no rotation order (order == 0). For a planar Cs molecule
+    there is no proper rotation axis, so z is taken from the lowest-moment
+    principal axis — which lies *in* the molecular plane. The mirror normal is
+    then perpendicular to z, so the generic σh test failed and execution fell
+    through to the even-order σv/σd branch, which computes 2π / order and
+    divided by zero. Cs must instead be labelled σh directly.
+    """
+    s = Structure()
+    s.num_atoms = 4
+    # Four distinct elements placed asymmetrically in the z = 0 plane: the
+    # molecular plane is the only symmetry element, giving exactly Cs.
+    s.atomic_numbers = np.array([6, 7, 8, 1])
+    s.coordinates = np.array([
+        [0.0, 0.0, 0.0],
+        [1.3, 0.2, 0.0],
+        [0.5, 1.1, 0.0],
+        [-0.9, 0.4, 0.0],
+    ])
+    s._centre_at_com()
+
+    sym = Symmetry(s)  # must not raise
+    assert sym.point_group.label.name == "Cs"
+
+
 def test_linear_smallest_moment_near_zero():
     """Linear molecules have Ia ≈ 0."""
     s = Structure(str(XYZ_DIR / "carbon-dioxide.xyz"))

@@ -4,6 +4,21 @@ All notable changes to this project will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [Unreleased]
+
+### Fixed
+- **Planar Cs molecules (e.g. caffeine) no longer crash with `ZeroDivisionError`.**
+  In `Symmetry._label_reflection_planes_cyclic_dihedral`, the σv/σd classification
+  for even-order groups computes `2π / pg_label.order`. Cs (= C1h) carries no
+  rotation order (`order == 0`). For a *planar* Cs molecule there is no proper
+  rotation axis, so the z axis is taken from the lowest-moment principal axis,
+  which lies *in* the molecular plane; the mirror normal is then perpendicular to
+  z, the generic σh test failed, and execution fell through to the order-based
+  branch and divided by zero. Cs is now labelled σh directly (its single mirror
+  plane is σh by Schoenflies convention) before that branch is reached. Added
+  `test_planar_cs_no_zero_division` regression test. Suite total: 253 → 254 tests.
+
+
 ## [0.2.4] - 2026-06-18
 
 ### Tests

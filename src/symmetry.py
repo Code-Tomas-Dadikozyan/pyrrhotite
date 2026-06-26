@@ -1183,6 +1183,22 @@ class Symmetry:
         σv from σd by the same half-step test used for C2′/C2″.
         """
         pg_label = self._point_group.label
+
+        # Cs (= C1h) is a special case: it has exactly one mirror plane, which is
+        # σh by Schoenflies convention. It also carries no rotation order (order
+        # == 0), so it must never reach the even-order σv/σd branch below — that
+        # divides by pg_label.order and would raise ZeroDivisionError. Crucially,
+        # the generic "normal parallel to z" σh test cannot be relied upon here:
+        # for a planar Cs molecule there is no proper rotation axis, so z is set
+        # from the lowest-moment principal axis, which lies *in* the molecular
+        # plane. The mirror normal is then perpendicular to z and the test fails.
+        # Label the plane σh directly instead.
+        if pg_label.group_class == _PGL.Class.Cs:
+            for op in self._operation_manager.operations:
+                if op.label.element == _OL.Element.Reflection:
+                    op.label.set_plane(_OL.Plane.Horizontal)
+            return
+
         for op in self._operation_manager.operations:
             lbl = op.label
             if lbl.element != _OL.Element.Reflection:
